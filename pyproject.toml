@@ -29,7 +29,10 @@ dependencies = [
     "uvicorn>=0.22.0",
     "partialjson>=0.0.5",
     "litellm>=1.40.20",
+<<<<<<< HEAD
     "langchain_community>=0.2.12",
+=======
+>>>>>>> eac1423e (Reinitialize after moving folders)
 ]
 
 [project.optional-dependencies]
