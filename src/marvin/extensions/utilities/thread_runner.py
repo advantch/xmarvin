@@ -7,34 +7,25 @@ Used to
 """
 
 import asyncio
-import os
 import traceback
 from contextlib import contextmanager
 
 import litellm
-
 import rich
-from marvin.extensions.event_handlers.default_assistant_event_handler import (
-    DefaultAssistantEventHandler,
-)
-from marvin.beta.assistants import Assistant
-from marvin.beta.local.thread import LocalThread
-from marvin.extensions.utilities.configure_preset import configure_internal_sql_agent
-from marvin.extensions.storage.base import BaseRunStorage, BaseThreadStore
-from marvin.extensions.types.start_run import StartRunSchema
-from marvin.extensions.monitoring.logging import logger
-from marvin.extensions.utilities.tenant import get_current_tenant_id, set_current_tenant_id
-from marvin.extensions.settings import extensions_settings
-
 from marvin import settings as marvin_settings
 from marvin.beta.assistants import Assistant
+from marvin.beta.local.thread import LocalThread
 from marvin.extensions.event_handlers.default_assistant_event_handler import (
     DefaultAssistantEventHandler,
 )
 from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.monitoring.logging import logger
+from marvin.extensions.settings import extensions_settings
+from marvin.extensions.storage.base import BaseRunStorage, BaseThreadStore
 from marvin.extensions.storage.simple_chatstore import SimpleThreadStore
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
+from marvin.extensions.types.start_run import StartRunSchema
 from marvin.extensions.utilities.assistants_api import create_thread_message
 from marvin.extensions.utilities.configure_preset import configure_internal_sql_agent
 from marvin.extensions.utilities.context import (
@@ -43,15 +34,19 @@ from marvin.extensions.utilities.context import (
     clear_run_context,
 )
 from marvin.extensions.utilities.streaming import send_app_event
+from marvin.extensions.utilities.tenant import (
+    get_current_tenant_id,
+    set_current_tenant_id,
+)
 from marvin.src.marvin.extensions.storage.base import BaseThreadStore
 
 
-def update_marvin_settings(api_key: str| None = None):
+def update_marvin_settings(api_key: str | None = None):
     if api_key:
-        marvin_settings.openai.api_key = api_key    
+        marvin_settings.openai.api_key = api_key
 
 
-def update_litellm_settings(api_key: str| None = None):
+def update_litellm_settings(api_key: str | None = None):
     if api_key:
         litellm.openai.api_key = api_key
     else:
@@ -93,7 +88,9 @@ def verify_runtime_config(data: StartRunSchema):
         elif data.preset == "default":
             data.agent_config = AgentConfig.default_agent()
     else:
-        agent_config = extensions_settings.agent_storage_class.get_agent_config(data.agent_id)
+        agent_config = extensions_settings.agent_storage_class.get_agent_config(
+            data.agent_id
+        )
         data.agent_config = agent_config
 
     if data.runtime_config:
@@ -201,10 +198,7 @@ def run_context(payload: StartRunSchema):
         clear_run_context(payload.run_id)
 
 
-def memory_with_storage(
-    thread_id, run_id, tenant_id
-):
-
+def memory_with_storage(thread_id, run_id, tenant_id):
     storage = extensions_settings.chat_store_class(
         run_id=run_id, thread_id=thread_id, tenant_id=tenant_id
     )
@@ -282,7 +276,9 @@ def handle_local_run(
     # the agent to use
     assistant = data.agent_config.as_assistant()
     # add an event handler to save run data and streaming
-    handler = DefaultAssistantEventHandler(context=context, cache=extensions_settings.storage.cache, memory=memory)
+    handler = DefaultAssistantEventHandler(
+        context=context, cache=extensions_settings.storage.cache, memory=memory
+    )
 
     local_thread = LocalThread.create(
         id=thread.id,

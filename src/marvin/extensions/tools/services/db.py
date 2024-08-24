@@ -1,5 +1,5 @@
-
 from marvin.extensions.monitoring.logging import logger
+
 try:
     import environ
     from django.conf import settings

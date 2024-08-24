@@ -3,9 +3,12 @@ import os
 from typing import Any, Dict, List, Optional
 
 import fsspec
-from pydantic import Field
-
-from marvin.extensions.storage.base import BaseChatStore, BaseRunStorage, BaseThreadStore, BaseAgentStorage
+from marvin.extensions.storage.base import (
+    BaseAgentStorage,
+    BaseChatStore,
+    BaseRunStorage,
+    BaseThreadStore,
+)
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import expose_sync_method
 from pydantic import Field
@@ -135,7 +138,6 @@ class SimpleThreadStore(BaseThreadStore):
         return thread
 
 
-
 class SimpleRunStore(BaseRunStorage):
     """Simple run storage."""
 
@@ -146,20 +148,17 @@ class SimpleRunStore(BaseRunStorage):
         """Create a run."""
         run = self.store[kwargs["run_id"]] = kwargs
         return run
-    
 
     @expose_sync_method("get")
     async def get_async(self, **kwargs) -> "SimpleRunStore":
         """Get a run."""
         return self.store[kwargs["run_id"]]
-    
 
     @expose_sync_method("update")
     async def update_async(self, **kwargs) -> "SimpleRunStore":
         """Update a run."""
         self.store[kwargs["run_id"]] = kwargs
         return self.store[kwargs["run_id"]]
-    
 
 
 class SimpleAgentStorage(BaseAgentStorage):

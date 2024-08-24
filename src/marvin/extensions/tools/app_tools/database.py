@@ -1,19 +1,17 @@
-from collections import deque
 import traceback
+from collections import deque
 from typing import Any, Dict, Iterable, List
 
-from pydantic import BaseModel, Field
-
+import sqlparse
 from marvin.extensions.tools.services.sql_database import SQLDatabase
 from marvin.extensions.tools.tool import get_config_from_context, tool
 from marvin.extensions.tools.tool_kit import ToolKit
 from pydantic import BaseModel, Field
-
-import sqlparse
-from sqlparse.sql import TokenList, Token
+from sqlparse.sql import Token, TokenList
 from sqlparse.tokens import Keyword
 
 REPORTS_PARAM_TOKEN = "$$"
+
 
 def passes_blacklist(
     sql: str, blacklist: Iterable[str] = None
@@ -46,7 +44,8 @@ def walk_tokens(token: TokenList) -> Iterable[Token]:
         if isinstance(token, TokenList):
             queue.extend(token)
         yield token
-        
+
+
 class QueryResult(BaseModel):
     data: List[Dict[str, Any]] = Field(description="The result data of the query")
     headers: List[str] = Field(description="The column headers of the result")
@@ -205,6 +204,7 @@ def db_describe_tables(tables: List[str]) -> TableDescription:
     except Exception as e:
         return TableDescription(description=f"Error: {str(e)}")
 
+
 @tool(
     name="db_create_table",
     description="Creates a new table in the database",
@@ -216,7 +216,7 @@ def db_create_table(table: TableCreate) -> TableDescription:
     allow_create = not config.get("readonly", False)
     if isinstance(table, dict):
         table = TableCreate(**table)
-    
+
     if not allow_create:
         return TableDescription(description="Error: Create is not allowed.")
     try:
@@ -225,8 +225,12 @@ def db_create_table(table: TableCreate) -> TableDescription:
             column_definitions = [f"{col.name} {col.type}" for col in table.columns]
         else:
             column_definitions = table.columns
-        connection.run(f"CREATE TABLE {table.table_name} ({', '.join(column_definitions)})")
-        return TableDescription(description=f"Table {table.table_name} created successfully.")
+        connection.run(
+            f"CREATE TABLE {table.table_name} ({', '.join(column_definitions)})"
+        )
+        return TableDescription(
+            description=f"Table {table.table_name} created successfully."
+        )
     except Exception as e:
         return TableDescription(description=f"Error:db_create_table: {str(e)}")
 
@@ -285,5 +289,9 @@ default_database_toolkit = ToolKit.create_toolkit(
     config_schema=Config().model_json_schema(),
     requires_config=True,
     icon="Database",
-    config={"defautl_database": "default", "url": "sqlite:///:memory:", "readonly": False},
+    config={
+        "defautl_database": "default",
+        "url": "sqlite:///:memory:",
+        "readonly": False,
+    },
 )

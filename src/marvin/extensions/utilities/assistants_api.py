@@ -1,10 +1,11 @@
 import os
 import tempfile
-
 from typing import IO
+
+from marvin.settings import settings
 from openai import AsyncOpenAI, OpenAI
 from openai.types import FileObject
-from marvin.settings import settings
+
 
 def get_client(api_key=None):
     return OpenAI(api_key=api_key or settings.openai.api_key)

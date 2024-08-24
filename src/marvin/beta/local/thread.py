@@ -2,18 +2,18 @@ import uuid
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from marvin.extensions.monitoring.events import DefaultAssistantEventHandler
-from marvin.extensions.utilities.message_parsing import (
-    format_message_for_completion_endpoint,
-)
 from pydantic import BaseModel, Field
 
 from marvin.extensions.memory.base import BaseMemory
 from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.monitoring.events import DefaultAssistantEventHandler
 from marvin.extensions.storage import BaseChatStore, SimpleChatStore
 from marvin.extensions.storage.base import BaseThreadStore
 from marvin.extensions.tools.tool import Tool
 from marvin.extensions.types import ChatMessage
+from marvin.extensions.utilities.message_parsing import (
+    format_message_for_completion_endpoint,
+)
 from marvin.extensions.utilities.openai_streaming import PrintHandler
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 

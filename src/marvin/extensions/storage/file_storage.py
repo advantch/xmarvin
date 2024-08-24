@@ -1,9 +1,6 @@
-
-
 from io import BytesIO
-from typing import Union, Optional, BinaryIO
+from typing import BinaryIO, Optional, Union
 from uuid import UUID
-
 
 from marvin.extensions.storage.base import BaseFileStorage
 
@@ -13,14 +10,18 @@ class SimpleFileStorage(BaseFileStorage):
         self.files = {}
         self.metadata = {}
 
-    async def save_file(self, file: BinaryIO, file_id: Union[str, UUID], metadata: Optional[dict] = None) -> dict:
+    async def save_file(
+        self, file: BinaryIO, file_id: Union[str, UUID], metadata: Optional[dict] = None
+    ) -> dict:
         content = file.read()
         self.files[str(file_id)] = content
         file_metadata = metadata or {}
-        file_metadata.update({
-            "file_id": str(file_id),
-            "size": len(content),
-        })
+        file_metadata.update(
+            {
+                "file_id": str(file_id),
+                "size": len(content),
+            }
+        )
         self.metadata[str(file_id)] = file_metadata
         return file_metadata
 

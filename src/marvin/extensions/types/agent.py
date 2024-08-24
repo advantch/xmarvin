@@ -2,19 +2,17 @@ import uuid
 from typing import Callable, List, Literal, Optional, Union
 from uuid import UUID
 
+from marvin.beta.assistants import CodeInterpreter, FileSearch
+from marvin.beta.local import LocalAssistant
+from marvin.extensions.tools.services.db import get_django_db_connection_url
+from marvin.extensions.tools.tool import Tool
+from marvin.extensions.types.base import BaseSchemaConfig
+from marvin.extensions.types.llms import AIModels
+from marvin.extensions.utilities.prompts import DEFAULT_ASSISTANT_BASE_PROMPT
 from marvin.extensions.utilities.render_prompt import (
     render_assistant_instructions,
     render_instructions,
 )
-from marvin.extensions.types.base import BaseSchemaConfig
-from pydantic import BaseModel, Field
-
-from marvin.beta.assistants import CodeInterpreter, FileSearch
-from marvin.beta.local import LocalAssistant
-from marvin.extensions.utilities.prompts import DEFAULT_ASSISTANT_BASE_PROMPT
-from marvin.extensions.tools.services.db import get_django_db_connection_url
-from marvin.extensions.tools.tool import Tool
-from marvin.extensions.types.llms import AIModels
 from marvin.tools.assistants import AssistantTool
 from pydantic import BaseModel, Field
 

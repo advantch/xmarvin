@@ -1,14 +1,10 @@
-import asyncio
 import pytest
 from marvin.extensions.utilities.tenant import (
-    tenant_context,
-    empty_tenant_context,
-    set_tenant_metadata,
-    get_tenant_metadata,
-    set_thread_state,
-    clear_thread_state,
-    get_current_tenant_id,
     _tenant_state,
+    clear_thread_state,
+    empty_tenant_context,
+    get_current_tenant_id,
+    get_tenant_metadata,
     set_current_tenant_id,
     set_tenant_metadata,
     set_thread_state,
