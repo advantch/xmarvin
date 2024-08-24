@@ -1,9 +1,8 @@
 import humps
 from asgiref.sync import async_to_sync
-from pydantic import BaseModel
-
 from marvin.extensions.utilities.serialization import to_serializable
 from marvin.utilities.asyncio import is_coro
+from pydantic import BaseModel
 
 try:
     from channels.layers import get_channel_layer
@@ -81,7 +80,8 @@ async def send_app_event_async(
     streaming: bool = False,
     patch: bool = False,
     camel_case: bool = True,
-    run_id: str = None,):
+    run_id: str = None,
+):
     """
     Send event to channel
 
@@ -95,7 +95,7 @@ async def send_app_event_async(
         streaming: is streaming set true if incrementally patching
         camel_case: convert to camel case
     """
- 
+
     if isinstance(data, BaseModel):
         data = data.model_dump(by_alias=True)
     if isinstance(data, str):

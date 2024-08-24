@@ -6,7 +6,14 @@ from uuid import UUID
 
 import humps
 from marvin.extensions.monitoring.logging import logger
+from marvin.extensions.settings import extensions_settings
 from marvin.extensions.types.base import BaseSchemaConfig
+from marvin.extensions.types.data_source import DataSourceSchema
+from marvin.extensions.types.tools import (
+    AppCodeInterpreterTool,
+    AppFileSearchTool,
+    AppToolCall,
+)
 from openai.types.beta.threads.message_content import (
     ImageFileContentBlock,
     ImageURLContentBlock,
@@ -26,14 +33,6 @@ from openai.types.beta.threads.runs.function_tool_call import (
 )
 from pydantic import BaseModel, Field
 
-from marvin.extensions.types.data_source import DataSourceSchema
-from marvin.extensions.types.tools import (
-    AppCodeInterpreterTool,
-    AppFileSearchTool,
-    AppToolCall,
-)
-
-from marvin.extensions.settings import extensions_settings
 
 class Function(OpenAIFunction):
     pass
@@ -67,7 +66,6 @@ class FileMessageContent(BaseModel):
         pass
 
     def as_openai_llm_message(self):
-        
         storage = extensions_settings.storage.file_storage_class()
         data_source = storage.get(self.file_id)
         if data_source:
@@ -201,6 +199,7 @@ class ChatMessage(BaseModel):
     def as_llm_message(self):
         """As litellm message"""
         from marvin.extensions.utilities.message_parsing import to_openai_message_dict
+
         return to_openai_message_dict(self)
 
     def append_content(self, text: str):

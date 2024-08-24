@@ -7,6 +7,7 @@ from .base import Embeddings
 clip_model = None
 text_model = None
 
+
 def get_embeddings(documents: list[str]):
     embedding = _get_text_model()
     text_generator = embedding.embed(documents)
@@ -15,6 +16,7 @@ def get_embeddings(documents: list[str]):
 
 def _get_clip_model():
     from fastembed import ImageEmbedding  # noqa
+
     clip_model = ImageEmbedding("Qdrant/resnet50-onnx")
     return clip_model
 

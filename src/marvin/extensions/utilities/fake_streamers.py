@@ -1,4 +1,4 @@
-from marvin.utilities.logging import pretty_log, logger
+from marvin.utilities.logging import logger, pretty_log
 
 
 def send_event(*args, **kwargs):
@@ -7,10 +7,10 @@ def send_event(*args, **kwargs):
 
 
 class FakeChannelLayer:
-
     def group_send(self, *args, **kwargs):
         logger.warning("group_send not available in non-django environment")
         pretty_log(*args, **kwargs)
+
 
 def get_channel_layer():
     return FakeChannelLayer()

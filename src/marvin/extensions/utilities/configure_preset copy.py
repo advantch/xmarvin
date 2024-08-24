@@ -1,7 +1,7 @@
-from .prompts import SQL_PROMPT
-
 from marvin.extensions.types import AgentConfig, StartRunSchema
 from marvin.extensions.types.llms import AIModels
+
+from .prompts import SQL_PROMPT
 
 
 def configure_internal_sql_agent(data: StartRunSchema) -> str:

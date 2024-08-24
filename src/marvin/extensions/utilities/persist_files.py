@@ -1,11 +1,9 @@
-from typing import Union, BinaryIO
-from uuid import UUID
+from typing import BinaryIO
 
 from marvin.extensions.storage.base import BaseFileStorage
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.unique_id import generate_uuid_from_string
-from openai.types.beta.threads import ImageFile
 
 
 async def save_assistant_image_to_storage(
@@ -15,7 +13,7 @@ async def save_assistant_image_to_storage(
     Saves assistant image file to storage
     """
     file_id = generate_uuid_from_string(str(context.run_id))
-    
+
     # Save the image file
     result: dict = await file_storage.save_file(
         image_file,
@@ -24,7 +22,7 @@ async def save_assistant_image_to_storage(
             "thread_id": context.thread_id,
             "run_id": context.run_id,
             "tenant_id": context.tenant_id,
-        }
+        },
     )
 
     # Create a chat message

@@ -1,14 +1,14 @@
 import uuid
 from contextlib import contextmanager
-from marvin.extensions.utilities.tenant import get_current_tenant_id
-from marvin.extensions.storage import BaseRunStore
-from marvin.extensions.settings import extensions_settings
 
+from marvin.extensions.settings import extensions_settings
+from marvin.extensions.storage import BaseRunStore
 from marvin.extensions.utilities.context import (
     RunContext,
     add_run_context,
     clear_run_context,
 )
+from marvin.extensions.utilities.tenant import get_current_tenant_id
 
 
 @contextmanager

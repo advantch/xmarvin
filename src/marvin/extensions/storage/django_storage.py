@@ -2,8 +2,6 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 import orjson
-from pydantic import Field
-
 from marvin.extensions.storage.base import BaseChatStore, BaseThreadStore
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import expose_sync_method
@@ -18,7 +16,7 @@ class DJjangoDBChatStore(BaseChatStore):
     run_id: Optional[str | UUID] = None
     thread_id: Optional[str | UUID] = None
     tenant_id: Optional[str | UUID] = None
-    
+
     django_message_model: Optional[Any] = None
 
     class Config:

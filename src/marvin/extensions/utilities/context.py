@@ -59,13 +59,14 @@ class RunContext(BaseModel):
         arbitrary_types_allowed = True
 
     def default_config(self):
-        
-        return [{
-            "toolkit_id": "default_database",
-            "config": {
-                "url": 'postgresql://postgres:postgres@localhost:5432/postgres',
+        return [
+            {
+                "toolkit_id": "default_database",
+                "config": {
+                    "url": "postgresql://postgres:postgres@localhost:5432/postgres",
+                },
             }
-        }]
+        ]
 
 
 def is_async_context():

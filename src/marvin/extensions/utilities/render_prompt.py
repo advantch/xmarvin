@@ -1,6 +1,8 @@
-from .prompts import DEFAULT_ASSISTANT_PROMPT, DEFAULT_PROMPT
-from jinja2 import Template
 from datetime import datetime
+
+from jinja2 import Template
+
+from .prompts import DEFAULT_ASSISTANT_PROMPT, DEFAULT_PROMPT
 
 
 def render_instructions(agent_config=None, prompt=None):

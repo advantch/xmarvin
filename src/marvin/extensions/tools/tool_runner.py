@@ -1,10 +1,8 @@
 import uuid
 
-from marvin.extensions.monitoring.logging import pretty_log
-from marvin.extensions.tools.tool import Tool as DBTool
-
 from marvin.extensions.tools.app_tools import get_tool_by_name, toolkits
 from marvin.extensions.tools.context import tool_run_context
+from marvin.extensions.tools.tool import Tool as DBTool
 from marvin.extensions.utilities.serialization import to_serializable
 
 

@@ -38,6 +38,7 @@ def set_tenant_from_current_thread():
 def unset_current_tenant_id() -> None:
     _tenant_id.set(None)
 
+
 @asynccontextmanager
 async def tenant_context(tenant_id):
     token = _tenant_id.set(tenant_id)
@@ -45,6 +46,7 @@ async def tenant_context(tenant_id):
         yield
     finally:
         _tenant_id.reset(token)
+
 
 @asynccontextmanager
 async def empty_tenant_context():

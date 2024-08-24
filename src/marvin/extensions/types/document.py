@@ -2,8 +2,9 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from .base import BaseSchemaConfig
 from pydantic import BaseModel, Field
+
+from .base import BaseSchemaConfig
 
 
 class DocumentMetadata(BaseModel):

@@ -1,15 +1,11 @@
 """Base interface class for storing chat history per user."""
 
-from abc import abstractmethod
-from io import BytesIO
-from typing import Any, List, Optional
 from abc import ABC, abstractmethod
-from typing import BinaryIO, Optional, Union
+from typing import Any, BinaryIO, List, Optional, Union
 from uuid import UUID
 
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin
-from pydantic import BaseModel
 
 
 class BaseChatStore(ABC, ExposeSyncMethodsMixin):
@@ -73,7 +69,9 @@ class BaseThreadStore(ABC, ExposeSyncMethodsMixin):
 
 class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
     @abstractmethod
-    async def save_file(self, file: BinaryIO, file_id: Union[str, UUID], metadata: Optional[dict] = None) -> dict:
+    async def save_file(
+        self, file: BinaryIO, file_id: Union[str, UUID], metadata: Optional[dict] = None
+    ) -> dict:
         """Save a file to storage and return its metadata."""
         pass
 
@@ -99,11 +97,11 @@ class BaseRunStorage(ABC, ExposeSyncMethodsMixin):
         """Create a run."""
         ...
 
-    
     @abstractmethod
     async def update(self, **kwargs) -> "BaseRunStorage":
         """Update a run."""
         ...
+
 
 class BaseAgentStorage(ABC, ExposeSyncMethodsMixin):
     @abstractmethod

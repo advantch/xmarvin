@@ -1,12 +1,13 @@
 import asyncio
 import concurrent
 from concurrent.futures import ThreadPoolExecutor
-from openai import OpenAI
 
 from marvin.extensions.embeddings.base import Embeddings
-from marvin.extensions.settings import extensions_settings
 from marvin.extensions.monitoring import logger
+from marvin.extensions.settings import extensions_settings
 from marvin.settings import settings
+from openai import OpenAI
+
 
 def get_embeddings(text, model="text-embedding-3-small", dimensions=None):
     if dimensions is None:
@@ -27,7 +28,7 @@ class OpenAIEmbeddings(Embeddings):
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed search docs using a thread pool."""
-    
+
         logger.info(
             f"Embedding {len(texts)} documents using {self.num_threads} threads"
         )

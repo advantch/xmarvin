@@ -1,5 +1,4 @@
 from marvin.extensions.monitoring.logging import pretty_log
-
 from marvin.extensions.tools.app_tools import all_tools, toolkits
 from marvin.extensions.tools.tool import Tool
 
