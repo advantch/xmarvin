@@ -3,10 +3,9 @@ from enum import Enum
 import logfire
 import openai
 from fastapi import Body, FastAPI
-from pydantic import BaseModel
-
 from marvin import fn
 from marvin.client import AsyncMarvinClient
+from pydantic import BaseModel
 
 app = FastAPI()
 client = openai.AsyncClient()

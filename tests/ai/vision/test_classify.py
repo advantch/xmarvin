@@ -1,6 +1,5 @@
-import pytest
-
 import marvin
+import pytest
 
 
 @pytest.fixture(autouse=True)

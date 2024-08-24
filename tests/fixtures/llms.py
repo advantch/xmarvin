@@ -1,5 +1,4 @@
 import pytest
-
 from marvin.settings import temporary_settings
 
 

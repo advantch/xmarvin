@@ -16,10 +16,9 @@ MARVIN_CHAT_COMPLETIONS_MODEL=<your Azure OpenAI deployment name>
 
 from enum import Enum
 
-from pydantic import BaseModel
-
 import marvin
 from marvin.settings import temporary_settings
+from pydantic import BaseModel
 
 
 class Sentiment(Enum):

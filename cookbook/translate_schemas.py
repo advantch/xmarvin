@@ -1,6 +1,5 @@
-from pydantic import BaseModel
-
 import marvin
+from pydantic import BaseModel
 
 
 class FooModel(BaseModel):

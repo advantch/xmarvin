@@ -1,13 +1,12 @@
 from pathlib import Path
 
-from pydantic import BaseModel, Field
-
 import marvin
 import marvin.tools
 import marvin.tools.filesystem
 import marvin.tools.python
 import marvin.tools.shell
 from marvin.beta.applications import Application
+from pydantic import BaseModel, Field
 
 marvin.settings.log_level = "DEBUG"
 marvin.settings.llm_model = "gpt-4o"

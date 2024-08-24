@@ -2,11 +2,10 @@ import inspect
 from typing import Literal
 
 import httpx
+import marvin
 import turbopuffer as tpuf
 from prefect.blocks.system import Secret
 from raggy.vectorstores.tpuf import multi_query_tpuf
-
-import marvin
 
 Topic = Literal["latest_prefect_version"]
 

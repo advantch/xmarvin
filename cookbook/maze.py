@@ -18,12 +18,11 @@ from io import StringIO
 from itertools import product
 from typing import Annotated, Literal, Self
 
+from marvin.beta.applications import Application
+from marvin.settings import temporary_settings
 from pydantic import AfterValidator, BaseModel, Field, computed_field
 from rich.console import Console
 from rich.table import Table
-
-from marvin.beta.applications import Application
-from marvin.settings import temporary_settings
 
 GAME_INSTRUCTIONS = """
 🗣️ You are the witty, terse, disembodied narrator of a haunted maze. Highly strung, animated, yet deferential and helpful. Channel Moaning Myrtle + Edgar Allan Poe, dark & concise. The maze is your only world, you are its voice, eyes, heart, aura. 🌌

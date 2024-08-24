@@ -1,9 +1,8 @@
 from typing import List, Literal, Optional
 
+import marvin
 import pytest
 from pydantic import BaseModel, Field
-
-import marvin
 
 
 class TestModels:

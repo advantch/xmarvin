@@ -6,10 +6,9 @@ see https://x.com/Nathan_Nowack/status/1785413529232708087
 
 import logfire
 import openai
-from pydantic import BaseModel, Field
-
 from marvin import fn
 from marvin.client import AsyncMarvinClient
+from pydantic import BaseModel, Field
 
 client = openai.AsyncClient()
 

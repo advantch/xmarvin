@@ -5,13 +5,6 @@ from typing import Annotated
 
 from fastapi import FastAPI
 from jinja2 import Template
-from prefect.events import Event, emit_event
-from prefect.events.clients import PrefectCloudEventSubscriber
-from prefect.events.filters import EventFilter
-from pydantic import Field
-from typing_extensions import TypedDict
-from websockets.exceptions import ConnectionClosedError
-
 from marvin import fn
 from marvin.beta.applications import Application
 from marvin.beta.applications.state.json_block import JSONBlockState
@@ -19,6 +12,12 @@ from marvin.beta.assistants import Assistant
 from marvin.utilities.logging import get_logger
 from marvin.utilities.slack import get_user_name
 from marvin.utilities.strings import count_tokens
+from prefect.events import Event, emit_event
+from prefect.events.clients import PrefectCloudEventSubscriber
+from prefect.events.filters import EventFilter
+from pydantic import Field
+from typing_extensions import TypedDict
+from websockets.exceptions import ConnectionClosedError
 
 PARENT_APP_STATE_BLOCK_NAME = "marvin-parent-app-state"
 PARENT_APP_STATE = JSONBlockState(block_name=PARENT_APP_STATE_BLOCK_NAME)

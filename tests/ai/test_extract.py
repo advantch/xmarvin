@@ -1,7 +1,6 @@
+import marvin
 import pytest
 from pydantic import BaseModel, Field
-
-import marvin
 
 
 class Location(BaseModel):

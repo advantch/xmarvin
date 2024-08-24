@@ -3,10 +3,9 @@ from enum import Enum
 from typing import Dict, List, Literal
 from unittest.mock import patch
 
+import marvin
 import pytest
 from pydantic import BaseModel
-
-import marvin
 
 
 @marvin.fn

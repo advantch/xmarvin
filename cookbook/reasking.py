@@ -1,9 +1,8 @@
 from typing import Annotated
 
-from pydantic import AfterValidator
-
 import marvin
 from marvin.beta.retries import retry_fn_on_validation_error
+from pydantic import AfterValidator
 
 
 def verify_random_number(number: int) -> int:

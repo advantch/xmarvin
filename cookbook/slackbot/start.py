@@ -2,16 +2,10 @@ import asyncio
 import os
 import re
 
+import marvin
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from keywords import handle_keywords
-from parent_app import emit_assistant_completed_event, get_notes_for_user, lifespan
-from prefect import flow, task
-from prefect.blocks.system import JSON
-from prefect.states import Completed
-from tools import get_info, get_prefect_code_example, search_prefect_docs
-
-import marvin
 from marvin.beta.applications import Application
 from marvin.beta.applications.state.json_block import JSONBlockState
 from marvin.beta.assistants import Assistant, Thread
@@ -24,6 +18,11 @@ from marvin.utilities.slack import (
     post_slack_message,
 )
 from marvin.utilities.strings import count_tokens, slice_tokens
+from parent_app import emit_assistant_completed_event, get_notes_for_user, lifespan
+from prefect import flow, task
+from prefect.blocks.system import JSON
+from prefect.states import Completed
+from tools import get_info, get_prefect_code_example, search_prefect_docs
 
 BOT_MENTION = r"<@(\w+)>"
 CACHE = JSONBlockState(block_name="marvin-thread-cache")
