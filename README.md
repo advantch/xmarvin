@@ -280,3 +280,12 @@ ai_audio.play()
 🐛 **Found a bug?** feel free to [open an issue](https://github.com/PrefectHQ/marvin/issues/new/choose).
 
 👷 **Feedback?** Marvin is under active development, and we'd love to [hear it](https://github.com/PrefectHQ/marvin/discussions).
+
+
+# Local dev
+
+```
+pip install -e ".[dev]"
+export OPENAI_API_KEY='your-key'
+pytest
+```

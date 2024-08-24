@@ -28,6 +28,7 @@ dependencies = [
     "tzdata>=2023.3",
     "uvicorn>=0.22.0",
     "partialjson>=0.0.5",
+    "litellm>=1.40.20",
 ]
 
 [project.optional-dependencies]
