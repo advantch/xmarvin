@@ -45,5 +45,5 @@ class TestVisionCaption:
         assert_equal(
             result,
             "New York City; Washington DC",
-            instructions="A caption was generated for two images. Ensure it mentions both cities.",
+            instructions="A caption was generated for two images. Ensure it mentions both cities. It does not need to be the exact wording but should be close.",
         )

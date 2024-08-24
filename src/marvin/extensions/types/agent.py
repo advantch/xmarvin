@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from typing import Callable, List, Literal, Optional, Union
 from uuid import UUID
@@ -154,7 +155,7 @@ class AgentConfig(BaseModel):
     def default_agent(cls, model=None):
         default_model = AIModels.GPT_4O_MINI
         instructions = DEFAULT_ASSISTANT_BASE_PROMPT.format(
-            date=timezone.now().isoformat()
+            date=datetime.datetime.now().strftime("%Y-%m-%d")
         )
         from marvin.extensions.tools.app_tools import (
             code_interpreter_toolkit,
@@ -292,7 +293,7 @@ class AgentConfig(BaseModel):
 
     def agent_tools_to_function_tools(self) -> list[AgentApiTool]:
         """
-        #TODO check usage should this be split and return a FunctionTool from openai?
+        Agent tools to function tools
         """
         tools = self.get_tools()
         return [AgentApiTool.from_tool(tool) for tool in tools]

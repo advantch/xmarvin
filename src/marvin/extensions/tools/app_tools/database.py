@@ -14,6 +14,29 @@ from sqlparse.sql import TokenList, Token
 from sqlparse.tokens import Keyword
 
 REPORTS_PARAM_TOKEN = "$$"
+# Change the behavior of reports
+SQL_BLACKLIST = (
+        # DML
+        "COMMIT",
+        "DELETE",
+        "INSERT",
+        "MERGE",
+        "REPLACE",
+        "ROLLBACK",
+        "SET",
+        "START",
+        "UPDATE",
+        "UPSERT",
+        # DDL
+        "ALTER",
+        "CREATE",
+        "DROP",
+        "RENAME",
+        "TRUNCATE",
+        # DCL
+        "GRANT",
+        "REVOKE",
+)
 
 def passes_blacklist(
     sql: str, blacklist: Iterable[str] = None
@@ -28,7 +51,7 @@ def passes_blacklist(
                     if token.ttype in Keyword:
                         keyword_tokens.add(str(token.value).upper())
 
-    blacklist = blacklist or app_settings.REPORTS_SQL_BLACKLIST
+    blacklist = blacklist or SQL_BLACKLIST
     fails = [bl_word for bl_word in blacklist if bl_word.upper() in keyword_tokens]
 
     return not bool(fails), fails
