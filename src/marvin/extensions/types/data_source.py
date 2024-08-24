@@ -47,8 +47,10 @@ class IndexData(BaseModel):
     class Config(BaseSchemaConfig):
         pass
 
+
 class DeleteDataSourcesSchema(BaseModel):
     ids: list[str]
+
 
 class DataSourceSchema(BaseModel):
     id: str | UUID | None = None

@@ -7,6 +7,12 @@ from uuid import UUID
 import humps
 from apps.common.logging import logger
 from apps.common.schema import BaseSchemaConfig
+from marvin.extensions.types.data_source import DataSourceSchema
+from marvin.extensions.types.tools import (
+    AppCodeInterpreterTool,
+    AppFileSearchTool,
+    AppToolCall,
+)
 from openai.types.beta.threads.message_content import (
     ImageFileContentBlock,
     ImageURLContentBlock,
@@ -25,13 +31,6 @@ from openai.types.beta.threads.runs.function_tool_call import (
     FunctionToolCall as OpenAIFunctionToolCall,
 )
 from pydantic import BaseModel, Field
-
-from marvin.extensions.types.data_source import DataSourceSchema
-from marvin.extensions.types.tools import (
-    AppCodeInterpreterTool,
-    AppFileSearchTool,
-    AppToolCall,
-)
 
 
 class Function(OpenAIFunction):
@@ -128,7 +127,9 @@ class Metadata(BaseModel):
     streaming: bool = False
     run_id: str | UUID | None = None
     id: str | UUID | None = None
-    tool_calls: list[Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool]] | None | Any = None
+    tool_calls: list[
+        Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool]
+    ] | None | Any = None
     raw_tool_output: Any | None = None
     name: str | None = None
     type: str | None = "message"
@@ -199,6 +200,7 @@ class ChatMessage(BaseModel):
     def as_llm_message(self):
         """As litellm message"""
         from apps.ai.agent.utilities.message_parsing import to_openai_message_dict
+
         return to_openai_message_dict(self)
 
     def append_content(self, text: str):

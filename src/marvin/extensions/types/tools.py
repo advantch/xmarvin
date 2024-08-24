@@ -47,7 +47,8 @@ class AppFunction(OpenAIFunction):
         description="Structured output of the tool.", default=None
     )
 
-class AppCodeInterpreterTool(OpenAICodeInterpreterToolCall): 
+
+class AppCodeInterpreterTool(OpenAICodeInterpreterToolCall):
     structured_output: Any | None = Field(
         description="Structured output of the tool.", default=None
     )
@@ -61,18 +62,21 @@ class AppCodeInterpreterTool(OpenAICodeInterpreterToolCall):
                 "input": tool.code_interpreter.input,
                 "outputs": c,
             },
-            "structured_output": c
+            "structured_output": c,
         }
+
 
 class AppFileSearchTool(OpenAIFileSearchToolCall):
     structured_output: Any | None = Field(
         description="Structured output of the tool.", default=None
     )
 
+
 class AppToolCall(OpenAIFunctionToolCall):
     function: AppFunction
 
+
 AnyToolCall: TypeAlias = Annotated[
-    Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool], 
-    PropertyInfo(discriminator="type")
+    Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool],
+    PropertyInfo(discriminator="type"),
 ]

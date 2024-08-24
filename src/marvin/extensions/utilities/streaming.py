@@ -2,11 +2,10 @@ import humps
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django_eventstream import send_event
-from pydantic import BaseModel
-
 from marvin.extensions.utilities.async_utils import check_event_loop
 from marvin.extensions.utilities.serialization import to_serializable
 from marvin.utilities.asyncio import run_async
+from pydantic import BaseModel
 
 
 def send_app_event(

@@ -1,6 +1,5 @@
 from apps.ai.agent.monitoring.logging import pretty_log
 from apps.databases.models import DatabaseSettings
-
 from marvin.extensions.tools.app_tools import all_tools, toolkits
 from marvin.extensions.tools.tool import Tool
 
@@ -42,7 +41,7 @@ def get_agent_tools(agent_config, is_assistant=False) -> tuple[list[Tool], dict]
         # update config
         toolkit.config = agent_toolkit.get_config()
         if toolkit.requires_config:
-            config.append({'toolkit_id': toolkit.id, 'config': toolkit.config})
+            config.append({"toolkit_id": toolkit.id, "config": toolkit.config})
         for tool in toolkit.to_tool_list():
             code_tool = all_tools.get(tool.name)
             if code_tool:

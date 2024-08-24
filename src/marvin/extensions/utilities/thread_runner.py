@@ -11,32 +11,34 @@ import traceback
 from contextlib import contextmanager
 
 import litellm
-from marvin.src.marvin.extensions.storage.base import BaseThreadStore
 import rich
-from marvin.extensions.event_handlers.default_assistant_event_handler import (
-    DefaultAssistantEventHandler,
-)
-from marvin.beta.assistants import Assistant
-from marvin.extensions.utilities.configure_preset import configure_internal_sql_agent
-from marvin.extensions.models import Agent, Run
 from apps.ai.schema import StartRunSchema
 from apps.common.logging import logger
 from apps.tenants.utils import get_current_tenant_id, set_current_tenant_id
 from django.conf import settings
 from django.core.cache import cache
-
 from marvin import settings as marvin_settings
+from marvin.beta.assistants import Assistant
+from marvin.extensions.event_handlers.default_assistant_event_handler import (
+    DefaultAssistantEventHandler,
+)
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.storage.simple_chatstore import SimpleChatStore, SimpleThreadStore
+from marvin.extensions.models import Agent, Run
+from marvin.extensions.storage.simple_chatstore import (
+    SimpleChatStore,
+    SimpleThreadStore,
+)
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.utilities.assistants_api import create_thread_message
+from marvin.extensions.utilities.configure_preset import configure_internal_sql_agent
 from marvin.extensions.utilities.context import (
     RunContext,
     add_run_context,
     clear_run_context,
 )
 from marvin.extensions.utilities.streaming import send_app_event
+from marvin.src.marvin.extensions.storage.base import BaseThreadStore
 
 
 def update_marvin_settings():
@@ -112,10 +114,10 @@ def save_run_data(run, context):
 def run_context(payload: StartRunSchema):
     """
     Run and thread are automatically created and managed within this context.
-    
+
     This context manager handles the creation and management of a Run and Thread
     for an AI assistant interaction. It performs the following tasks:
-    
+
     1. Sets the current tenant ID.
     2. Creates or retrieves a Thread from the database.
     3. Initializes a new Run in the database.
@@ -123,16 +125,16 @@ def run_context(payload: StartRunSchema):
     5. Yields the created Run, Thread, and Context for use in the calling code.
     6. Handles exceptions, logging errors and updating the Run status if needed.
     7. Saves run data and clears the run context upon completion.
-    
+
     Args:
         payload (StartRunSchema): Contains all necessary information to start a run.
-    
+
     Yields:
         tuple: A tuple containing (db_run, thread, context)
             - db_run (Run): The database Run object.
             - thread (Thread): The database Thread object.
             - context (dict): The run context dictionary.
-    
+
     Raises:
         Exception: Any exception that occurs during the run is caught, logged,
                    and the run status is updated to 'failed'.
@@ -143,7 +145,6 @@ def run_context(payload: StartRunSchema):
 
     if not payload.tenant_id:
         payload.tenant_id = tenant_id
-
 
     thread = SimpleThreadStore().get_or_add_thread(
         payload.thread_id,
@@ -192,13 +193,8 @@ def run_context(payload: StartRunSchema):
         clear_run_context(payload.run_id)
 
 
-def memory_with_storage(
-    thread_id, run_id, tenant_id
-):
-
-    storage = SimpleChatStore(
-        run_id=run_id, thread_id=thread_id, tenant_id=tenant_id
-    )
+def memory_with_storage(thread_id, run_id, tenant_id):
+    storage = SimpleChatStore(run_id=run_id, thread_id=thread_id, tenant_id=tenant_id)
 
     return Memory(
         storage=storage,
@@ -310,12 +306,12 @@ def start_run(data: StartRunSchema):
         data.agent_config is not None
     ), "Agent config is required: Did you forget to call `verify_runtime_config?`"
     send_app_event(
-        data.channel_id, 
-        data.thread_id, 
+        data.channel_id,
+        data.thread_id,
         {
             "type": "start",
             "runId": data.run_id,
-        }
+        },
     )
 
     # start a context manager here

@@ -4,9 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from apps.common.utils import debug_timer
 from django.conf import settings
-from openai import OpenAI
-
 from marvin.extensions.embeddings.base import Embeddings
+from openai import OpenAI
 
 
 @debug_timer

@@ -4,11 +4,10 @@ import time
 from datetime import datetime
 from typing import Any
 
+from marvin.extensions.utilities.serialization import to_serializable
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
-
-from marvin.extensions.utilities.serialization import to_serializable
 
 logger = logging.getLogger(__name__)
 

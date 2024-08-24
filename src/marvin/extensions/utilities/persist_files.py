@@ -1,9 +1,8 @@
-from openai.types.beta.threads import ImageFile
-
 from marvin.extensions.tools.function_tool import sync_to_async
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.unique_id import generate_uuid_from_string
+from openai.types.beta.threads import ImageFile
 
 
 async def save_assistant_image_to_storage(

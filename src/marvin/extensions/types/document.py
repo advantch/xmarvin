@@ -54,7 +54,7 @@ class Document(BaseModel):
         """
         from marvin.extensions.chunking.text_splitter import (
             RecursiveCharacterTextSplitter,
-        )  # noqa: E501
+        )
 
         if isinstance(documents, str):
             documents = [Document(page_content=documents)]

@@ -23,7 +23,6 @@ from .assistant import LocalAssistant
 
 
 class LocalThread(BaseModel, ExposeSyncMethodsMixin):
-    
     id: str | uuid.UUID = Field(default_factory=lambda: str(uuid4()))
     storage: Optional[BaseChatStore] = SimpleChatStore()
     thread_storage: Optional[BaseThreadStore] | None = None
@@ -72,7 +71,8 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
         return thread
 
     @classmethod
-    def create(cls,
+    def create(
+        cls,
         id: str | None = Field(default=None, description="Thread ID for thread"),
         tenant_id: str | UUID = Field(default=None, description="Tenant ID for thread"),
         messages: List[ChatMessage] | None = None,
@@ -80,7 +80,6 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
         memory: BaseMemory | None = None,
         thread_storage: Optional[BaseThreadStore] = None,
         tags: List[str] | None = None,
-
     ):
         thread_id = str(id) or str(uuid4())
         tenant_id = str(tenant_id) or "primary"
@@ -151,8 +150,8 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
         """
         Creates a new run for the thread.
         """
-        from .run import LocalRun # noqa
-         
+        from .run import LocalRun  # noqa
+
         event_handler_kwargs = event_handler_kwargs or {}
         memory = event_handler_kwargs.pop("memory", None) or self.memory
         context = event_handler_kwargs.pop("context", None) or context

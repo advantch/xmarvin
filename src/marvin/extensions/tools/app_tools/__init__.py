@@ -34,11 +34,13 @@ def get_tool_by_name(name: str):
     """
     return all_tools.get(name)
 
+
 def get_toolkit_by_id(toolkit_id: str):
     for toolkit in toolkits:
         if toolkit.id == toolkit_id:
             return toolkit
     raise ValueError(f"Toolkit with id {toolkit_id} not found")
+
 
 __all__ = [
     "get_all_tools",

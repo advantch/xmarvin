@@ -2,7 +2,6 @@ import uuid
 
 from apps.ai.agent.monitoring.logging import pretty_log
 from apps.ai.models.tools import Tool as DBTool
-
 from marvin.extensions.tools.app_tools import get_tool_by_name, toolkits
 from marvin.extensions.tools.context import tool_run_context
 from marvin.extensions.utilities.serialization import to_serializable
@@ -41,6 +40,7 @@ def fetch_and_run_tool(
         run.save()
 
     return result
+
 
 def fetch_and_run_toolkit_tool(
     tool_id: str,

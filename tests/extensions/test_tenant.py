@@ -1,19 +1,19 @@
 # Test
 import asyncio
-import pytest
 
+import pytest
 from marvin.extensions.utilities.tenant import (
-    tenant_context,
-    empty_tenant_context,
-    set_tenant_metadata,
-    get_tenant_metadata,
-    set_thread_state,
-    clear_thread_state,
     _tenant_state,
-    _tenant_metadata,
+    clear_thread_state,
+    empty_tenant_context,
     get_current_tenant_id,
+    get_tenant_metadata,
     set_current_tenant_id,
+    set_tenant_metadata,
+    set_thread_state,
+    tenant_context,
 )
+
 
 @pytest.mark.asyncio
 async def test_tenant_context():
@@ -44,6 +44,7 @@ async def test_tenant_context():
     assert "tenant4" not in _tenant_state.get()
 
     print("All tests passed!")
+
 
 # Run the test
 asyncio.run(test_tenant_context())

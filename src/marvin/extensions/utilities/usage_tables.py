@@ -3,7 +3,6 @@ from functools import lru_cache
 from typing import Any, Dict
 
 from apps.common.logging import logger
-
 from marvin.extensions.types.costs import TokenCreditsUsage
 from marvin.extensions.utilities.cost_calculator import get_service_usage_costs
 

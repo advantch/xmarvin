@@ -33,13 +33,13 @@ class DefaultJsonEncoder(json.JSONEncoder):
         if isinstance(cleaned_obj, BaseModel):
             try:
                 data = cleaned_obj.model_dump()
-            
+
                 return data
             except Exception as e:
                 logger.error(f"Failed to serialize {cleaned_obj} {e}")
                 # try:
                 #     from marvin.extensions.types.tools import AppCodeInterpreterTool, AppFileSearchTool
-    
+
                 #     if isinstance(cleaned_obj, AppCodeInterpreterTool):
                 #         d = AppCodeInterpreterTool.dump(cleaned_obj)
                 #         rich.print(d, "test code interpreter tool")
@@ -48,7 +48,7 @@ class DefaultJsonEncoder(json.JSONEncoder):
                 #         return AppFileSearchTool.model_dump(cleaned_obj)
                 # except Exception as e:
                 #     logger.error(f"Failed to serialize {cleaned_obj} {e}")
-                    
+
                 return str(cleaned_obj)
 
         if isinstance(cleaned_obj, UUID):

@@ -8,14 +8,13 @@ from apps.ai.agent.utilities.render_prompt import (
 )
 from apps.common.schema import BaseSchemaConfig
 from django.utils import timezone
-from pydantic import BaseModel, Field
-
 from marvin.beta.assistants import CodeInterpreter, FileSearch
 from marvin.extensions.prompts.default import DEFAULT_ASSISTANT_BASE_PROMPT
 from marvin.extensions.tools.services.db import get_django_db_connection_url
 from marvin.extensions.tools.tool import Tool
 from marvin.extensions.types.llms import AIModels
 from marvin.tools.assistants import AssistantTool
+from pydantic import BaseModel, Field
 
 OPENAI_TOOLS = ["code_interpreter", "file_search"]
 
@@ -91,6 +90,7 @@ class RuntimeConfig(BaseModel):
 class CustomToolkit(BaseModel):
     toolkit_id: str
     db_id: str
+
 
 class AgentConfig(BaseModel):
     """
@@ -183,7 +183,11 @@ class AgentConfig(BaseModel):
             include_document=False,
             settings={},
             use_citations=True,
-            builtin_toolkits=[web_browser_toolkit.id, search_toolkit.id, code_interpreter_toolkit.id],
+            builtin_toolkits=[
+                web_browser_toolkit.id,
+                search_toolkit.id,
+                code_interpreter_toolkit.id,
+            ],
             starters=[
                 {
                     "value": "Search google for AI tools",
@@ -198,7 +202,6 @@ class AgentConfig(BaseModel):
 
     @classmethod
     def admin_agent(cls, model=None):
-
         default_model = AIModels.GPT_4O
 
         agent_config = cls(

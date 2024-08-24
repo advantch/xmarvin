@@ -3,10 +3,9 @@
 from abc import abstractmethod
 from typing import Any, List, Optional
 
-from pydantic import BaseModel
-
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin
+from pydantic import BaseModel
 
 
 class BaseChatStore(BaseModel, ExposeSyncMethodsMixin):

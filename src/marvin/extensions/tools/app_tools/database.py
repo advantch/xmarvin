@@ -3,11 +3,10 @@ from typing import Any, Dict, List
 
 from apps.ai.agent.monitoring.logging import pretty_log
 from apps.dashboard.sql_utils import passes_blacklist
-from pydantic import BaseModel, Field
-
 from marvin.extensions.tools.services.sql_database import SQLDatabase
 from marvin.extensions.tools.tool import get_config_from_context, tool
 from marvin.extensions.tools.tool_kit import ToolKit
+from pydantic import BaseModel, Field
 
 
 class QueryResult(BaseModel):
@@ -30,23 +29,37 @@ class TableCreateColumn(BaseModel):
     name: str = Field(description="The name of the column")
     type: str = Field(description="The type of the column")
 
+
 class TableCreate(BaseModel):
     table_name: str = Field(description="The name of the table to create")
-    columns: List[TableCreateColumn] | List[str] = Field(description="The columns of the table")
+    columns: List[TableCreateColumn] | List[str] = Field(
+        description="The columns of the table"
+    )
+
 
 class RowData(BaseModel):
-    values: Dict[str, Any] = Field(description="Dictionary of column names and their values")
+    values: Dict[str, Any] = Field(
+        description="Dictionary of column names and their values"
+    )
+
 
 class RowCondition(BaseModel):
     condition: str = Field(description="SQL condition for identifying the row(s)")
 
+
 class RowUpdate(BaseModel):
-    updates: Dict[str, Any] = Field(description="Dictionary of column names and their new values")
-    condition: str = Field(description="SQL condition for identifying the row(s) to update")
+    updates: Dict[str, Any] = Field(
+        description="Dictionary of column names and their new values"
+    )
+    condition: str = Field(
+        description="SQL condition for identifying the row(s) to update"
+    )
+
 
 class ColumnDefinition(BaseModel):
     name: str = Field(description="Name of the column")
     type: str = Field(description="SQL type of the column")
+
 
 class Config(BaseModel):
     database: str = Field(description="The name of the database", default="default")
@@ -195,9 +208,15 @@ def db_create_table(table: TableCreate) -> TableDescription:
             column_definitions = [f"{col.name} {col.type}" for col in table.columns]
         else:
             column_definitions = table.columns
-        pretty_log(f"Creating table {table.table_name} with columns {column_definitions}")
-        connection.run(f"CREATE TABLE {table.table_name} ({', '.join(column_definitions)})")
-        return TableDescription(description=f"Table {table.table_name} created successfully.")
+        pretty_log(
+            f"Creating table {table.table_name} with columns {column_definitions}"
+        )
+        connection.run(
+            f"CREATE TABLE {table.table_name} ({', '.join(column_definitions)})"
+        )
+        return TableDescription(
+            description=f"Table {table.table_name} created successfully."
+        )
     except Exception as e:
         return TableDescription(description=f"Error:db_create_table: {str(e)}")
 
@@ -230,7 +249,9 @@ def db_add_row(table: str, row: RowData) -> TableDescription:
     config = get_config_from_context(config_key=["database", "default_database"])
     url = config.get("url")
     if config.get("readonly", False):
-        return TableDescription(description="Error: Add row is not allowed in readonly mode.")
+        return TableDescription(
+            description="Error: Add row is not allowed in readonly mode."
+        )
     if isinstance(row, dict):
         row = RowData.model_validate(row)
     try:
@@ -239,11 +260,12 @@ def db_add_row(table: str, row: RowData) -> TableDescription:
         placeholders = ", ".join(["?"] * len(row.values))
         query = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
         pretty_log(f"Adding row to {table} with query: {query}")
-        
+
         connection.run(query, list(row.values.values()))
         return TableDescription(description=f"Row added to {table} successfully.")
     except Exception as e:
         return TableDescription(description=f"Error: {str(e)}")
+
 
 @tool(
     name="db_remove_row",
@@ -254,17 +276,22 @@ def db_remove_row(table: str, condition: RowCondition) -> TableDescription:
     config = get_config_from_context(config_key=["database", "default_database"])
     url = config.get("url")
     if config.get("readonly", False):
-        return TableDescription(description="Error: Remove row is not allowed in readonly mode.")
-    
+        return TableDescription(
+            description="Error: Remove row is not allowed in readonly mode."
+        )
+
     if isinstance(condition, dict):
         condition = RowCondition.model_validate(condition)
     try:
         connection = db_connection(url)
         query = f"DELETE FROM {table} WHERE {condition.condition}"
         connection.run(query)
-        return TableDescription(description=f"Row(s) removed from {table} successfully.")
+        return TableDescription(
+            description=f"Row(s) removed from {table} successfully."
+        )
     except Exception as e:
         return TableDescription(description=f"Error: {str(e)}")
+
 
 @tool(
     name="db_edit_row",
@@ -275,7 +302,9 @@ def db_edit_row(table: str, update: RowUpdate) -> TableDescription:
     config = get_config_from_context(config_key=["database", "default_database"])
     url = config.get("url")
     if config.get("readonly", False):
-        return TableDescription(description="Error: Edit row is not allowed in readonly mode.")
+        return TableDescription(
+            description="Error: Edit row is not allowed in readonly mode."
+        )
     if isinstance(update, dict):
         update = RowUpdate.model_validate(update)
     try:
@@ -287,6 +316,7 @@ def db_edit_row(table: str, update: RowUpdate) -> TableDescription:
     except Exception as e:
         return TableDescription(description=f"Error: {str(e)}")
 
+
 @tool(
     name="db_add_column",
     description="Adds a new column to the specified table",
@@ -296,7 +326,9 @@ def db_add_column(table: str, column: ColumnDefinition) -> TableDescription:
     config = get_config_from_context(config_key=["database", "default_database"])
     url = config.get("url")
     if config.get("readonly", False):
-        return TableDescription(description="Error: Add column is not allowed in readonly mode.")
+        return TableDescription(
+            description="Error: Add column is not allowed in readonly mode."
+        )
     if isinstance(column, dict):
         column = ColumnDefinition.model_validate(column)
     try:
@@ -304,9 +336,12 @@ def db_add_column(table: str, column: ColumnDefinition) -> TableDescription:
         query = f"ALTER TABLE {table} ADD COLUMN {column.name} {column.type}"
 
         connection.run(query)
-        return TableDescription(description=f"Column {column.name} added to {table} successfully.")
+        return TableDescription(
+            description=f"Column {column.name} added to {table} successfully."
+        )
     except Exception as e:
         return TableDescription(description=f"Error: {str(e)}")
+
 
 @tool(
     name="db_remove_column",
@@ -317,12 +352,16 @@ def db_remove_column(table: str, column_name: str) -> TableDescription:
     config = get_config_from_context(config_key=["database", "default_database"])
     url = config.get("url")
     if config.get("readonly", False):
-        return TableDescription(description="Error: Remove column is not allowed in readonly mode.")
+        return TableDescription(
+            description="Error: Remove column is not allowed in readonly mode."
+        )
     try:
         connection = db_connection(url)
         query = f"ALTER TABLE {table} DROP COLUMN {column_name}"
         connection.run(query)
-        return TableDescription(description=f"Column {column_name} removed from {table} successfully.")
+        return TableDescription(
+            description=f"Column {column_name} removed from {table} successfully."
+        )
     except Exception as e:
         return TableDescription(description=f"Error: {str(e)}")
 

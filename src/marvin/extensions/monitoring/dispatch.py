@@ -1,11 +1,10 @@
 import traceback
 from typing import Any, Dict
 
-from pydantic import BaseModel
-
 from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.streaming import async_send_app_event
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
+from pydantic import BaseModel
 
 from .events.base import BaseEvent
 
