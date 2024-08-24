@@ -8,6 +8,7 @@ from marvin.extensions.storage.base import BaseChatStore, BaseThreadStore
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import expose_sync_method
 from marvin.utilities.logging import logger
+from pydantic import Field
 
 
 class DJjangoDBChatStore(BaseChatStore):

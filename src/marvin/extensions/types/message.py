@@ -128,7 +128,9 @@ class Metadata(BaseModel):
     streaming: bool = False
     run_id: str | UUID | None = None
     id: str | UUID | None = None
-    tool_calls: list[Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool]] | None | Any = None
+    tool_calls: list[
+        Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool]
+    ] | None | Any = None
     raw_tool_output: Any | None = None
     name: str | None = None
     type: str | None = "message"

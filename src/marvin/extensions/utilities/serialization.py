@@ -27,7 +27,7 @@ class DefaultJsonEncoder(json.JSONEncoder):
         if isinstance(cleaned_obj, BaseModel):
             try:
                 data = cleaned_obj.model_dump()
-            
+
                 return data
             except Exception as e:
                 logger.error(f"Failed to serialize {cleaned_obj} {e}")  

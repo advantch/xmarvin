@@ -3,12 +3,14 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 # Context variables
-_tenant_id = contextvars.ContextVar('tenant_id', default=None)
-_tenant_metadata = contextvars.ContextVar('tenant_metadata', default={})
-_tenant_state = contextvars.ContextVar('tenant_state', default={})
+_tenant_id = contextvars.ContextVar("tenant_id", default=None)
+_tenant_metadata = contextvars.ContextVar("tenant_metadata", default={})
+_tenant_state = contextvars.ContextVar("tenant_state", default={})
+
 
 def get_current_tenant_id() -> str | None:
     return _tenant_id.get()
+
 
 def set_current_tenant_id(tenant_id: str | UUID | None) -> None:
     if not tenant_id:
@@ -18,16 +20,20 @@ def set_current_tenant_id(tenant_id: str | UUID | None) -> None:
     else:
         _tenant_id.set(tenant_id)
 
+
 def set_tenant_metadata(metadata: dict) -> None:
     _tenant_metadata.set(metadata)
 
+
 def get_tenant_metadata() -> dict:
     return _tenant_metadata.get()
+
 
 def set_tenant_from_current_thread():
     # This function doesn't need to change as it uses get_current_tenant_id
     tenant_id = get_current_tenant_id()
     set_current_tenant_id(tenant_id)
+
 
 def unset_current_tenant_id() -> None:
     _tenant_id.set(None)
@@ -48,6 +54,7 @@ async def empty_tenant_context():
     finally:
         _tenant_id.reset(token)
 
+
 def default_tenant_dns_settings():
     return {
         "cloudflare": {},
@@ -55,49 +62,14 @@ def default_tenant_dns_settings():
         "selfhosted": False,
     }
 
+
 def set_thread_state(tenant_id: str, data: dict):
     current_state = _tenant_state.get()
     current_state[tenant_id] = data
     _tenant_state.set(current_state)
 
+
 def clear_thread_state(tenant_id: str):
     current_state = _tenant_state.get()
     current_state.pop(tenant_id, None)
     _tenant_state.set(current_state)
-
-# Test
-import asyncio
-import pytest
-
-@pytest.mark.asyncio
-async def test_tenant_context():
-    async def check_tenant(expected_id):
-        assert get_current_tenant_id() == expected_id
-
-    # Test tenant_context
-    async with tenant_context("tenant1"):
-        await check_tenant("tenant1")
-        async with tenant_context("tenant2"):
-            await check_tenant("tenant2")
-        await check_tenant("tenant1")
-
-    # Test empty_tenant_context
-    set_current_tenant_id("tenant3")
-    async with empty_tenant_context():
-        await check_tenant(None)
-    await check_tenant("tenant3")
-
-    # Test set_tenant_metadata and get_tenant_metadata
-    set_tenant_metadata({"key": "value"})
-    assert get_tenant_metadata() == {"key": "value"}
-
-    # Test set_thread_state and clear_thread_state
-    set_thread_state("tenant4", {"data": "test"})
-    assert _tenant_state.get()["tenant4"] == {"data": "test"}
-    clear_thread_state("tenant4")
-    assert "tenant4" not in _tenant_state.get()
-
-    print("All tests passed!")
-
-# Run the test
-asyncio.run(test_tenant_context())

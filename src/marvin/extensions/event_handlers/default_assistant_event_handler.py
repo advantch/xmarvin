@@ -2,18 +2,6 @@ import traceback
 from datetime import datetime
 
 from litellm.types.utils import Delta
-from openai import AsyncAssistantEventHandler
-from openai.types.beta.assistant_stream_event import (
-    ThreadRunCancelled,
-    ThreadRunCompleted,
-    ThreadRunFailed,
-    ThreadRunRequiresAction,
-    ThreadRunStepCompleted,
-)
-from openai.types.beta.threads import ImageFile, Message, MessageDelta
-from openai.types.beta.threads.runs import RunStep, RunStepDelta
-from typing_extensions import override
-
 from marvin.extensions.memory.temp_memory import Memory
 from marvin.extensions.monitoring.dispatch import Dispatcher
 from marvin.extensions.monitoring.logging import logger, pretty_log
@@ -294,7 +282,6 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
     async def on_image_file_done(self, image_file: ImageFile) -> None:
         """Callback that is fired when an image file block is finished"""
         try:
-
             chat_message = await save_assistant_image_to_storage(
                 context=self.context,
                 image_file=image_file,

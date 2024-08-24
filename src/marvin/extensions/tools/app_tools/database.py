@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from marvin.extensions.tools.services.sql_database import SQLDatabase
 from marvin.extensions.tools.tool import get_config_from_context, tool
 from marvin.extensions.tools.tool_kit import ToolKit
+from pydantic import BaseModel, Field
 
 import sqlparse
 from sqlparse.sql import TokenList, Token
@@ -66,23 +67,37 @@ class TableCreateColumn(BaseModel):
     name: str = Field(description="The name of the column")
     type: str = Field(description="The type of the column")
 
+
 class TableCreate(BaseModel):
     table_name: str = Field(description="The name of the table to create")
-    columns: List[TableCreateColumn] | List[str] = Field(description="The columns of the table")
+    columns: List[TableCreateColumn] | List[str] = Field(
+        description="The columns of the table"
+    )
+
 
 class RowData(BaseModel):
-    values: Dict[str, Any] = Field(description="Dictionary of column names and their values")
+    values: Dict[str, Any] = Field(
+        description="Dictionary of column names and their values"
+    )
+
 
 class RowCondition(BaseModel):
     condition: str = Field(description="SQL condition for identifying the row(s)")
 
+
 class RowUpdate(BaseModel):
-    updates: Dict[str, Any] = Field(description="Dictionary of column names and their new values")
-    condition: str = Field(description="SQL condition for identifying the row(s) to update")
+    updates: Dict[str, Any] = Field(
+        description="Dictionary of column names and their new values"
+    )
+    condition: str = Field(
+        description="SQL condition for identifying the row(s) to update"
+    )
+
 
 class ColumnDefinition(BaseModel):
     name: str = Field(description="Name of the column")
     type: str = Field(description="SQL type of the column")
+
 
 class Config(BaseModel):
     database: str = Field(description="The name of the database", default="default")

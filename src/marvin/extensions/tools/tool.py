@@ -12,6 +12,7 @@ import pydantic
 import pydantic.v1
 from langchain_core.messages import InvalidToolCall, ToolCall
 from litellm import ChatCompletionMessageToolCall
+from marvin.utilities.tools import Function, ModelSchemaGenerator
 from prefect.utilities.asyncutils import run_coro_as_sync
 from pydantic import (
     BaseModel,
@@ -20,8 +21,6 @@ from pydantic import (
     TypeAdapter,
     model_validator,
 )
-
-from marvin.utilities.tools import Function, ModelSchemaGenerator
 
 from ...agent.monitoring.logging import pretty_log
 
@@ -149,9 +148,9 @@ class Tool(BaseModel):
                     param_description = None
 
                 if param_description:
-                    parameters["properties"][param.name]["description"] = (
-                        param_description
-                    )
+                    parameters["properties"][param.name][
+                        "description"
+                    ] = param_description
 
         # Handle return type description
 
@@ -180,13 +179,15 @@ class Tool(BaseModel):
 
         if len(description) > 1024:
             raise ValueError(
-                inspect.cleandoc(f"""
+                inspect.cleandoc(
+                    f"""
                 {name}: The tool's description exceeds 1024
                 characters. Please provide a shorter description, fewer
                 annotations, or pass
                 `include_param_descriptions=False` or
                 `include_return_description=False` to `from_function`.
-                """).replace("\n", " ")
+                """
+                ).replace("\n", " ")
             )
 
         tool = cls(
@@ -271,10 +272,11 @@ class ApiTool(Tool):
         dict_tool = tool.model_dump()
         dict_tool["fn"] = None
         return cls(**dict_tool)
-    
+
     @classmethod
     def as_tool(cls, tool: Tool):
         from marvin.extensions.tools.app_tools import get_tool_by_name
+
         fn = get_tool_by_name(tool.name)
         tool.fn = fn
         return tool
@@ -286,6 +288,7 @@ class ToolConfig(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
 
 def tool(
     fn: Optional[Callable] = None,
@@ -375,6 +378,7 @@ def output_to_string(output: Any) -> str:
     except Exception:
         return str(output)
 
+
 class ToolResult(BaseModel):
     tool_call_id: str
     result: Any = Field(exclude=True, repr=False)
@@ -382,7 +386,6 @@ class ToolResult(BaseModel):
     is_error: bool = False
     is_private: bool = False
     end_turn: bool = False
-
 
 
 def handle_tool_call(
@@ -479,8 +482,9 @@ async def handle_tool_call_async(
     )
 
 
-
-def get_config_from_context(config_key: str | list[str] | None = None) -> Dict[str, Any]:
+def get_config_from_context(
+    config_key: str | list[str] | None = None,
+) -> Dict[str, Any]:
     """
     Get the RunContextToolkitConfig from the context
     For example for a 'default_database' toolkit_id, the config will be returned

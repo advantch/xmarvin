@@ -42,6 +42,7 @@ def fetch_and_run_tool(
 
     return result
 
+
 def fetch_and_run_toolkit_tool(
     tool_id: str,
     toolkit_id: str,

@@ -10,7 +10,11 @@ from marvin.extensions.utilities.tenant import (
     get_current_tenant_id,
     _tenant_state,
     set_current_tenant_id,
+    set_tenant_metadata,
+    set_thread_state,
+    tenant_context,
 )
+
 
 @pytest.mark.asyncio
 async def test_tenant_context():

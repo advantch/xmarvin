@@ -2,11 +2,11 @@ import uuid
 from typing import Any
 
 from asgiref.local import Local
+from marvin.extensions.types import AgentConfig
 from pydantic import BaseModel, Field
 
-from marvin.extensions.types import AgentConfig
-
 _async_locals = Local()
+
 
 class RunContextToolkitConfig(BaseModel):
     toolkit_id: str | uuid.UUID | None = None
@@ -30,13 +30,15 @@ class RunContext(BaseModel):
     agent_config: AgentConfig | None = None
     variables: dict[str, dict] | None = None
     tool_config: list[RunContextToolkitConfig] | None = Field(
-        default=[{
-            'toolkit_id': 'default_database',
-            'config': {
-                "url": "postgresql://postgres:postgres@localhost:5432/postgres",
-                "database": "postgres",
+        default=[
+            {
+                "toolkit_id": "default_database",
+                "config": {
+                    "url": "postgresql://postgres:postgres@localhost:5432/postgres",
+                    "database": "postgres",
+                },
             }
-        }],
+        ],
         description="The configuration for the tools to be used in the run.",
     )
     private_ref: str | None = Field(
@@ -55,7 +57,6 @@ class RunContext(BaseModel):
     class Config:
         extra = "allow"
         arbitrary_types_allowed = True
-
 
     def default_config(self):
         

@@ -4,6 +4,7 @@ from marvin.extensions.types.base import BaseSchemaConfig
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 from marvin.extensions.tools.tool import ApiTool, Tool
+from pydantic import BaseModel, Field, computed_field, model_validator
 
 
 class ToolKitTokenIntegration(BaseModel):
@@ -81,7 +82,7 @@ class ToolKit(BaseModel):
         if self.tool_ids is not None:
             tools.extend([get_tool(tool_id) for tool_id in self.tool_ids])
         return tools
-    
+
     def to_runnable_tool_list(self) -> List[Tool]:
         tools = []
         from .getters import get_tool  # noqa
@@ -100,9 +101,10 @@ class ToolKit(BaseModel):
             if t.name == tool_name:
                 return t
         raise ValueError(f"Tool '{tool_name}' not found in toolkit.")
-    
+
     def get_runnable_tool(self, tool_name: str) -> Tool:
         from .app_tools import get_tool_by_name
+
         for t in self.to_runnable_tool_list():
             if t.name == tool_name:
                 return get_tool_by_name(tool_name)
@@ -115,7 +117,6 @@ class ToolKit(BaseModel):
 
     def remove_tool(self, tool_name: str):
         self.tools = [t for t in self.tools if t.name != tool_name]
-
 
     @classmethod
     def create_toolkit(

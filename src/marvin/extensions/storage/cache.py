@@ -3,6 +3,7 @@ class SimpleCache:
     Simple in memory cache for the run
     Replace with a redis cache
     """
+
     cache = {}
 
     def __init__(self):

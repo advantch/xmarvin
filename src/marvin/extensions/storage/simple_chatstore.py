@@ -8,6 +8,7 @@ from pydantic import Field
 from marvin.extensions.storage.base import BaseChatStore, BaseRunStorage, BaseThreadStore, BaseAgentStorage
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import expose_sync_method
+from pydantic import Field
 
 
 class SimpleChatStore(BaseChatStore):
@@ -103,7 +104,6 @@ class SimpleChatStore(BaseChatStore):
         with fs.open(persist_path, "r") as f:
             data = json.load(f)
         return cls.validate_json(data)
-
 
 
 class SimpleThreadStore(BaseThreadStore):
