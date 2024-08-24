@@ -1,7 +1,12 @@
+
+try:
 import environ
 from django.conf import settings
 from django.core.cache import cache
 from django.db.utils import DEFAULT_DB_ALIAS, load_backend
+
+except ImportError as e:
+    print(f"ImportError: {e} - this package is only available in django")
 
 
 def get_config_from_string(url):

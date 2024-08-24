@@ -1,11 +1,11 @@
 import json
 import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import fsspec
 from pydantic import Field
 
-from marvin.extensions.storage.base import BaseChatStore
+from marvin.extensions.storage.base import BaseChatStore, BaseThreadStore
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import expose_sync_method
 
@@ -103,3 +103,33 @@ class SimpleChatStore(BaseChatStore):
         with fs.open(persist_path, "r") as f:
             data = json.load(f)
         return cls.validate_json(data)
+
+
+
+class SimpleThreadStore(BaseThreadStore):
+    """
+    Thread storage that saves to the database.
+    """
+
+    store: Dict[str, List[Any]] = Field(default_factory=dict)
+
+    @expose_sync_method("get_or_add_thread")
+    async def get_or_add_thread_async(
+        self,
+        thread_id: str,
+        tenant_id: str,
+        tags: list[str] | None = None,
+        name: str | None = None,
+        user_id: str | None = None,
+    ) -> "SimpleThreadStore":
+        thread = self.store.get(thread_id, None)
+        if thread is None:
+            data = {
+                "id": thread_id,
+                "tenant_id": tenant_id,
+                "tags": tags,
+                "name": name,
+                "user_id": user_id,
+            }
+            thread = self.store[thread_id] = data
+        return thread

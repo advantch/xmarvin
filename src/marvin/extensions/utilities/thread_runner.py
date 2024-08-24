@@ -9,9 +9,9 @@ Used to
 import asyncio
 import traceback
 from contextlib import contextmanager
-from typing import Literal
 
 import litellm
+from marvin.src.marvin.extensions.storage.base import BaseThreadStore
 import rich
 from marvin.extensions.event_handlers.default_assistant_event_handler import (
     DefaultAssistantEventHandler,
@@ -27,8 +27,7 @@ from django.core.cache import cache
 
 from marvin import settings as marvin_settings
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.storage.db_storage import DbChatStore, DbThreadStore
-from marvin.extensions.storage.simple_chatstore import SimpleChatStore
+from marvin.extensions.storage.simple_chatstore import SimpleChatStore, SimpleThreadStore
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.utilities.assistants_api import create_thread_message
@@ -70,7 +69,6 @@ def send_close_event(data, event="close", error=None):
     )
 
 
-@debug_timer
 def verify_runtime_config(data: StartRunSchema):
     """
     Fetch db agent if available and id provided.
@@ -90,15 +88,6 @@ def verify_runtime_config(data: StartRunSchema):
     if data.runtime_config:
         data.agent_config.runtime_config = data.runtime_config
 
-    # Load toolkit configs
-    # tool_configs = []
-    # for toolkit in data.agent_config.tool_kits:
-    #     if toolkit.requires_config:
-    #         config = Tool.objects.get_toolkit_config(toolkit.name, data.tenant_id)
-    #         tool_configs.append({
-    #             "name": toolkit.name,
-    #             "config": config,
-    #         })
     return data
 
 
@@ -156,7 +145,7 @@ def run_context(payload: StartRunSchema):
         payload.tenant_id = tenant_id
 
 
-    thread = DbThreadStore().get_or_add_thread(
+    thread = SimpleThreadStore().get_or_add_thread(
         payload.thread_id,
         tenant_id=tenant_id,
         tags=payload.tags,
@@ -204,14 +193,12 @@ def run_context(payload: StartRunSchema):
 
 
 def memory_with_storage(
-    thread_id, run_id, tenant_id, storage_type: Literal["db", "simple"] = "db"
+    thread_id, run_id, tenant_id
 ):
-    if storage_type == "db":
-        storage = DbChatStore(run_id=run_id, thread_id=thread_id, tenant_id=tenant_id)
-    else:
-        storage = SimpleChatStore(
-            run_id=run_id, thread_id=thread_id, tenant_id=tenant_id
-        )
+
+    storage = SimpleChatStore(
+        run_id=run_id, thread_id=thread_id, tenant_id=tenant_id
+    )
 
     return Memory(
         storage=storage,
@@ -240,7 +227,7 @@ def store_remote_thread_message(data: ChatMessage, assistant_thread_id):
 
 
 def handle_assistant_run(
-    data: StartRunSchema, thread: DbThreadStore, run: Run, context: dict
+    data: StartRunSchema, thread: BaseThreadStore, run: Run, context: dict
 ):
     update_marvin_settings()
     # add message to local db(consider skipping this step until later)
@@ -279,7 +266,7 @@ def handle_assistant_run(
 
 
 def handle_local_run(
-    data: StartRunSchema, thread: DbThreadStore, run: Run, context: dict
+    data: StartRunSchema, thread: BaseThreadStore, run: Run, context: dict
 ):
     update_litellm_settings()
     from apps.ai.agent.local.thread import LocalThread
@@ -295,7 +282,7 @@ def handle_local_run(
         id=thread.id,
         tenant_id=data.tenant_id,
         tags=data.tags,
-        thread_storage=DbThreadStore(),
+        thread_storage=SimpleThreadStore(),
         memory=memory,
     )
     local_thread.add_message(data.message)
