@@ -2,7 +2,7 @@ import mimetypes
 import os
 
 import magic
-from apps.common.logging import logger
+from marvin.extensions.logging import logger
 from magika import Magika
 
 

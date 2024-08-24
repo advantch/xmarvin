@@ -1,5 +1,5 @@
 import contextvars
-from contextlib import ContextDecorator
+from contextlib import asynccontextmanager
 from uuid import UUID
 
 # Context variables
@@ -32,28 +32,21 @@ def set_tenant_from_current_thread():
 def unset_current_tenant_id() -> None:
     _tenant_id.set(None)
 
-class tenant_context(ContextDecorator):
-    def __init__(self, *args, **kwargs):
-        self.tenant_id = args[0]
-        self.token = None
-        super().__init__()
+@asynccontextmanager
+async def tenant_context(tenant_id):
+    token = _tenant_id.set(tenant_id)
+    try:
+        yield
+    finally:
+        _tenant_id.reset(token)
 
-    def __enter__(self):
-        self.token = _tenant_id.set(self.tenant_id)
-
-    def __exit__(self, *exc):
-        _tenant_id.reset(self.token)
-
-class empty_tenant_context(ContextDecorator):
-    def __init__(self, *args, **kwargs):
-        self.token = None
-        super().__init__()
-
-    def __enter__(self):
-        self.token = _tenant_id.set(None)
-
-    def __exit__(self, *exc):
-        _tenant_id.reset(self.token)
+@asynccontextmanager
+async def empty_tenant_context():
+    token = _tenant_id.set(None)
+    try:
+        yield
+    finally:
+        _tenant_id.reset(token)
 
 def default_tenant_dns_settings():
     return {
@@ -71,3 +64,40 @@ def clear_thread_state(tenant_id: str):
     current_state = _tenant_state.get()
     current_state.pop(tenant_id, None)
     _tenant_state.set(current_state)
+
+# Test
+import asyncio
+import pytest
+
+@pytest.mark.asyncio
+async def test_tenant_context():
+    async def check_tenant(expected_id):
+        assert get_current_tenant_id() == expected_id
+
+    # Test tenant_context
+    async with tenant_context("tenant1"):
+        await check_tenant("tenant1")
+        async with tenant_context("tenant2"):
+            await check_tenant("tenant2")
+        await check_tenant("tenant1")
+
+    # Test empty_tenant_context
+    set_current_tenant_id("tenant3")
+    async with empty_tenant_context():
+        await check_tenant(None)
+    await check_tenant("tenant3")
+
+    # Test set_tenant_metadata and get_tenant_metadata
+    set_tenant_metadata({"key": "value"})
+    assert get_tenant_metadata() == {"key": "value"}
+
+    # Test set_thread_state and clear_thread_state
+    set_thread_state("tenant4", {"data": "test"})
+    assert _tenant_state.get()["tenant4"] == {"data": "test"}
+    clear_thread_state("tenant4")
+    assert "tenant4" not in _tenant_state.get()
+
+    print("All tests passed!")
+
+# Run the test
+asyncio.run(test_tenant_context())

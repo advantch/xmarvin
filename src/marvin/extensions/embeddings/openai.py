@@ -1,19 +1,18 @@
 import asyncio
 import concurrent
 from concurrent.futures import ThreadPoolExecutor
-
-from apps.common.utils import debug_timer
-from django.conf import settings
 from openai import OpenAI
 
 from marvin.extensions.embeddings.base import Embeddings
+from marvin.extensions.settings import extensions_settings
+from marvin.extensions.monitoring import logger
+from marvin.settings import settings
 
-
-@debug_timer
 def get_embeddings(text, model="text-embedding-3-small", dimensions=None):
     if dimensions is None:
-        dimensions = settings.DEFAULT_VECTOR_DIMENSIONS
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        dimensions = extensions_settings.default_vector_dimensions
+    client = OpenAI(api_key=settings.openai.api_key)
+
     response = client.embeddings.create(input=text, model=model, dimensions=dimensions)
     return response.data[0].embedding
 
@@ -28,8 +27,7 @@ class OpenAIEmbeddings(Embeddings):
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed search docs using a thread pool."""
-        from apps.common.logging import logger
-
+    
         logger.info(
             f"Embedding {len(texts)} documents using {self.num_threads} threads"
         )

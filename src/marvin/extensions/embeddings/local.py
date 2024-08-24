@@ -2,15 +2,11 @@ import asyncio
 import concurrent
 from concurrent.futures import ThreadPoolExecutor
 
-from apps.common.utils import debug_timer
-
 from .base import Embeddings
 
 clip_model = None
 text_model = None
 
-
-@debug_timer
 def get_embeddings(documents: list[str]):
     embedding = _get_text_model()
     text_generator = embedding.embed(documents)
@@ -19,7 +15,6 @@ def get_embeddings(documents: list[str]):
 
 def _get_clip_model():
     from fastembed import ImageEmbedding  # noqa
-
     clip_model = ImageEmbedding("Qdrant/resnet50-onnx")
     return clip_model
 
@@ -41,7 +36,6 @@ class FastEmbedEmbeddings(Embeddings):
     def __init__(self, num_threads=50):
         self.num_threads = num_threads
 
-    @debug_timer
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed search docs using a thread pool."""
         with ThreadPoolExecutor(max_workers=self.num_threads) as executor:

@@ -11,3 +11,21 @@ class AIModels(str, Enum):
     COMMAND_PLUS = "command-plus"
     COMMAND_PLUS_R = "command-plus-r"
     GEMINI_FLASH = "gemini-flash"
+
+
+    @staticmethod
+    def provider(model: str):
+        if model in [AIModels.CLAUDE_3_OPUS, AIModels.CLAUDE_3_HAIKU, AIModels.CLAUDE_3_5_SONNET, AIModels.CLAUDE_3_SONNET]:
+            return "anthropic"
+        
+        if model in [AIModels.GEMINI_FLASH]:
+            return "google"
+        
+        if model in [AIModels.GPT_4O_MINI, AIModels.GPT_4O]:
+            return "openai"
+        
+        if model in [AIModels.COMMAND_PLUS, AIModels.COMMAND_PLUS_R]:
+            return "cohere"
+        
+        return "openai"
+

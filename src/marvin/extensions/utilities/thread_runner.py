@@ -7,27 +7,28 @@ Used to
 """
 
 import asyncio
+import os
 import traceback
 from contextlib import contextmanager
 
 import litellm
-from marvin.src.marvin.extensions.storage.base import BaseThreadStore
+
 import rich
 from marvin.extensions.event_handlers.default_assistant_event_handler import (
     DefaultAssistantEventHandler,
 )
 from marvin.beta.assistants import Assistant
+from marvin.beta.local.thread import LocalThread
 from marvin.extensions.utilities.configure_preset import configure_internal_sql_agent
-from marvin.extensions.models import Agent, Run
-from apps.ai.schema import StartRunSchema
-from apps.common.logging import logger
-from apps.tenants.utils import get_current_tenant_id, set_current_tenant_id
-from django.conf import settings
-from django.core.cache import cache
+from marvin.extensions.storage.base import BaseRunStorage, BaseThreadStore
+from marvin.extensions.types.start_run import StartRunSchema
+from marvin.extensions.monitoring.logging import logger
+from marvin.extensions.utilities.tenant import get_current_tenant_id, set_current_tenant_id
+from marvin.extensions.settings import extensions_settings
 
 from marvin import settings as marvin_settings
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.storage.simple_chatstore import SimpleChatStore, SimpleThreadStore
+from marvin.extensions.storage.simple_chatstore import SimpleThreadStore
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.utilities.assistants_api import create_thread_message
@@ -39,12 +40,16 @@ from marvin.extensions.utilities.context import (
 from marvin.extensions.utilities.streaming import send_app_event
 
 
-def update_marvin_settings():
-    marvin_settings.openai.api_key = settings.OPENAI_API_KEY
+def update_marvin_settings(api_key: str| None = None):
+    if api_key:
+        marvin_settings.openai.api_key = api_key    
 
 
-def update_litellm_settings():
-    litellm.openai.api_key = settings.OPENAI_API_KEY
+def update_litellm_settings(api_key: str| None = None):
+    if api_key:
+        litellm.openai.api_key = api_key
+    else:
+        litellm.openai.api_key = marvin_settings.openai.api_key
 
 
 def send_close_event(data, event="close", error=None):
@@ -82,7 +87,7 @@ def verify_runtime_config(data: StartRunSchema):
         elif data.preset == "default":
             data.agent_config = AgentConfig.default_agent()
     else:
-        agent_config = Agent.objects.get_agent_config(data.agent_id)
+        agent_config = extensions_settings.agent_storage_class.get_agent_config(data.agent_id)
         data.agent_config = agent_config
 
     if data.runtime_config:
@@ -154,7 +159,7 @@ def run_context(payload: StartRunSchema):
     )
     payload.thread_id = str(thread.id)
 
-    db_run = Run.objects.init_db_run(
+    db_run = extensions_settings.run_storage_class.init_db_run(
         payload.run_id,
         thread.id,
         tenant_id=tenant_id,
@@ -188,7 +193,6 @@ def run_context(payload: StartRunSchema):
         db_run.save()
         send_close_event(payload, "close")
         save_run_data(db_run, _c)
-        # remove run context
         clear_run_context(payload.run_id)
 
 
@@ -196,7 +200,7 @@ def memory_with_storage(
     thread_id, run_id, tenant_id
 ):
 
-    storage = SimpleChatStore(
+    storage = extensions_settings.chat_store_class(
         run_id=run_id, thread_id=thread_id, tenant_id=tenant_id
     )
 
@@ -227,13 +231,12 @@ def store_remote_thread_message(data: ChatMessage, assistant_thread_id):
 
 
 def handle_assistant_run(
-    data: StartRunSchema, thread: BaseThreadStore, run: Run, context: dict
+    data: StartRunSchema, thread: BaseThreadStore, run: BaseRunStorage, context: dict
 ):
     update_marvin_settings()
     # add message to local db(consider skipping this step until later)
     thread.add_message(data.message)
     remote_thread = thread.remote_thread()
-    # add message to remote thread
     store_remote_thread_message(data.message, remote_thread.id)
     agent_config = data.agent_config
 
@@ -254,7 +257,7 @@ def handle_assistant_run(
             "openai_thread_id": remote_thread.id,
             "openai_assistant_id": assistant.id,
             "memory": memory_with_storage(thread.id, run.id, data.tenant_id),
-            "cache": cache,
+            "cache": extensions_settings.storage.cache,
         },
         tool_choice="auto",
         tools=agent_config.get_assistant_tools(),
@@ -266,17 +269,15 @@ def handle_assistant_run(
 
 
 def handle_local_run(
-    data: StartRunSchema, thread: BaseThreadStore, run: Run, context: dict
+    data: StartRunSchema, thread: BaseThreadStore, run: BaseRunStorage, context: dict
 ):
     update_litellm_settings()
-    from apps.ai.agent.local.thread import LocalThread
-
     # memory to use, use the same memory object for handler and thread
     memory = memory_with_storage(thread.id, run.id, data.tenant_id)
     # the agent to use
     assistant = data.agent_config.as_assistant()
     # add an event handler to save run data and streaming
-    handler = DefaultAssistantEventHandler(context=context, cache=cache, memory=memory)
+    handler = DefaultAssistantEventHandler(context=context, cache=extensions_settings.storage.cache, memory=memory)
 
     local_thread = LocalThread.create(
         id=thread.id,

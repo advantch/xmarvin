@@ -1,10 +1,10 @@
 
+from marvin.extensions.monitoring.logging import logger
 try:
-import environ
-from django.conf import settings
-from django.core.cache import cache
-from django.db.utils import DEFAULT_DB_ALIAS, load_backend
-
+    import environ
+    from django.conf import settings
+    from django.core.cache import cache
+    from django.db.utils import DEFAULT_DB_ALIAS, load_backend
 except ImportError as e:
     print(f"ImportError: {e} - this package is only available in django")
 
@@ -141,8 +141,6 @@ def run_query(query, connection=None, url=None, as_dict=True):
         if connection is None:
             connection = create_connection(url=url)
         with connection.cursor() as cursor:
-            from apps.common.logging import logger
-
             logger.info(f"running query {query}")
             cursor.execute(query)
             if as_dict:

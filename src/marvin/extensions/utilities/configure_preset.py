@@ -1,6 +1,5 @@
-from apps.ai.agent.utilities.prompts import SQL_PROMPT
-from apps.ai.schema import StartRunSchema
-
+from .prompts import SQL_PROMPT
+from marvin.extensions.types import StartRunSchema
 from marvin.extensions.types import AgentConfig
 from marvin.extensions.types.llms import AIModels
 

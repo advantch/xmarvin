@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from apps.common.schema import BaseSchemaConfig
+from .base import BaseSchemaConfig
 from pydantic import BaseModel, Field
 
 
@@ -52,7 +52,7 @@ class Document(BaseModel):
         """
         Vectorizable the chunks of the documents.
         """
-        from marvin.extensions.chunking.text_splitter import (
+        from langchain_text_splitters import (
             RecursiveCharacterTextSplitter,
         )  # noqa: E501
 

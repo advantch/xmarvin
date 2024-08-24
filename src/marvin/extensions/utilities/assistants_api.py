@@ -1,26 +1,25 @@
 import os
 import tempfile
 
-from django.conf import settings
-from django.core.files import File
+from typing import IO
 from openai import AsyncOpenAI, OpenAI
 from openai.types import FileObject
-
+from marvin.settings import settings
 
 def get_client(api_key=None):
-    return OpenAI(api_key=api_key or settings.OPENAI_API_KEY)
+    return OpenAI(api_key=api_key or settings.openai.api_key)
 
 
 def get_async_client():
-    return AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    return AsyncOpenAI(api_key=settings.openai.api_key)
 
 
-def upload_assistants_file(file: File, name: str, purpose="assistants") -> FileObject:
+def upload_assistants_file(file: IO, name: str, purpose="assistants") -> FileObject:
     """
     Upload a file to OpenAI
     """
     client = get_client()
-    byte_content = file.file.read()
+    byte_content = file.read()
     # Ensure the name is only the file name, not a full path
     _, file_extension = os.path.splitext(name)
     temp_suffix = file_extension or ".tmp"

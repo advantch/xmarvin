@@ -2,10 +2,8 @@ import uuid
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from apps.ai.agent.event_handlers.default_assistant_event_handler import (
-    DefaultAssistantEventHandler,
-)
-from apps.ai.agent.utilities.message_parsing import (
+from marvin.extensions.monitoring.events import DefaultAssistantEventHandler
+from marvin.extensions.utilities.message_parsing import (
     format_message_for_completion_endpoint,
 )
 from pydantic import BaseModel, Field

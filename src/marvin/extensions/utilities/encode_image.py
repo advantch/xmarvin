@@ -1,8 +1,5 @@
 from io import BytesIO
-
-from django.core.files import File
-from django.core.files.base import ContentFile
-from django.db.models.fields.files import FieldFile
+from typing import Any
 
 
 def encode_image(image_path):
@@ -19,11 +16,19 @@ def encode_image(image_path):
         }
 
 
-def encode_image_from_file(image_file: FieldFile):
+def encode_image_from_file(image_file: str | Any):
+    """
+    Also accepts django field file objects.
+    """
     import base64
 
+    if hasattr(image_file, "url"):
+        url = image_file.url
+    else:
+        url = image_file
+
     return {
-        "url": image_file.url,
+        "url": url,
         "source": {
             "type": "base64",
             "media_type": image_file.file.content_type,
@@ -49,7 +54,7 @@ def encode_image_from_url(image_url):
 
 
 def bulk_encode(
-    image_paths: list[str] | list[File | ContentFile | BytesIO],
+    image_paths: list[str] | list[BytesIO],
 ) -> list[str]:
     """
     Encode given images in bulk
@@ -59,7 +64,7 @@ def bulk_encode(
 
     encoder = (
         encode_image_from_file
-        if isinstance(image_paths[0], (File, ContentFile, BytesIO))
+        if isinstance(image_paths[0], BytesIO)
         else encode_image_from_url
     )
 

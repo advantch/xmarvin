@@ -30,12 +30,16 @@ dependencies = [
     "partialjson>=0.0.5",
     "litellm>=1.40.20",
     "langchain_community>=0.2.12",
+    "pyhumps>=3.8.0",
+    "magika>=0.5.1",
+    "sqlparse>=0.5.1",
 ]
 
 [project.optional-dependencies]
 generator = ["datamodel-code-generator>=0.20.0"]
 chromadb = ["chromadb"]
 prefect = ["prefect>=2.14.9"]
+django = ["django-eventstream>=5.0.1"]
 dev = [
     "marvin[tests]",
     "black[jupyter]",
@@ -72,7 +76,7 @@ video = ["opencv-python >= 4.5"]
 slackbot = ["marvin[prefect]", "numpy", "raggy", "turbopuffer==0.1.15"]
 
 [project.urls]
-Code = "https://github.com/prefecthq/marvin"
+Code = "https://github.com/advantch/xmarvin"
 Documentation = "https://www.askmarvin.ai"
 
 [project.scripts]

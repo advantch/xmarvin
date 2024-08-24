@@ -1,5 +1,6 @@
 import litellm
 from litellm import Usage, cost_per_token
+from marvin.extensions.types.costs import ServiceCosts
 
 
 def get_run_costs(model_response):
@@ -44,7 +45,7 @@ def get_run_costs(model_response):
     }
 
 
-def get_service_usage_costs(usage: Usage, model: str):
+def get_service_usage_costs(usage: Usage, model: str) -> ServiceCosts:
     """
     Calculate the service provider costs for a given usage
     """
@@ -54,17 +55,17 @@ def get_service_usage_costs(usage: Usage, model: str):
             usage.prompt_tokens,
             usage.completion_tokens,
         )
-        return {
-            "prompt_cost": prompt_cost_usd,
-            "completion_cost": completion_usd,
-            "total_cost": prompt_cost_usd + completion_usd,
-        }
+        return ServiceCosts(
+            prompt_cost=prompt_cost_usd,
+            completion_cost=completion_usd,
+            total_cost=prompt_cost_usd + completion_usd,
+        )
     except Exception:
-        return {
-            "prompt_cost": 0,
-            "completion_cost": 0,
-            "total_cost": 0,
-        }
+        return ServiceCosts(
+            prompt_cost=0,
+            completion_cost=0,
+            total_cost=0,
+        )
 
 
 def merge_run_costs(costs: list[dict]):

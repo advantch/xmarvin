@@ -16,6 +16,7 @@ class PrintHandler(AsyncAssistantEventHandler):
         self.live.start()
         self.messages = []
         self.steps = []
+        self.storage = []
         super().__init__()
 
     def print_run(self):

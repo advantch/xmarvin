@@ -2,6 +2,10 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+class ServiceCosts(BaseModel):
+    prompt_cost: float
+    completion_cost: float
+    total_cost: float
 
 class TokenCreditsUsage(BaseModel):
     cost: float

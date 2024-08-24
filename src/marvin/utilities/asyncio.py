@@ -205,3 +205,11 @@ def expose_sync_method(name: str) -> Callable[..., Any]:
         return async_method
 
     return decorator
+
+
+def is_coro():
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return False
+    return True

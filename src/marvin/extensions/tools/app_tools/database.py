@@ -1,15 +1,51 @@
+from collections import deque
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List
 
-from apps.ai.agent.monitoring.logging import pretty_log
-from apps.dashboard.sql_utils import passes_blacklist
 from pydantic import BaseModel, Field
 
 from marvin.extensions.tools.services.sql_database import SQLDatabase
 from marvin.extensions.tools.tool import get_config_from_context, tool
 from marvin.extensions.tools.tool_kit import ToolKit
 
+import sqlparse
+from sqlparse.sql import TokenList, Token
+from sqlparse.tokens import Keyword
 
+REPORTS_PARAM_TOKEN = "$$"
+
+def passes_blacklist(
+    sql: str, blacklist: Iterable[str] = None
+) -> tuple[bool, Iterable[str]]:
+    sql_strings = sqlparse.split(sql)
+    keyword_tokens = set()
+    for sql_string in sql_strings:
+        statements = sqlparse.parse(sql_string)
+        for statement in statements:
+            for token in walk_tokens(statement):
+                if not token.is_whitespace and not isinstance(token, TokenList):
+                    if token.ttype in Keyword:
+                        keyword_tokens.add(str(token.value).upper())
+
+    blacklist = blacklist or app_settings.REPORTS_SQL_BLACKLIST
+    fails = [bl_word for bl_word in blacklist if bl_word.upper() in keyword_tokens]
+
+    return not bool(fails), fails
+
+
+def walk_tokens(token: TokenList) -> Iterable[Token]:
+    """
+    Generator to walk all tokens in a Statement
+    https://stackoverflow.com/questions/54982118/parse-case-when-statements-with-sqlparse
+    :param token: TokenList
+    """
+    queue = deque([token])
+    while queue:
+        token = queue.popleft()
+        if isinstance(token, TokenList):
+            queue.extend(token)
+        yield token
+        
 class QueryResult(BaseModel):
     data: List[Dict[str, Any]] = Field(description="The result data of the query")
     headers: List[str] = Field(description="The column headers of the result")
@@ -154,26 +190,6 @@ def db_describe_tables(tables: List[str]) -> TableDescription:
     except Exception as e:
         return TableDescription(description=f"Error: {str(e)}")
 
-
-@tool(
-    name="db_update_table",
-    description="Updates the specified table in the database",
-    config=Config().model_json_schema(),
-)
-def db_update_table(table: str, columns: List[str]) -> TableDescription:
-    config = get_config_from_context(config_key=["database", "default_database"])
-    url = config.get("url")
-    allow_update = not config.get("readonly", False)
-    if not allow_update:
-        return TableDescription(description="Error: Update is not allowed.")
-    try:
-        connection = db_connection(url)
-        connection.run(f"UPDATE {table} SET {', '.join(columns)}")
-        return TableDescription(description=f"Table {table} updated successfully.")
-    except Exception as e:
-        return TableDescription(description=f"Error: {str(e)}")
-
-
 @tool(
     name="db_create_table",
     description="Creates a new table in the database",
@@ -185,146 +201,19 @@ def db_create_table(table: TableCreate) -> TableDescription:
     allow_create = not config.get("readonly", False)
     if isinstance(table, dict):
         table = TableCreate(**table)
-    pretty_log(f"Creating table {table.table_name} with columns {table.columns}")
+    
     if not allow_create:
         return TableDescription(description="Error: Create is not allowed.")
     try:
         connection = db_connection(url)
-        pretty_log(f"Creating table {table.table_name} with columns {table.columns}")
         if isinstance(table.columns[0], TableCreateColumn):
             column_definitions = [f"{col.name} {col.type}" for col in table.columns]
         else:
             column_definitions = table.columns
-        pretty_log(f"Creating table {table.table_name} with columns {column_definitions}")
         connection.run(f"CREATE TABLE {table.table_name} ({', '.join(column_definitions)})")
         return TableDescription(description=f"Table {table.table_name} created successfully.")
     except Exception as e:
         return TableDescription(description=f"Error:db_create_table: {str(e)}")
-
-
-@tool(
-    name="db_drop_table",
-    description="Drops the specified table from the database",
-    config=Config().model_json_schema(),
-)
-def db_drop_table(table: str) -> TableDescription:
-    config = get_config_from_context(config_key=["database", "default_database"])
-    url = config.get("url")
-    allow_drop = not config.get("readonly", False)
-    if not allow_drop:
-        return TableDescription(description="Error: Drop is not allowed.")
-    try:
-        connection = db_connection(url)
-        connection.run(f"DROP TABLE {table}")
-        return TableDescription(description=f"Table {table} dropped successfully.")
-    except Exception as e:
-        return TableDescription(description=f"Error: {str(e)}")
-
-
-@tool(
-    name="db_add_row",
-    description="Adds a new row to the specified table",
-    config=Config().model_json_schema(),
-)
-def db_add_row(table: str, row: RowData) -> TableDescription:
-    config = get_config_from_context(config_key=["database", "default_database"])
-    url = config.get("url")
-    if config.get("readonly", False):
-        return TableDescription(description="Error: Add row is not allowed in readonly mode.")
-    if isinstance(row, dict):
-        row = RowData.model_validate(row)
-    try:
-        connection = db_connection(url)
-        columns = ", ".join(row.values.keys())
-        placeholders = ", ".join(["?"] * len(row.values))
-        query = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
-        pretty_log(f"Adding row to {table} with query: {query}")
-        
-        connection.run(query, list(row.values.values()))
-        return TableDescription(description=f"Row added to {table} successfully.")
-    except Exception as e:
-        return TableDescription(description=f"Error: {str(e)}")
-
-@tool(
-    name="db_remove_row",
-    description="Removes a row from the specified table based on a condition",
-    config=Config().model_json_schema(),
-)
-def db_remove_row(table: str, condition: RowCondition) -> TableDescription:
-    config = get_config_from_context(config_key=["database", "default_database"])
-    url = config.get("url")
-    if config.get("readonly", False):
-        return TableDescription(description="Error: Remove row is not allowed in readonly mode.")
-    
-    if isinstance(condition, dict):
-        condition = RowCondition.model_validate(condition)
-    try:
-        connection = db_connection(url)
-        query = f"DELETE FROM {table} WHERE {condition.condition}"
-        connection.run(query)
-        return TableDescription(description=f"Row(s) removed from {table} successfully.")
-    except Exception as e:
-        return TableDescription(description=f"Error: {str(e)}")
-
-@tool(
-    name="db_edit_row",
-    description="Edits a row in the specified table based on a condition",
-    config=Config().model_json_schema(),
-)
-def db_edit_row(table: str, update: RowUpdate) -> TableDescription:
-    config = get_config_from_context(config_key=["database", "default_database"])
-    url = config.get("url")
-    if config.get("readonly", False):
-        return TableDescription(description="Error: Edit row is not allowed in readonly mode.")
-    if isinstance(update, dict):
-        update = RowUpdate.model_validate(update)
-    try:
-        connection = db_connection(url)
-        set_clause = ", ".join([f"{k} = %s" for k in update.updates.keys()])
-        query = f"UPDATE {table} SET {set_clause} WHERE {update.condition}"
-        connection.run(query, list(update.updates.values()))
-        return TableDescription(description=f"Row(s) in {table} updated successfully.")
-    except Exception as e:
-        return TableDescription(description=f"Error: {str(e)}")
-
-@tool(
-    name="db_add_column",
-    description="Adds a new column to the specified table",
-    config=Config().model_json_schema(),
-)
-def db_add_column(table: str, column: ColumnDefinition) -> TableDescription:
-    config = get_config_from_context(config_key=["database", "default_database"])
-    url = config.get("url")
-    if config.get("readonly", False):
-        return TableDescription(description="Error: Add column is not allowed in readonly mode.")
-    if isinstance(column, dict):
-        column = ColumnDefinition.model_validate(column)
-    try:
-        connection = db_connection(url)
-        query = f"ALTER TABLE {table} ADD COLUMN {column.name} {column.type}"
-
-        connection.run(query)
-        return TableDescription(description=f"Column {column.name} added to {table} successfully.")
-    except Exception as e:
-        return TableDescription(description=f"Error: {str(e)}")
-
-@tool(
-    name="db_remove_column",
-    description="Removes a column from the specified table",
-    config=Config().model_json_schema(),
-)
-def db_remove_column(table: str, column_name: str) -> TableDescription:
-    config = get_config_from_context(config_key=["database", "default_database"])
-    url = config.get("url")
-    if config.get("readonly", False):
-        return TableDescription(description="Error: Remove column is not allowed in readonly mode.")
-    try:
-        connection = db_connection(url)
-        query = f"ALTER TABLE {table} DROP COLUMN {column_name}"
-        connection.run(query)
-        return TableDescription(description=f"Column {column_name} removed from {table} successfully.")
-    except Exception as e:
-        return TableDescription(description=f"Error: {str(e)}")
 
 
 @tool(name="db_query_checker", description="Checks the SQL query for common mistakes")
@@ -360,9 +249,7 @@ database_toolkit = ToolKit.create_toolkit(
         db_query,
         db_list_tables,
         db_describe_tables,
-        db_update_table,
         db_create_table,
-        db_drop_table,
     ],
     config_schema=Config().model_json_schema(),
     requires_config=True,
@@ -378,12 +265,10 @@ default_database_toolkit = ToolKit.create_toolkit(
         db_query,
         db_list_tables,
         db_describe_tables,
-        db_update_table,
         db_create_table,
-        db_drop_table,
     ],
     config_schema=Config().model_json_schema(),
     requires_config=True,
     icon="Database",
-    config={"database": "default", "url": "sqlite:///:memory:", "readonly": False},
+    config={"defautl_database": "default", "url": "sqlite:///:memory:", "readonly": False},
 )

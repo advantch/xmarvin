@@ -58,12 +58,11 @@ class RunContext(BaseModel):
 
 
     def default_config(self):
-        from apps.databases.models import DatabaseSettings
+        
         return [{
             "toolkit_id": "default_database",
             "config": {
-                "url": DatabaseSettings.objects.get_default_tenant_database().url,
-                "database": DatabaseSettings.objects.get_default_tenant_database().database,
+                "url": 'postgresql://postgres:postgres@localhost:5432/postgres',
             }
         }]
 
@@ -120,6 +119,5 @@ def clear_run_context(run_id: str):
     """Clear run context."""
     if hasattr(_async_locals, "run_context"):
         del _async_locals.run_context[run_id]
-    if hasattr(_async_locals, "run_id"):
-        if _async_locals.run_id == run_id:
-            del _async_locals.run_id
+    if hasattr(_async_locals, "run_id") and _async_locals.run_id == run_id:
+        del _async_locals.run_id

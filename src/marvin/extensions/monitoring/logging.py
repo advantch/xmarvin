@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 from datetime import datetime
 from typing import Any
 
@@ -46,5 +45,5 @@ def pretty_log(*args, propagate=False, **kwargs):
         "kwargs": to_serializable(kwargs),
     }
     message = f"DEBUG LOG: \n {json.dumps(data, indent=4)}"
-    panel = create_panel(message, "DEBUG", time.time(), color)
+    panel = create_panel(message, "DEBUG", datetime.now().timestamp(), color)
     console.print(panel)

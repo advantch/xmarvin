@@ -2,16 +2,16 @@ import uuid
 from typing import Callable, List, Literal, Optional, Union
 from uuid import UUID
 
-from apps.ai.agent.utilities.render_prompt import (
+from marvin.extensions.utilities.render_prompt import (
     render_assistant_instructions,
     render_instructions,
 )
-from apps.common.schema import BaseSchemaConfig
-from django.utils import timezone
+from marvin.extensions.types.base import BaseSchemaConfig
 from pydantic import BaseModel, Field
 
 from marvin.beta.assistants import CodeInterpreter, FileSearch
-from marvin.extensions.prompts.default import DEFAULT_ASSISTANT_BASE_PROMPT
+from marvin.beta.local import LocalAssistant
+from marvin.extensions.utilities.prompts import DEFAULT_ASSISTANT_BASE_PROMPT
 from marvin.extensions.tools.services.db import get_django_db_connection_url
 from marvin.extensions.tools.tool import Tool
 from marvin.extensions.types.llms import AIModels
@@ -301,8 +301,6 @@ class AgentConfig(BaseModel):
             return render_instructions(self)
 
     def as_assistant(self):
-        from apps.ai.agent.local.assistant import LocalAssistant
-
         return LocalAssistant(
             id=self.id or str(uuid.uuid4()),
             name=self.name,

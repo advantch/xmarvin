@@ -1,7 +1,7 @@
 import uuid
 
-from apps.ai.agent.monitoring.logging import pretty_log
-from apps.ai.models.tools import Tool as DBTool
+from marvin.extensions.monitoring.logging import pretty_log
+from marvin.extensions.tools.tool import Tool as DBTool
 
 from marvin.extensions.tools.app_tools import get_tool_by_name, toolkits
 from marvin.extensions.tools.context import tool_run_context
@@ -51,19 +51,8 @@ def fetch_and_run_toolkit_tool(
 ):
     config = config or {}
 
-    from apps.ai.models import CustomToolkit
-
-    if db_id:
-        custom_toolkit = CustomToolkit.objects.filter(id=db_id).first()
-        if custom_toolkit:
-            toolkit = get_toolkit_by_id(custom_toolkit.toolkit_id)
-            tool = toolkit.get_tool(tool_id)
-            config.update(custom_toolkit.config)
-        else:
-            raise ValueError(f"Custom toolkit with id {toolkit_id} not found")
-    elif toolkit_id:
-        toolkit = get_toolkit_by_id(toolkit_id)
-        tool = toolkit.get_runnable_tool(tool_id)
+    toolkit = get_toolkit_by_id(toolkit_id)
+    tool = toolkit.get_runnable_tool(tool_id)
 
     if not tool or not tool.run or not tool.fn:
         raise ValueError(f"Tool with id {tool_id} not found or is invalid")
@@ -74,7 +63,6 @@ def fetch_and_run_toolkit_tool(
 
         # Update run with result
         run.data["outputs"] = to_serializable(result)
-        pretty_log(result)
         run.save()
 
     return result

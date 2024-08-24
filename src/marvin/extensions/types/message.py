@@ -5,8 +5,8 @@ from typing import Any, Literal, Optional, Union
 from uuid import UUID
 
 import humps
-from apps.common.logging import logger
-from apps.common.schema import BaseSchemaConfig
+from marvin.extensions.monitoring.logging import logger
+from marvin.extensions.types.base import BaseSchemaConfig
 from openai.types.beta.threads.message_content import (
     ImageFileContentBlock,
     ImageURLContentBlock,
@@ -33,6 +33,7 @@ from marvin.extensions.types.tools import (
     AppToolCall,
 )
 
+from marvin.extensions.settings import extensions_settings
 
 class Function(OpenAIFunction):
     pass
@@ -66,12 +67,12 @@ class FileMessageContent(BaseModel):
         pass
 
     def as_openai_llm_message(self):
-        from apps.ai.models import DataSource
-
-        document = DataSource.objects.filter(file_id=self.file_id).first()
-        if document:
-            document.sync_to_openai()
-            return document.remote_reference()
+        
+        storage = extensions_settings.storage.file_storage_class()
+        data_source = storage.get(self.file_id)
+        if data_source:
+            data_source.sync_to_openai()
+            return data_source.remote_reference()
         return None
 
     def as_llm_message(self):
@@ -91,27 +92,26 @@ class ImageMessageContent(BaseModel):
         pass
 
     def as_llm_message(self):
-        from apps.ai.models import DataSource
+        storage = extensions_settings.storage.file_storage_class()
+        data_source = storage.get(self.file_id)
 
-        img_file = DataSource.objects.filter(file_id=self.file_id).first()
-        if img_file:
+        if data_source:
             return ImageURLContentBlock(
                 **{
                     "type": "image_url",
                     "image_url": {
-                        "url": img_file.base_64_string(),
+                        "url": data_source.base_64_string(),
                     },
                 }
             )
         return None
 
     def as_openai_llm_message(self):
-        from apps.ai.models import DataSource
-
-        document = DataSource.objects.filter(file_id=self.file_id).first()
-        if document:
-            document.sync_to_openai()
-            return document.remote_reference()
+        storage = extensions_settings.storage.file_storage_class()
+        data_source = storage.get(self.file_id)
+        if data_source:
+            data_source.sync_to_openai()
+            return data_source.remote_reference()
         return None
 
 
@@ -198,7 +198,7 @@ class ChatMessage(BaseModel):
 
     def as_llm_message(self):
         """As litellm message"""
-        from apps.ai.agent.utilities.message_parsing import to_openai_message_dict
+        from marvin.extensions.utilities.message_parsing import to_openai_message_dict
         return to_openai_message_dict(self)
 
     def append_content(self, text: str):

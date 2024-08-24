@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from apps.ai.agent.monitoring.events import BaseEvent
-from apps.common.schema import BaseSchemaConfig
+from marvin.extensions.monitoring.events import BaseEvent
+from marvin.extensions.types.base import BaseSchemaConfig
 
 from marvin.extensions.types.message import ChatMessage
 

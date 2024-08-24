@@ -29,7 +29,7 @@ from marvin.extensions.utilities.mappers import (
 from marvin.extensions.utilities.persist_files import save_assistant_image_to_storage
 from marvin.extensions.utilities.serialization import to_serializable
 from marvin.extensions.utilities.unique_id import generate_uuid_from_string
-from marvin.extensions.utilities.usage_tables import calculate_credits
+from marvin.extensions.utilities.cost_tracking import calculate_credits
 
 
 class DefaultAssistantEventHandler(AsyncAssistantEventHandler):

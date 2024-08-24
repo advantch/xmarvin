@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 import fsspec
 from pydantic import Field
 
-from marvin.extensions.storage.base import BaseChatStore, BaseThreadStore
+from marvin.extensions.storage.base import BaseChatStore, BaseRunStorage, BaseThreadStore, BaseAgentStorage
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import expose_sync_method
 
@@ -133,3 +133,40 @@ class SimpleThreadStore(BaseThreadStore):
             }
             thread = self.store[thread_id] = data
         return thread
+
+
+
+class SimpleRunStore(BaseRunStorage):
+    """Simple run storage."""
+
+    store: Dict[str, List[Any]] = Field(default_factory=dict)
+
+    @expose_sync_method("create")
+    async def create_async(self, **kwargs) -> "SimpleRunStore":
+        """Create a run."""
+        run = self.store[kwargs["run_id"]] = kwargs
+        return run
+    
+
+    @expose_sync_method("get")
+    async def get_async(self, **kwargs) -> "SimpleRunStore":
+        """Get a run."""
+        return self.store[kwargs["run_id"]]
+    
+
+    @expose_sync_method("update")
+    async def update_async(self, **kwargs) -> "SimpleRunStore":
+        """Update a run."""
+        self.store[kwargs["run_id"]] = kwargs
+        return self.store[kwargs["run_id"]]
+    
+
+
+class SimpleAgentStorage(BaseAgentStorage):
+    """Simple agent storage."""
+
+    store: Dict[str, List[Any]] = Field(default_factory=dict)
+
+    def get_agent_config(self, agent_id: str) -> "SimpleAgentStorage":
+        """Get agent config."""
+        return self.store.get(agent_id, None)

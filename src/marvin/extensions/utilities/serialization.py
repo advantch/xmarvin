@@ -5,15 +5,9 @@ from uuid import UUID
 
 import humps
 import pydantic
-from apps.common.logging import logger
-from django.db import models
-from django.db.models.query import QuerySet
-from django.forms.models import model_to_dict as base_model_to_dict
+from marvin.extensions.monitoring.logging import logger
 from pydantic import BaseModel
 
-
-def model_to_dict(model):
-    return base_model_to_dict(model, exclude=("password",))
 
 
 class DefaultJsonEncoder(json.JSONEncoder):
@@ -36,19 +30,7 @@ class DefaultJsonEncoder(json.JSONEncoder):
             
                 return data
             except Exception as e:
-                logger.error(f"Failed to serialize {cleaned_obj} {e}")
-                # try:
-                #     from marvin.extensions.types.tools import AppCodeInterpreterTool, AppFileSearchTool
-    
-                #     if isinstance(cleaned_obj, AppCodeInterpreterTool):
-                #         d = AppCodeInterpreterTool.dump(cleaned_obj)
-                #         rich.print(d, "test code interpreter tool")
-                #         return d
-                #     if isinstance(cleaned_obj, AppFileSearchTool):
-                #         return AppFileSearchTool.model_dump(cleaned_obj)
-                # except Exception as e:
-                #     logger.error(f"Failed to serialize {cleaned_obj} {e}")
-                    
+                logger.error(f"Failed to serialize {cleaned_obj} {e}")  
                 return str(cleaned_obj)
 
         if isinstance(cleaned_obj, UUID):
@@ -64,14 +46,21 @@ class DefaultJsonEncoder(json.JSONEncoder):
             return cleaned_obj.isoformat()
         if pydantic.dataclasses.is_pydantic_dataclass(cleaned_obj):
             return cleaned_obj.model_dump()
+        
+        try:
+            from django.db import models
+            from django.db.models.query import QuerySet
+            from django.forms.models import model_to_dict
+            
+            if isinstance(cleaned_obj, models.Model):
+                return model_to_dict(cleaned_obj)
 
-        if isinstance(cleaned_obj, models.Model):
-            # excludes passwords
-            return model_to_dict(cleaned_obj)
+            if isinstance(cleaned_obj, QuerySet):
+                return [model_to_dict(model) for model in cleaned_obj]
+        except ImportError:
+            pass
 
-        if isinstance(cleaned_obj, QuerySet):
-            # excludes passwords
-            return [model_to_dict(model) for model in cleaned_obj]
+
 
         if is_dataclass(cleaned_obj):
             try:
