@@ -2,8 +2,7 @@ from datetime import datetime
 from typing import Literal, Optional
 from uuid import UUID
 
-from apps.common.schema import BaseSchemaConfig
-from apps.common.typed_fields import VUrl
+from marvin.extensions.types.base import BaseSchemaConfig, CustomUrl
 from pydantic import BaseModel, Field
 
 
@@ -15,8 +14,8 @@ class GithubOptionsSchema(BaseModel):
 
 class DocumentFromURLSchema(BaseModel):
     name: str | None = None
-    url: VUrl | None = None
-    urls: list[dict[str, VUrl]] | None = None
+    url: CustomUrl | None = None
+    urls: list[dict[str, CustomUrl]] | None = None
     description: str | None = None
     url_option: str | None = "single"
     max_pages: int | None = 20

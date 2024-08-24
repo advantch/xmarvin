@@ -227,18 +227,6 @@ class Tool(BaseModel):
     def serialize_for_prompt(self) -> dict:
         return self.model_dump(include={"name", "description"})
 
-    def load_from_db(self):
-        if self.db_id:
-            from apps.ai.models import Tool as DBTool  # noqa
-
-            db_tool = DBTool.objects.filter(id=self.db_id).first()
-            if not db_tool:
-                logger.info(f"Loading tool from DB: {db_tool}")
-
-            self.custom_name = db_tool.data.get("custom_name", None)
-            self.custom_description = db_tool.data.get("custom_description", None)
-            self.config = db_tool.data.get("config", {})
-
     def to_openai_tool(self) -> dict:
         return {
             "type": "function",
