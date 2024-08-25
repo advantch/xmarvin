@@ -13,26 +13,26 @@ from sqlparse.tokens import Keyword
 REPORTS_PARAM_TOKEN = "$$"
 # Change the behavior of reports
 SQL_BLACKLIST = (
-        # DML
-        "COMMIT",
-        "DELETE",
-        "INSERT",
-        "MERGE",
-        "REPLACE",
-        "ROLLBACK",
-        "SET",
-        "START",
-        "UPDATE",
-        "UPSERT",
-        # DDL
-        "ALTER",
-        "CREATE",
-        "DROP",
-        "RENAME",
-        "TRUNCATE",
-        # DCL
-        "GRANT",
-        "REVOKE",
+    # DML
+    "COMMIT",
+    "DELETE",
+    "INSERT",
+    "MERGE",
+    "REPLACE",
+    "ROLLBACK",
+    "SET",
+    "START",
+    "UPDATE",
+    "UPSERT",
+    # DDL
+    "ALTER",
+    "CREATE",
+    "DROP",
+    "RENAME",
+    "TRUNCATE",
+    # DCL
+    "GRANT",
+    "REVOKE",
 )
 
 
