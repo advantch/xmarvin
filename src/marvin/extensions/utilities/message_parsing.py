@@ -2,7 +2,9 @@ import logging
 from typing import Any, Dict, List, Optional, Sequence, Type
 
 from marvin.extensions.types import ChatMessage
-from openai.types.beta.threads import TextContentBlock
+from marvin.types import ImageFileContentBlock
+from openai.types.beta.threads import TextContentBlock, MessageContent
+from marvin.extensions.types.message import ChatMessage, FileMessageContent, ImageMessageContent
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletionMessageToolCall,
@@ -36,14 +38,12 @@ def to_openai_message_dict(
                 c.append({"text": item.text.value, "type": "text"})
         content = c
 
-    #  TODO check if any attachments are present
-    # what happens when tool generates an image??
-    # for now just will be in content as text.
+    # images are added as image url content
     if message.metadata.attachments:
         for item in message.metadata.attachments:
-            m = item.as_llm_message()
-            if m:
-                content.append(m)
+            media_item = as_llm_message(item.file_id)
+            if media_item:
+                content.append(media_item)
 
     message_dict = {
         "role": message.role.value,
@@ -166,3 +166,60 @@ def to_openai_tool(
             "parameters": schema,
         },
     }
+
+
+def as_llm_message(file_id: str):
+    from marvin.extensions.settings import extensions_settings # noqa
+    storage = extensions_settings.storage.file_storage_class()
+    data_source = storage.get(file_id)
+    if data_source:
+        return ImageFileContentBlock(
+            **{
+                "type": "image_url",
+                "image_url": {
+                    "url": data_source.base_64_string(),
+                },
+            }
+        )
+    return None
+
+
+def get_openai_assistant_attachments(message: ChatMessage) -> List[MessageContent]:
+    from marvin.extensions.settings import extensions_settings # noqa
+    default_storage = extensions_settings.storage.file_storage_class()
+    attachments: List[MessageContent] = []
+    for attachment in message.metadata.attachments:
+        if isinstance(attachment, FileMessageContent):
+            file_content = default_storage.get_file(attachment.file_id)
+            if file_content:
+                attachments.append({
+                    "type": "file",
+                    "file_id": attachment.file_id,
+                    "content": file_content
+                })
+    return attachments
+
+def get_openai_assistant_messages(message: ChatMessage) -> List[MessageContent]:
+    content: List[MessageContent] = []
+    from marvin.extensions.settings import extensions_settings # noqa
+    default_storage = extensions_settings.storage.file_storage_class()
+    if isinstance(message.content, list):
+        for text_message in message.content:
+            if isinstance(text_message, TextContentBlock):
+                content.append({
+                    "type": "text",
+                    "text": text_message.text.value
+                })
+
+    for attachment in message.metadata.attachments:
+        if isinstance(attachment, ImageMessageContent):
+            image_content = default_storage.get_file(attachment.file_id)
+            if image_content:
+                content.append({
+                    "type": "image_file",
+                    "image_file": {
+                        "file_id": attachment.file_id,
+                    }
+                })
+
+    return content

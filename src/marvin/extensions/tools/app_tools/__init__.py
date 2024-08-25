@@ -4,8 +4,6 @@ from .database import (
     db_list_tables,
     db_describe_tables,
     db_create_table,
-    db_update_table,
-    db_drop_table,
     default_database_toolkit,
 )
 from .web_search import web_browser, web_browser_toolkit
@@ -15,8 +13,6 @@ all_tools = {
     "db_list_tables": db_list_tables,
     "db_describe_tables": db_describe_tables,
     "db_create_table": db_create_table,
-    "db_update_table": db_update_table,
-    "db_drop_table": db_drop_table,
     "web_browser": web_browser,
 }
 

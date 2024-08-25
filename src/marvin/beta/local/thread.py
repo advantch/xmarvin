@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from marvin.extensions.memory.base import BaseMemory
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.monitoring.events import DefaultAssistantEventHandler
+from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.storage import BaseChatStore, SimpleChatStore
 from marvin.extensions.storage.base import BaseThreadStore
 from marvin.extensions.tools.tool import Tool
@@ -24,7 +24,7 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
     id: str | uuid.UUID = Field(default_factory=lambda: str(uuid4()))
     storage: Optional[BaseChatStore] = SimpleChatStore()
     thread_storage: Optional[BaseThreadStore] | None = None
-    memory: Optional[BaseMemory] = Memory(storage=storage)
+    memory: Optional[BaseMemory] = Memory(storage=SimpleChatStore())
     tenant_id: str
     messages: List[ChatMessage] = []
     _current_run_id: str | None = None
@@ -108,6 +108,7 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
 
     @expose_sync_method("get_message")
     async def get_message_async(self, message_id: str) -> Optional[ChatMessage]:
+        print('adding message')
         return self.memory.get(message_id, index=self.id)
 
     @expose_sync_method("list_messages")

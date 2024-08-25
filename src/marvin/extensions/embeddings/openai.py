@@ -1,6 +1,7 @@
 import asyncio
 import concurrent
 from concurrent.futures import ThreadPoolExecutor
+from typing import List
 
 from marvin.extensions.embeddings.base import Embeddings
 from marvin.extensions.monitoring import logger
@@ -8,12 +9,34 @@ from marvin.extensions.settings import extensions_settings
 from marvin.settings import settings
 from openai import OpenAI
 
+def get_client(api_key=None):
+    api_key = api_key or settings.openai.api_key
+    return OpenAI(api_key=api_key)
 
-def get_embeddings(text, model="text-embedding-3-small", dimensions=None):
+openai_embeddings_client = get_client()
+
+def get_embeddings(
+        text, 
+        model="text-embedding-3-small", 
+        dimensions=None, 
+        api_key=None, 
+        use_default_client=True
+) -> List[float]:
+    """
+    Get embeddings from OpenAI.
+    @param text: The text to embed.
+    @param model: The model to use.
+    @param dimensions: The dimensions of the embeddings.
+    @param api_key: The API key to use.
+    @param use_default_client: Whether to use the default client.
+    @return: list[float] The embeddings.
+    """
     if dimensions is None:
         dimensions = extensions_settings.default_vector_dimensions
-    client = OpenAI(api_key=settings.openai.api_key)
-
+    if not use_default_client:
+        client = get_client(api_key)
+    else:
+        client = openai_embeddings_client
     response = client.embeddings.create(input=text, model=model, dimensions=dimensions)
     return response.data[0].embedding
 
@@ -38,7 +61,6 @@ class OpenAIEmbeddings(Embeddings):
                 executor.submit(get_embeddings, text): text for text in texts
             }
 
-            # Collect the results as they are completed
             results = []
             for future in concurrent.futures.as_completed(future_to_text):
                 result = future.result()

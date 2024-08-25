@@ -18,10 +18,10 @@ def calculate_credits(
     service_costs = get_service_usage_costs(run.usage, model)
 
     def _per_token_cost(tokens: int) -> float:
-        return service_costs["total_cost"] / tokens if tokens != 0 else 0
+        return service_costs.total_cost / tokens if tokens != 0 else 0
 
     return TokenCreditsUsage(
-        cost=service_costs["total_cost"],
+        cost=service_costs.total_cost,
         per_token=_per_token_cost(tokens),
         tokens=tokens,
         model=model,

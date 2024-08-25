@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 from marvin.extensions.types.agent import AgentConfig
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, run_sync
 
-from ...core.storage import BaseChatStore
-from ...core.tools.tool import Tool
+from marvin.extensions.storage import BaseChatStore
+from marvin.extensions.tools.tool import Tool
 
 
 class LocalAssistant(BaseModel, ExposeSyncMethodsMixin):
@@ -17,7 +17,7 @@ class LocalAssistant(BaseModel, ExposeSyncMethodsMixin):
     tools: List[Tool] | None = Field(default_factory=list)
     model: str | None = None
     file_ids: List[str] | None = Field(default_factory=list)
-    storage: Optional[BaseChatStore] = None
+    storage: Optional[type[BaseChatStore]] = None
 
     def run(self, thread, **kwargs):
         from .run import LocalRun  # noqa: F401

@@ -9,8 +9,8 @@ class SimpleCache:
     def __init__(self):
         self.cache = {}
 
-    def get(self, key):
-        return self.cache.get(key)
+    def get(self, key, default=None):
+        return self.cache.get(key, default)
 
     def set(self, key, value):
         self.cache[key] = value

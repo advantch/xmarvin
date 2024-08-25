@@ -1,8 +1,8 @@
 import uuid
 from contextlib import contextmanager
 
-from marvin.extensions.settings import extensions_settings
 from marvin.extensions.storage import BaseRunStore
+from marvin.extensions.storage.simple_chatstore import SimpleRunStore
 from marvin.extensions.utilities.context import (
     RunContext,
     add_run_context,
@@ -18,12 +18,12 @@ def tool_run_context(
     input_data: dict,
     toolkit_id: str | uuid.UUID | None = None,
     db_id: str | uuid.UUID | None = None,
-    run_storage_class: BaseRunStore | None = None,
+    run_storage_class: BaseRunStore | None = SimpleRunStore,
 ):
     run_id = str(uuid.uuid4())
     tenant_id = get_current_tenant_id()
 
-    storage = run_storage_class or extensions_settings.storage.run_storage()
+    storage = run_storage_class or SimpleRunStore()
 
     # Create run object in the database
     run = storage.create(
@@ -61,10 +61,12 @@ def tool_run_context(
 
     try:
         yield run, _c
+    except Exception as e:
+        run.status = "failed"
+        run.save()
+        raise e
     finally:
         # Update run status
         run.status = "completed"
         run.save()
-
-        # Clear run context
         clear_run_context(run_id)

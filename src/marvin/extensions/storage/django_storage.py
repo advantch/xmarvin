@@ -103,9 +103,6 @@ class DJjangoDBChatStore(BaseChatStore):
         return [self.thread_id]
 
 
-def get_chat_name(name):
-    return name[0:255]
-
 
 class DJangoDBThreadStore(BaseThreadStore):
     """

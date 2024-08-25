@@ -3,13 +3,9 @@ import uuid
 from typing import Callable, List, Literal, Optional, Union
 from uuid import UUID
 
-from marvin.beta.assistants import CodeInterpreter, FileSearch
-from marvin.beta.local import LocalAssistant
-from marvin.extensions.tools.services.db import get_django_db_connection_url
 from marvin.extensions.tools.tool import Tool
-from marvin.extensions.types.base import BaseSchemaConfig
+from marvin.extensions.types.base import BaseModelConfig
 from marvin.extensions.types.llms import AIModels
-from marvin.extensions.utilities.prompts import DEFAULT_ASSISTANT_BASE_PROMPT
 from marvin.extensions.utilities.render_prompt import (
     render_assistant_instructions,
     render_instructions,
@@ -40,7 +36,7 @@ class AgentApiTool(BaseModel):
     auto_run: bool | None = True
     tool_id: str | None = None
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
     @classmethod
@@ -75,7 +71,7 @@ class AgentInstructions(BaseModel):
     text: str | None = None
     json_doc: TiptapDoc | None = Field(default=None, alias="json")
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
 
@@ -84,7 +80,7 @@ class RuntimeConfig(BaseModel):
     document_context: str | None = None
     include_document: bool | None = True
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
 
@@ -118,8 +114,7 @@ class AgentConfig(BaseModel):
     custom_toolkits: List[CustomToolkit] = Field(
         default_factory=list, description="List of custom toolkit IDs"
     )
-    toolkit_config: dict | None = None
-    runtime_tools: list[Callable | Tool | AssistantTool] | None = None
+    toolkit_config: dict | List[dict] | None = None
 
     model: AIModels | None = AIModels.GPT_4O_MINI
     onboarding_instructions: Optional[str] | None = Field(
@@ -142,24 +137,83 @@ class AgentConfig(BaseModel):
     # system
     is_internal: bool | None = False
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
     def construct_unique_name(self):
         short_id = str(self.id)[:4]
         return f"{self.name}-{short_id}"
 
+    def get_assistant_tools(self) -> list[Callable | AssistantTool]:
+        """
+        Fetch tools for *assistant running on openai*
+        Returns a list of functions for assistant to use.
+         - code interpreter & filesearch are not supported for other agents.
+         - file search
+        """
+        from marvin.extensions.tools.helpers import get_agent_tools # noqa
+        from marvin.beta.assistants import CodeInterpreter, FileSearch # noqa
+        tools = []
+        agent_tools, config = get_agent_tools(self, is_assistant=True)
+        for t in agent_tools:
+            # native file search
+            if t.function.name == "file_search":
+                tools.append(FileSearch)
+            # native code interpreter if applicable
+            elif t.function.name == "code_interpreter":
+                tools.append(CodeInterpreter)
+            else:
+                tools.append(t)
+        # remote
+        if 'code_interpreter' in self.builtin_toolkits and CodeInterpreter not in tools:
+            tools.append(CodeInterpreter)
+        if 'file_search' in self.builtin_toolkits and FileSearch not in tools:
+            tools.append(FileSearch)
+
+        self.toolkit_config = [config] if config else []
+        return tools
+
+    def get_tools(self) -> list[AgentApiTool]:
+        """
+        Fetch agent tools for agents
+        Returns a list of functions for agent to use.
+        """
+        from marvin.extensions.tools.helpers import get_agent_tools
+
+        tools, config = get_agent_tools(self)
+        self.toolkit_config = [config] if config else []
+        return tools
+
+    def agent_tools_to_function_tools(self) -> list[AgentApiTool]:
+        """
+        Agent tools to function tools
+        """
+        tools = self.get_tools()
+        return [AgentApiTool.from_tool(tool) for tool in tools]
+
+    def get_instructions(self, simple=False):
+        if simple:
+            return self.instructions.text
+        if self.mode == "assistant":
+            return render_assistant_instructions(self)
+        else:
+            return render_instructions(self)
+
+    def as_assistant(self):
+        from marvin.beta.local.assistant import LocalAssistant
+        return LocalAssistant(
+            id=self.id or str(uuid.uuid4()),
+            name=self.name,
+            instructions=self.get_instructions(),
+            tools=self.get_tools(),
+            model=self.model,
+        )
+
     @classmethod
     def default_agent(cls, model=None):
         default_model = AIModels.GPT_4O_MINI
-        instructions = DEFAULT_ASSISTANT_BASE_PROMPT.format(
-            date=datetime.datetime.now().strftime("%Y-%m-%d")
-        )
-        from marvin.extensions.tools.app_tools import (
-            code_interpreter_toolkit,
-            search_toolkit,
-            web_browser_toolkit,
-        )
+        instructions = "You are a helpful assistant."
+        from marvin.extensions.tools.app_tools import web_browser_toolkit
 
         return cls(
             name="Default Assistant",
@@ -184,11 +238,7 @@ class AgentConfig(BaseModel):
             include_document=False,
             settings={},
             use_citations=True,
-            builtin_toolkits=[
-                web_browser_toolkit.id,
-                search_toolkit.id,
-                code_interpreter_toolkit.id,
-            ],
+            builtin_toolkits=[web_browser_toolkit.id],
             starters=[
                 {
                     "value": "Search google for AI tools",
@@ -199,116 +249,4 @@ class AgentConfig(BaseModel):
                     "title": "What is vanty.ai",
                 },
             ],
-        )
-
-    @classmethod
-    def admin_agent(cls, model=None):
-        default_model = AIModels.GPT_4O
-
-        agent_config = cls(
-            name="Admin Agent",
-            is_internal=True,
-            model=model or default_model,
-            tools=[],
-            description="Default agent",
-            system_prompt="You are a helpful assistant.",
-            instructions={
-                "json": {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": "You are a helpful assistant.",
-                                },
-                            ],
-                        }
-                    ],
-                },
-                "text": "You are a helpful assistant.",
-            },
-            triggers=[],
-            is_document=False,
-            include_document=False,
-            settings={},
-            use_citations=True,
-            starters=[
-                {
-                    "value": "How many users are there?",
-                    "title": "Number of users",
-                },
-                {
-                    "value": "How many workspaces have been created?",
-                    "title": "Number of workspaces",
-                },
-            ],
-        )
-        agent_config.toolkit_config = {
-            "database": {
-                "url": get_django_db_connection_url(db_alias="default"),
-                "readonly": False,
-            }
-        }
-        return agent_config
-
-    def get_assistant_tools(self) -> list[Callable | AssistantTool]:
-        """
-        Fetch agent tools for openai assistants
-        Returns a list of functions for assistant to use.
-
-        Only use this for openai assistants.
-         - code interpreter & filesearch are not supported for other agents.
-         - file search
-        """
-        from marvin.extensions.tools.getters import get_agent_tools
-
-        tools = []
-        agent_tools, config = get_agent_tools(self, is_assistant=True)
-        for t in agent_tools:
-            if t.function.name == "file_search":
-                tools.append(FileSearch)
-            elif t.function.name == "code_interpreter":
-                tools.append(CodeInterpreter)
-            else:
-                tools.append(t)
-
-        self.toolkit_config = config
-        self.runtime_tools = tools
-        return tools
-
-    def get_tools(self) -> list[AgentApiTool]:
-        """
-        Fetch agent tools for agents
-        Returns a list of functions for agent to use.
-        """
-        from marvin.extensions.tools.getters import get_agent_tools
-
-        tools, config = get_agent_tools(self)
-        self.toolkit_config = config
-        return tools
-
-    def agent_tools_to_function_tools(self) -> list[AgentApiTool]:
-        """
-        Agent tools to function tools
-        """
-        tools = self.get_tools()
-        return [AgentApiTool.from_tool(tool) for tool in tools]
-
-    def get_instructions(self, simple=False):
-        if simple:
-            return self.instructions.text
-        if self.mode == "assistant":
-            return render_assistant_instructions(self)
-        else:
-            return render_instructions(self)
-
-    def as_assistant(self):
-        return LocalAssistant(
-            id=self.id or str(uuid.uuid4()),
-            name=self.name,
-            instructions=self.get_instructions(),
-            tools=self.get_tools(),
-            model=self.model,
         )

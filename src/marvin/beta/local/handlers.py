@@ -1,10 +1,24 @@
 import traceback
 from datetime import datetime
 
+from datetime import datetime
+import traceback
+from openai import AsyncAssistantEventHandler
+from openai.types.beta.assistant_stream_event import (
+    ThreadRunCancelled,
+    ThreadRunCompleted,
+    ThreadRunFailed,
+    ThreadRunRequiresAction,
+    ThreadRunStepCompleted,
+)
+from openai.types.beta.threads import ImageFile, Message, MessageDelta
+from openai.types.beta.threads.runs import RunStep, RunStepDelta
+from typing_extensions import override
 from litellm.types.utils import Delta
+
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.monitoring.dispatch import Dispatcher
-from marvin.extensions.monitoring.logging import logger, pretty_log
+from marvin.extensions.utilities.dispatch import Dispatcher
+from marvin.extensions.utilities.logging import logger, pretty_log
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.assistants_api import (
     cancel_thread_run_async,
@@ -86,6 +100,17 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         data = {"message": m}
         await self.dispatcher.send_stream_event_async(data, patch=False)
 
+    @property
+    def storage(self):
+        """
+        Context storage.
+        If anything needs to be saved to the context, it should be saved here.
+        
+        For openai assistants handlers are instantiated per stream,
+        context and by extension storage is persisted.
+        """
+        return self._context["storage"]
+
     async def check_run_stop(self):
         """
         Check if the run should stop.
@@ -128,9 +153,8 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
                     "type": "message",
                 },
             )
-        self.messages.append(m)
+        self.storage['messages'].append(m)
         await self.memory.put_async(m)
-
         await self.check_run_stop()
 
     @override
@@ -173,7 +197,9 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         self.steps.append(run_step)
         details = run_step.step_details
 
-        if hasattr(details, "tool_calls"):
+        # only save messages if there are tool calls
+        # non tool call messages saved in on_message_done
+        if hasattr(details, "tool_calls") and details.tool_calls:
             outputs = self.tool_outputs
 
             assistant_message = run_step_to_tool_call_message(

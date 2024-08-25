@@ -7,7 +7,7 @@ from .agent import AgentConfig, RuntimeConfig
 from .message import ChatMessage
 
 
-class StartRunSchema(BaseModel):
+class TriggerAgentRun(BaseModel):
     """
     Body for starting a run.
     This is passed to the thread runner to start a run.

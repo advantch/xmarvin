@@ -8,12 +8,12 @@ import uuid
 from typing import Annotated, Any, Callable, Dict, Optional, Union
 
 import langchain_core.tools
+from marvin.utilities.asyncio import run_sync_if_awaitable
 import pydantic
 import pydantic.v1
 from langchain_core.messages import InvalidToolCall, ToolCall
 from litellm import ChatCompletionMessageToolCall
 from marvin.utilities.tools import Function, ModelSchemaGenerator
-from prefect.utilities.asyncutils import run_coro_as_sync
 from pydantic import (
     BaseModel,
     Field,
@@ -22,7 +22,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...agent.monitoring.logging import pretty_log
+from marvin.extensions.utilities.logging import pretty_log
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +76,7 @@ class Tool(BaseModel):
 
     def run(self, input: dict):
         result = self.fn(**input)
-        if inspect.isawaitable(result):
-            result = run_coro_as_sync(result)
+        result = run_sync_if_awaitable(result)
 
         # prepare artifact
         passed_args = inspect.signature(self.fn).bind(**input).arguments
@@ -207,9 +206,7 @@ class Tool(BaseModel):
 
             except Exception:
                 traceback.print_exc()
-                pass
 
-        # if is BaseModel class then just
         tool.config = config if isinstance(config, dict) else {}
 
         return tool
@@ -256,7 +253,7 @@ class Tool(BaseModel):
 class ApiTool(Tool):
     """
     Expose in API.
-    Removes fn as can not be serialized by ninja
+    Removes fn as can not be serialized in api endpoints. e.g. 'django-ninja'
     """
 
     fn: None | dict = None

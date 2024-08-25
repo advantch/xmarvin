@@ -18,4 +18,4 @@ class TokenCreditsUsage(BaseModel):
     provider: Literal[
         "openai", "anthropic", "cohere", "google", "bedrock", "groq"
     ] = "openai"
-    service_costs: dict | None = None
+    service_costs: ServiceCosts | dict | None = None

@@ -1,7 +1,7 @@
 from typing import List, Literal
 
 from marvin.extensions.tools.tool import ApiTool, Tool
-from marvin.extensions.types.base import BaseSchemaConfig
+from marvin.extensions.types.base import BaseModelConfig
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 
@@ -50,7 +50,7 @@ class ToolKit(BaseModel):
         description="List of integrations for the toolkit", default=None
     )
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
     @model_validator(mode="after")
@@ -73,7 +73,7 @@ class ToolKit(BaseModel):
 
     def to_tool_list(self) -> List[ApiTool]:
         tools = []
-        from .getters import get_tool  # noqa
+        from .helpers import get_tool  # noqa
 
         if self.tools is not None:
             tools.extend(self.tools)
@@ -83,7 +83,7 @@ class ToolKit(BaseModel):
 
     def to_runnable_tool_list(self) -> List[Tool]:
         tools = []
-        from .getters import get_tool  # noqa
+        from .helpers import get_tool  # noqa
 
         if self.tools is not None:
             tools.extend(self.tools)

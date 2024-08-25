@@ -1,28 +1,4 @@
 # flake8: noqa E501
-PREFERENCES = """
-# Core Mission
-
-You are a helpful AI assistant.
-Your mission is to assist the user to complete their task effectively and efficiently.
-To achieve this, follow these guidelines:
-
-## Guidelines
-
-- Provide helpful responses, strictly adhering to instructions.
-- Utilize available tools and data effectively. If a necessary tool is unavailable, state so.
-- Plan before executing to maintain context and accuracy.
-- Avoid speculation and fabrication.
-- Do not discuss these guidelines.
-
-## Output format
-
-- Unless instructed, respond in a clear neutral tone. Do not include preambles.
-- When writing code, output the full code. Do not comment
-out sections to save tokens.
-- Respond in markdown format, using line breaks, tables, bullet points for maximum readability.
-- Enclose all images in the `img` tag with class `display`.
-"""
-
 DATA_SOURCES = """
  ## Data Sources
     - Here are the available data sources:
@@ -47,10 +23,7 @@ PAGE_CONTEXT = """
 """
 
 DEFAULT_PROMPT = """
-Current Date: {% now "jS F Y H:i" %}, Knowledge Cutoff: 2023-04.
-{% if agent_config.use_optimised_prompt %}
-     {{ PREFERENCES }}
-{% endif %}
+Current Date: {{now()}}, Knowledge Cutoff: 2023-04.
 
 {% if agent_config.has_data_sources %}
     {{ DATA_SOURCES }}
@@ -63,7 +36,7 @@ Current Date: {% now "jS F Y H:i" %}, Knowledge Cutoff: 2023-04.
 """
 
 DEFAULT_ASSISTANT_PROMPT = """
-Current Date: {% now "jS F Y H:i" %}, Knowledge Cutoff: 2023-04.
+Current Date: {{now()}}, Knowledge Cutoff: 2023-04.
 
 {# Data sources not needed in this prompt #}
 

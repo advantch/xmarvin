@@ -30,15 +30,7 @@ class RunContext(BaseModel):
     agent_config: AgentConfig | None = None
     variables: dict[str, dict] | None = None
     tool_config: list[RunContextToolkitConfig] | None = Field(
-        default=[
-            {
-                "toolkit_id": "default_database",
-                "config": {
-                    "url": "postgresql://postgres:postgres@localhost:5432/postgres",
-                    "database": "postgres",
-                },
-            }
-        ],
+        default_factory=list,
         description="The configuration for the tools to be used in the run.",
     )
     private_ref: str | None = Field(
@@ -57,26 +49,6 @@ class RunContext(BaseModel):
     class Config:
         extra = "allow"
         arbitrary_types_allowed = True
-
-    def default_config(self):
-        return [
-            {
-                "toolkit_id": "default_database",
-                "config": {
-                    "url": "postgresql://postgres:postgres@localhost:5432/postgres",
-                },
-            }
-        ]
-
-
-def is_async_context():
-    try:
-        import asyncio
-
-        asyncio.get_event_loop()
-        return True
-    except RuntimeError:
-        return False
 
 
 def add_run_context(context: dict, run_id: str):

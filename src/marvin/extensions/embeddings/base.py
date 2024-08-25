@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 from abc import ABC, abstractmethod
+import random
 
 import numpy as np
 from pydantic import BaseModel
@@ -37,7 +38,8 @@ class FakeEmbeddings(Embeddings, BaseModel):
     """The size of the embedding vector."""
 
     def _get_embedding(self) -> list[float]:
-        return list(np.random.normal(size=self.size))
+        seed = random.randint(0, 10**8)
+        return list(np.random.default_rng(seed=seed).normal(size=self.size))
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         return [self._get_embedding() for _ in texts]
@@ -52,13 +54,13 @@ class DeterministicFakeEmbedding(Embeddings, BaseModel):
     the same embedding vector for the same text.
     """
 
-    size: int
+    size: int = 10
     """The size of the embedding vector."""
 
-    def _get_embedding(self, seed: int) -> list[float]:
+    def _get_embedding(self) -> list[float]:
         # set the seed for the random generator
-        np.random.seed(seed)
-        return list(np.random.normal(size=self.size))
+        seed = random.randint(0, 10**8)
+        return list(np.random.default_rng(seed=seed).normal(size=self.size))
 
     def _get_seed(self, text: str) -> int:
         """
@@ -67,7 +69,7 @@ class DeterministicFakeEmbedding(Embeddings, BaseModel):
         return int(hashlib.sha256(text.encode("utf-8")).hexdigest(), 16) % 10**8
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return [self._get_embedding(seed=self._get_seed(_)) for _ in texts]
+        return [self._get_embedding() for _ in texts]
 
     def embed_query(self, text: str) -> list[float]:
-        return self._get_embedding(seed=self._get_seed(text))
+        return self._get_embedding()

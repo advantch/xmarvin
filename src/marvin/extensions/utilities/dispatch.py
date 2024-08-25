@@ -6,7 +6,7 @@ from marvin.extensions.utilities.streaming import send_app_event_async
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 from pydantic import BaseModel
 
-from .events.base import BaseEvent
+from marvin.extensions.types.events import BaseEvent
 
 
 class Dispatcher(BaseModel, ExposeSyncMethodsMixin):

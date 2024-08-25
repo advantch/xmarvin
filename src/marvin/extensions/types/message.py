@@ -5,10 +5,9 @@ from typing import Any, Literal, Optional, Union
 from uuid import UUID
 
 import humps
-from marvin.extensions.monitoring.logging import logger
-from marvin.extensions.settings import extensions_settings
-from marvin.extensions.types.base import BaseSchemaConfig
-from marvin.extensions.types.data_source import DataSourceSchema
+from marvin.extensions.utilities.logging import logger
+from marvin.extensions.types.base import BaseModelConfig
+from marvin.extensions.types.data_source import DataSource
 from marvin.extensions.types.tools import (
     AppCodeInterpreterTool,
     AppFileSearchTool,
@@ -16,8 +15,6 @@ from marvin.extensions.types.tools import (
 )
 from openai.types.beta.threads.message_content import (
     ImageFileContentBlock,
-    ImageURLContentBlock,
-    MessageContent,
     TextContentBlock,
 )
 from openai.types.beta.threads.message_content_delta import (
@@ -60,21 +57,11 @@ class FileMessageContent(BaseModel):
 
     type: Literal["file"]
     file_id: Optional[str] = None
-    metadata: Optional[DataSourceSchema] = None
+    metadata: Optional[DataSource] = None
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
-    def as_openai_llm_message(self):
-        storage = extensions_settings.storage.file_storage_class()
-        data_source = storage.get(self.file_id)
-        if data_source:
-            data_source.sync_to_openai()
-            return data_source.remote_reference()
-        return None
-
-    def as_llm_message(self):
-        return None
 
 
 class ImageMessageContent(BaseModel):
@@ -84,33 +71,10 @@ class ImageMessageContent(BaseModel):
 
     type: Literal["image"]
     file_id: Optional[str] = None
-    metadata: Optional[DataSourceSchema] = None
+    metadata: Optional[DataSource] = None
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
-
-    def as_llm_message(self):
-        storage = extensions_settings.storage.file_storage_class()
-        data_source = storage.get(self.file_id)
-
-        if data_source:
-            return ImageURLContentBlock(
-                **{
-                    "type": "image_url",
-                    "image_url": {
-                        "url": data_source.base_64_string(),
-                    },
-                }
-            )
-        return None
-
-    def as_openai_llm_message(self):
-        storage = extensions_settings.storage.file_storage_class()
-        data_source = storage.get(self.file_id)
-        if data_source:
-            data_source.sync_to_openai()
-            return data_source.remote_reference()
-        return None
 
 
 AttachmentItem = Union[ImageMessageContent, FileMessageContent]
@@ -174,7 +138,7 @@ class ChatMessage(BaseModel):
     thread_id: str | UUID | None = None
     metadata: Metadata = Metadata()
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
     def __str__(self) -> str:
@@ -199,7 +163,6 @@ class ChatMessage(BaseModel):
     def as_llm_message(self):
         """As litellm message"""
         from marvin.extensions.utilities.message_parsing import to_openai_message_dict
-
         return to_openai_message_dict(self)
 
     def append_content(self, text: str):
@@ -211,32 +174,31 @@ class ChatMessage(BaseModel):
                 return
             self.content[0].text.value = self.content[0].text.value + "\n\n" + text
 
-    def get_openai_assistant_attachments(self) -> list[MessageContent]:
-        attachments: list[MessageContent] = []
-        # only relevant for files
-        for attachment in self.metadata.attachments:
-            if isinstance(attachment, FileMessageContent):
-                # sync to openai and return reference
-                message = attachment.as_openai_llm_message()
-                if message:
-                    attachments.append(message)
-        return attachments
+    # def get_openai_assistant_attachments(self) -> list[MessageContent]:
+    #     attachments: list[MessageContent] = []
+    #     # only relevant for files
+    #     for attachment in self.metadata.attachments:
+    #         if isinstance(attachment, FileMessageContent):
+    #             # sync to openai and return reference
+    #             message = attachment.as_openai_llm_message()
+    #             if message:
+    #                 attachments.append(message)
+    #     return attachments
 
-    def get_openai_assistant_messages(self) -> list[MessageContent]:
-        # image messages should be included
-        content: list[MessageContent] = []
+    # def get_openai_assistant_messages(self) -> list[MessageContent]:
+    #     # image messages should be included
+    #     content: list[MessageContent] = []
 
-        # if file return as bytes
-        for text_message in self.content:
-            if isinstance(text_message, TextContentBlock):
-                # api only accepts TextContentBlockParam - i.e. text should be string
-                content.append(
-                    {"text": text_message.text.value, "type": text_message.type}
-                )
+    #     for text_message in self.content:
+    #         if isinstance(text_message, TextContentBlock):
+    #             # api only accepts TextContentBlockParam - i.e. text should be string
+    #             content.append(
+    #                 {"text": text_message.text.value, "type": text_message.type}
+    #             )
 
-        for attachment in self.metadata.attachments:
-            if isinstance(attachment, ImageMessageContent):
-                message = attachment.as_openai_llm_message()
-                if message:
-                    content.append(message)
-        return content
+    #     for attachment in self.metadata.attachments:
+    #         if isinstance(attachment, ImageMessageContent):
+    #             message = attachment.as_openai_llm_message()
+    #             if message:
+    #                 content.append(message)
+    #     return content

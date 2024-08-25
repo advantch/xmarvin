@@ -171,7 +171,6 @@ class Assistant(BaseModel, ExposeSyncMethodsMixin):
                     "name",
                     "model",
                     "description",
-                    "metadata",
                     "tool_resources",
                     "metadata",
                     "response_format",

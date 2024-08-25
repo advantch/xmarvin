@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 import litellm
 from litellm import ModelResponse, acompletion
+from marvin.extensions.utilities.logging import pretty_log
 from openai.types.beta.assistant_stream_event import (
     ThreadRunCancelled,
     ThreadRunCompleted,
@@ -28,9 +29,7 @@ from pydantic import BaseModel, Field
 from marvin.beta.assistants.handlers import PrintHandler
 from marvin.beta.local.assistant import LocalAssistant
 from marvin.beta.local.thread import LocalThread
-from marvin.extensions.event_handlers.default_assistant_event_handler import (
-    DefaultAssistantEventHandler,
-)
+from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.storage.cache import cache
 from marvin.extensions.tools.tool import Tool, handle_tool_call_async
 from marvin.extensions.types.message import ChatMessage
@@ -94,7 +93,7 @@ class LocalRun(BaseModel, ExposeSyncMethodsMixin):
 
     usage: Usage | None = Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0)
     cache: Any = Field(
-        default_factory=cache,
+        default=cache,
         description="Cache for the run. Replace with a redis based cached to allow for messaging.",
     )
 
@@ -194,8 +193,9 @@ class LocalRun(BaseModel, ExposeSyncMethodsMixin):
                 self.usage.prompt_tokens += response.usage.prompt_tokens
                 self.usage.total_tokens += response.usage.total_tokens
                 self._current_step = None
-
-                if not hasattr(response.choices[0].message, "tool_calls"):
+                tool_calls = getattr(response.choices[0].message, "tool_calls", None)
+                pretty_log(tool_calls)
+                if not tool_calls or len(tool_calls) == 0:
                     is_complete = True
 
             if self.current_run_count >= self.max_runs:
@@ -262,7 +262,7 @@ class LocalRun(BaseModel, ExposeSyncMethodsMixin):
         - message_done dispatch message_done event
         """
         message = response.choices[0].message
-        if hasattr(message, "tool_calls"):
+        if hasattr(message, "tool_calls") and message.tool_calls:
             # set the current run to requires action
             self.run.required_action = RequiredAction(
                 **{

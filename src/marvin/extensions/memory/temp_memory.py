@@ -17,13 +17,13 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
 
     index: str = "default"
     thread_id: str = "default"
-    storage: BaseChatStore = SimpleChatStore()
+    storage: BaseChatStore | None = SimpleChatStore()
     context: dict | None = {}
     loaded: bool = False
     memory: dict[str, list[ChatMessage]] = {}
     previous_ids: list[str | UUID] = []
-    requires_search: bool = (False,)
-    hash_key: str = (None,)
+    requires_search: bool = False
+    hash_key: str | None = None
 
     def __init__(self, storage=None, context=None, thread_id=None, index=None):
         super().__init__()
@@ -53,6 +53,7 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
         """Load messages from storage."""
         if self.loaded:
             return self.memory
+        print(self.storage, type(self.storage))
         messages = self.storage.get_messages(self.index)
         ids = [message.id for message in messages]
         self.previous_ids = ids

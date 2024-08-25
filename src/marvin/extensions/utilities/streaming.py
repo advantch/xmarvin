@@ -1,7 +1,11 @@
+from typing import Literal
 import humps
+from pydantic import Field
+import uuid
 from asgiref.sync import async_to_sync
 from marvin.extensions.utilities.serialization import to_serializable
 from marvin.utilities.asyncio import is_coro
+from prefect.utilities.asyncutils import run_sync
 from pydantic import BaseModel
 
 try:
@@ -12,16 +16,16 @@ except ImportError:
 
 
 def send_app_event(
-    channel_id: str,
-    thread_id: str,
-    data: BaseModel | dict | None,
-    event: str = "message",
+    channel_id: str | uuid.UUID = Field(description="Channel ID- sse, ws channel"),
+    thread_id: str | uuid.UUID = Field(description="Thread ID"),
+    data: BaseModel | dict | None = Field(description="Data to send to channel"),
+    event: Literal["message", "close", "error", "final"] = "message",
     message_type: str = "message",
     channel_type="ws",
-    streaming: bool = False,
-    patch: bool = False,
-    camel_case: bool = True,
+    streaming: bool = Field(description="Is streaming set true if incrementally patching", default=False),
+    camel_case: bool = Field(description="Convert to camel case", default=True),
     run_id: str = None,
+    patch: bool = False,
 ):
     """
     Send event to channel
@@ -65,35 +69,25 @@ def send_app_event(
         layer = get_channel_layer()
         group = f"channel_{str(channel_id)}"
         if is_coro():
-            layer.group_send(group, channel_message)
+            run_sync(layer.group_send(group, channel_message))
         else:
             async_to_sync(layer.group_send)(group, channel_message)
 
 
 async def send_app_event_async(
-    channel_id: str,
-    thread_id: str,
-    data: BaseModel | dict | None,
-    event: str = "message",
+    channel_id: str | uuid.UUID = Field(description="Channel ID- sse, ws channel"),
+    thread_id: str | uuid.UUID = Field(description="Thread ID"),
+    data: BaseModel | dict | None = Field(description="Data to send to channel"),
+    event: Literal["message", "close", "error", "final"] = "message",
     message_type: str = "message",
     channel_type="ws",
-    streaming: bool = False,
-    patch: bool = False,
-    camel_case: bool = True,
+    streaming: bool = Field(description="Is streaming set true if incrementally patching", default=False),
+    camel_case: bool = Field(description="Convert to camel case", default=True),
     run_id: str = None,
+    patch: bool = False,
 ):
     """
     Send event to channel
-
-    Args:
-        channel_id: channel id to send to
-        thread_id: thread id to send to
-        data: data to send to channel
-        event: event name to send (message, close, error, final)
-        message_type: message type (message, close, error, final)
-        channel_type: channel type
-        streaming: is streaming set true if incrementally patching
-        camel_case: convert to camel case
     """
 
     if isinstance(data, BaseModel):

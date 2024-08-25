@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .base import BaseSchemaConfig
+from .base import BaseModelConfig
 
 
 class DocumentMetadata(BaseModel):
@@ -14,7 +14,7 @@ class DocumentMetadata(BaseModel):
     document_id: str | None = None
     title: str | None = None
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         extra = "allow"
 
 
@@ -34,7 +34,7 @@ class Document(BaseModel):
     embeddings: list[float] | None = None
     search_type: Literal["kw", "vector"] = "vector"
 
-    class Config(BaseSchemaConfig):
+    class Config(BaseModelConfig):
         pass
 
     @staticmethod
@@ -62,7 +62,6 @@ class Document(BaseModel):
 
         texts = [d.page_content for d in documents]
         metadata = [d.metadata for d in documents]
-        # then split the text into chunks
         splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=400)
         return splitter.create_documents(texts, metadata)
 
@@ -73,7 +72,6 @@ class Document(BaseModel):
         """
         from marvin.extensions.embeddings.openai import OpenAIEmbeddings
 
-        # then split the text into chunks
         embedder = OpenAIEmbeddings()
         embeddings = embedder.embed_documents(documents)
         for idx, document in enumerate(documents):

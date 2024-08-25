@@ -1,12 +1,15 @@
-"""Base interface class for storing chat history per user."""
+"""Base interface classes for interacting with local storage objects."""
 
 from abc import ABC, abstractmethod
 from typing import Any, BinaryIO, List, Optional, Union
 from uuid import UUID
+from marvin.beta.assistants.threads import Thread
 
 from marvin.extensions.types import ChatMessage
-from marvin.utilities.asyncio import ExposeSyncMethodsMixin
-
+from marvin.extensions.types.run import PersistedRun
+from marvin.extensions.types.thread import ChatThread
+from marvin.extensions.utilities.logging import pretty_log
+from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 
 class BaseChatStore(ABC, ExposeSyncMethodsMixin):
     @classmethod
@@ -59,12 +62,32 @@ class BaseChatStore(ABC, ExposeSyncMethodsMixin):
 
 
 class BaseThreadStore(ABC, ExposeSyncMethodsMixin):
+    """
+    Storage for threads
+    """
     @abstractmethod
     async def get_or_add_thread_async(
         self, thread_id: str, tenant_id: str
-    ) -> "BaseThreadStore":
+    ) -> ChatThread:
         """Get or create a thread."""
-        ...
+        raise NotImplementedError("get_or_add_thread_async is not implemented")
+    
+
+    @expose_sync_method("remote_thread")
+    async def remote_thread_async(self, thread_id: str | UUID, tenant_id: str | None = 'default') -> Thread:
+        """Get the remote thread."""
+        # first check if the thread exists locally
+        thread = await self.get_or_add_thread_async(thread_id, tenant_id)
+        if thread and thread.external_id:
+            return Thread(id=thread.external_id)
+        try:
+            remote_thread = Thread()
+            remote_thread = await remote_thread.create_async()
+            thread.external_id = remote_thread.id
+            return remote_thread
+        except Exception as e:
+            raise Exception(f"Unable to sync remote thread: {e}")
+        
 
 
 class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
@@ -92,15 +115,51 @@ class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
 
 
 class BaseRunStorage(ABC, ExposeSyncMethodsMixin):
+
+    async def update(self, **kwargs) -> "BaseRunStorage":
+        """Update a run."""
+        run = await self.get_or_create_async(id=self.id)
+        m = run.model_dump()
+        m.update(kwargs)
+        run = PersistedRun.model_validate(m)
+        return await self.save_async(run)
+
     @abstractmethod
-    async def create(self, **kwargs) -> "BaseRunStorage":
-        """Create a run."""
+    async def get_or_create_async(self, id: str) -> tuple[PersistedRun, bool]:
+        """Get or create a run."""
         ...
 
     @abstractmethod
-    async def update(self, **kwargs) -> "BaseRunStorage":
-        """Update a run."""
+    async def save_async(self, run: PersistedRun) -> PersistedRun:
+        """Save a run."""
         ...
+
+    async def init_db_run_async(
+        self,
+        run_id: str,
+        thread_id: str | None = None,
+        tenant_id: str | None = None,
+        remote_run: Any = None,
+        agent_id: str | None = None,
+        user_message: str | None = None,
+        tags: list[str] | None = None,
+    ) -> PersistedRun:
+        """Initialize a run."""
+        run, created = await self.get_or_create_async(id=run_id)
+        if created:
+            run.thread_id = thread_id
+            run.tenant_id = tenant_id
+            run.agent_id = agent_id
+            if user_message:
+                run.data["user_message"] = user_message
+            if tags:
+                run.tags = tags
+            run.status = "started"
+
+        if remote_run:
+            run.external_id = remote_run.id
+
+        return await self.save_async(run)
 
 
 class BaseAgentStorage(ABC, ExposeSyncMethodsMixin):

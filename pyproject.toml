@@ -33,6 +33,9 @@ dependencies = [
     "pyhumps>=3.8.0",
     "magika>=0.5.1",
     "sqlparse>=0.5.1",
+    "boto3>=1.26.107",
+    "asgiref>=3.8.1",
+    "prefect>=2.14.9"
 ]
 
 [project.optional-dependencies]
@@ -54,7 +57,7 @@ dev = [
     "pre-commit>=2.21,<4.0",
     "pydantic[dotenv]",
     "ruff",
-    "asgiref",
+    
 ]
 tests = [
     "pytest-asyncio>=0.18.2,!=0.22.0,<0.23.0",
@@ -64,6 +67,7 @@ tests = [
     "pytest~=7.3.1",
     "pytest-timeout",
     "pytest-xdist",
+    "pytest-mock>=3.13.0",
 ]
 audio = [
     "SpeechRecognition>=3.10",

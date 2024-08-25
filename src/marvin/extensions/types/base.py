@@ -1,7 +1,7 @@
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import AnyHttpUrl
 
 
-class BaseSchemaConfig(BaseModel.Config):
+class BaseModelConfig:
     extra = "allow"
     allow_mutation = False
     arbitrary_types_allowed = True
