@@ -1,8 +1,7 @@
 import traceback
 from datetime import datetime
 
-from datetime import datetime
-import traceback
+from litellm.types.utils import Delta
 from openai import AsyncAssistantEventHandler
 from openai.types.beta.assistant_stream_event import (
     ThreadRunCancelled,
@@ -14,17 +13,16 @@ from openai.types.beta.assistant_stream_event import (
 from openai.types.beta.threads import ImageFile, Message, MessageDelta
 from openai.types.beta.threads.runs import RunStep, RunStepDelta
 from typing_extensions import override
-from litellm.types.utils import Delta
 
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.utilities.dispatch import Dispatcher
-from marvin.extensions.utilities.logging import logger, pretty_log
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.assistants_api import (
     cancel_thread_run_async,
 )
 from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.cost_tracking import calculate_credits
+from marvin.extensions.utilities.dispatch import Dispatcher
+from marvin.extensions.utilities.logging import logger, pretty_log
 from marvin.extensions.utilities.mappers import (
     map_content_to_block,
     run_step_to_tool_call_message,
@@ -105,7 +103,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         """
         Context storage.
         If anything needs to be saved to the context, it should be saved here.
-        
+
         For openai assistants handlers are instantiated per stream,
         context and by extension storage is persisted.
         """
@@ -153,7 +151,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
                     "type": "message",
                 },
             )
-        self.storage['messages'].append(m)
+        self.storage["messages"].append(m)
         await self.memory.put_async(m)
         await self.check_run_stop()
 

@@ -1,12 +1,9 @@
-from uuid import UUID
+from datetime import datetime
+from typing import Any, Dict
+from uuid import UUID, uuid4
 
 from marvin.extensions.types.base import BaseModelConfig
 from marvin.extensions.types.message import ChatMessage
-
-from datetime import datetime
-from typing import Any, Dict
-from uuid import uuid4
-
 from pydantic import BaseModel, Field
 
 

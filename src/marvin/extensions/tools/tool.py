@@ -8,11 +8,12 @@ import uuid
 from typing import Annotated, Any, Callable, Dict, Optional, Union
 
 import langchain_core.tools
-from marvin.utilities.asyncio import run_sync_if_awaitable
 import pydantic
 import pydantic.v1
 from langchain_core.messages import InvalidToolCall, ToolCall
 from litellm import ChatCompletionMessageToolCall
+from marvin.extensions.utilities.logging import pretty_log
+from marvin.utilities.asyncio import run_sync_if_awaitable
 from marvin.utilities.tools import Function, ModelSchemaGenerator
 from pydantic import (
     BaseModel,
@@ -21,8 +22,6 @@ from pydantic import (
     TypeAdapter,
     model_validator,
 )
-
-from marvin.extensions.utilities.logging import pretty_log
 
 logger = logging.getLogger(__name__)
 

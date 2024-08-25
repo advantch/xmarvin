@@ -29,6 +29,7 @@ class DefaultJsonEncoder(json.JSONEncoder):
                 return data
             except Exception as e:
                 from marvin.extensions.utilities.logging import logger
+
                 logger.error(f"Failed to serialize {cleaned_obj} {e}")
                 return str(cleaned_obj)
 

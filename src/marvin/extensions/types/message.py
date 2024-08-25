@@ -5,7 +5,6 @@ from typing import Any, Literal, Optional, Union
 from uuid import UUID
 
 import humps
-from marvin.extensions.utilities.logging import logger
 from marvin.extensions.types.base import BaseModelConfig
 from marvin.extensions.types.data_source import DataSource
 from marvin.extensions.types.tools import (
@@ -13,6 +12,7 @@ from marvin.extensions.types.tools import (
     AppFileSearchTool,
     AppToolCall,
 )
+from marvin.extensions.utilities.logging import logger
 from openai.types.beta.threads.message_content import (
     ImageFileContentBlock,
     TextContentBlock,
@@ -61,7 +61,6 @@ class FileMessageContent(BaseModel):
 
     class Config(BaseModelConfig):
         pass
-
 
 
 class ImageMessageContent(BaseModel):
@@ -163,6 +162,7 @@ class ChatMessage(BaseModel):
     def as_llm_message(self):
         """As litellm message"""
         from marvin.extensions.utilities.message_parsing import to_openai_message_dict
+
         return to_openai_message_dict(self)
 
     def append_content(self, text: str):

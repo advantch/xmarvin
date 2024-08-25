@@ -16,7 +16,6 @@ from marvin.extensions.types.run import PersistedRun
 from marvin.extensions.types.thread import ChatThread
 from marvin.extensions.utilities.logging import pretty_log
 from marvin.utilities.asyncio import expose_sync_method
-from pydantic import Field
 
 
 class SimpleChatStore(BaseChatStore):
@@ -151,6 +150,7 @@ class SimpleThreadStore(BaseThreadStore):
 
 class SimpleRunStore(BaseRunStorage):
     """Simple run storage."""
+
     runs: Dict[str, PersistedRun] = {}
 
     @expose_sync_method("get_or_create")

@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Literal, Optional
 
 import litellm
 from litellm import ModelResponse, acompletion
-from marvin.extensions.utilities.logging import pretty_log
 from openai.types.beta.assistant_stream_event import (
     ThreadRunCancelled,
     ThreadRunCompleted,
@@ -28,12 +27,13 @@ from pydantic import BaseModel, Field
 
 from marvin.beta.assistants.handlers import PrintHandler
 from marvin.beta.local.assistant import LocalAssistant
-from marvin.beta.local.thread import LocalThread
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
+from marvin.beta.local.thread import LocalThread
 from marvin.extensions.storage.cache import cache
 from marvin.extensions.tools.tool import Tool, handle_tool_call_async
 from marvin.extensions.types.message import ChatMessage
 from marvin.extensions.types.tools import AppFunction, AppToolCall
+from marvin.extensions.utilities.logging import pretty_log
 from marvin.extensions.utilities.mappers import (
     convert_delta_to_message_delta,
     convert_model_response_to_message,

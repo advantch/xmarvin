@@ -1,11 +1,15 @@
 from typing import TYPE_CHECKING, Optional
-from marvin.extensions.types.message import ChatMessage, FileMessageContent, ImageMessageContent
-from marvin.types import TextContentBlock
 
 from openai.types.beta.threads import Message
 from pydantic import BaseModel, Field
 
 import marvin.utilities.openai
+from marvin.extensions.types.message import (
+    ChatMessage,
+    FileMessageContent,
+    ImageMessageContent,
+)
+from marvin.types import TextContentBlock
 from marvin.utilities.asyncio import (
     ExposeSyncMethodsMixin,
     expose_sync_method,
@@ -107,7 +111,7 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
             thread_id=self.id, role=role, content=content, attachments=attachments
         )
         return response
-    
+
     @expose_sync_method("add_messages")
     async def add_messages_async(
         self,
@@ -119,7 +123,7 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
         """
         client = marvin.utilities.openai.get_openai_client()
         # noqa
-        raise NotImplementedError("This is a work in progress") 
+        raise NotImplementedError("This is a work in progress")
 
         if self.id is None:
             await self.create_async()
@@ -142,27 +146,32 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
             if message.metadata.attachments:
                 for attachment in message.metadata.attachments:
                     if isinstance(attachment, ImageMessageContent):
-                        content.append({
-                            "type": "image_url",
-                            "image_url": {"url": attachment.metadata.url}
-                        })
+                        content.append(
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": attachment.metadata.url},
+                            }
+                        )
                     elif isinstance(attachment, FileMessageContent):
                         with open(attachment.metadata.path, "rb") as file:
-                            response = await client.files.create(file=file, purpose="assistants")
-                            attachments.append({
-                                "file_id": response.id,
-                                "tools": [{"type": "file_search"}]
-                            })
+                            response = await client.files.create(
+                                file=file, purpose="assistants"
+                            )
+                            attachments.append(
+                                {
+                                    "file_id": response.id,
+                                    "tools": [{"type": "file_search"}],
+                                }
+                            )
 
             # Create the message with the attached files
             response = await client.beta.threads.messages.create(
                 thread_id=self.id,
                 role=message.role,
                 content=content,
-                attachments=attachments
+                attachments=attachments,
             )
             added_messages.append(response)
-
 
     @expose_sync_method("get_messages")
     async def get_messages_async(

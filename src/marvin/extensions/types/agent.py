@@ -1,9 +1,7 @@
-import datetime
 import uuid
 from typing import Callable, List, Literal, Optional, Union
 from uuid import UUID
 
-from marvin.extensions.tools.tool import Tool
 from marvin.extensions.types.base import BaseModelConfig
 from marvin.extensions.types.llms import AIModels
 from marvin.extensions.utilities.render_prompt import (
@@ -151,8 +149,9 @@ class AgentConfig(BaseModel):
          - code interpreter & filesearch are not supported for other agents.
          - file search
         """
-        from marvin.extensions.tools.helpers import get_agent_tools # noqa
-        from marvin.beta.assistants import CodeInterpreter, FileSearch # noqa
+        from marvin.extensions.tools.helpers import get_agent_tools  # noqa
+        from marvin.beta.assistants import CodeInterpreter, FileSearch  # noqa
+
         tools = []
         agent_tools, config = get_agent_tools(self, is_assistant=True)
         for t in agent_tools:
@@ -165,9 +164,9 @@ class AgentConfig(BaseModel):
             else:
                 tools.append(t)
         # remote
-        if 'code_interpreter' in self.builtin_toolkits and CodeInterpreter not in tools:
+        if "code_interpreter" in self.builtin_toolkits and CodeInterpreter not in tools:
             tools.append(CodeInterpreter)
-        if 'file_search' in self.builtin_toolkits and FileSearch not in tools:
+        if "file_search" in self.builtin_toolkits and FileSearch not in tools:
             tools.append(FileSearch)
 
         self.toolkit_config = [config] if config else []
@@ -201,6 +200,7 @@ class AgentConfig(BaseModel):
 
     def as_assistant(self):
         from marvin.beta.local.assistant import LocalAssistant
+
         return LocalAssistant(
             id=self.id or str(uuid.uuid4()),
             name=self.name,

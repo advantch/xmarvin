@@ -1,8 +1,8 @@
 import os
 import tempfile
 from typing import IO
-from marvin.extensions.utilities.logging import pretty_log
 
+from marvin.extensions.utilities.logging import pretty_log
 from marvin.settings import settings
 from openai import AsyncOpenAI, OpenAI
 from openai.types import FileObject
@@ -12,7 +12,7 @@ def get_client(api_key=None):
     api_key = api_key or settings.openai.api_key
     assert settings.openai.api_key == api_key
     pretty_log(api_key, "api_key", os.getenv("OPENAI_API_KEY"))
-    
+
     return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 

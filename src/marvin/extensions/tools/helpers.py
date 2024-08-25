@@ -1,6 +1,6 @@
-from marvin.extensions.utilities.logging import pretty_log
 from marvin.extensions.tools.app_tools import all_tools, toolkits
 from marvin.extensions.tools.tool import Tool
+from marvin.extensions.utilities.logging import pretty_log
 
 
 def get_agent_tools(agent_config, is_assistant=False) -> tuple[list[Tool], dict]:

@@ -12,20 +12,26 @@ import traceback
 from contextlib import contextmanager
 
 import litellm
-from marvin.extensions.types.run import PersistedRun
-from marvin.extensions.utilities.message_parsing import get_openai_assistant_attachments, get_openai_assistant_messages
 import rich
 from marvin import settings as marvin_settings
 from marvin.beta.assistants import Assistant
-from marvin.beta.local.thread import LocalThread
 from marvin.beta.local.handlers import (
     DefaultAssistantEventHandler,
 )
+from marvin.beta.local.thread import LocalThread
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.utilities.logging import logger, pretty_log
 from marvin.extensions.settings import extensions_settings
-from marvin.extensions.storage.base import BaseAgentStorage, BaseChatStore, BaseRunStorage, BaseThreadStore
-from marvin.extensions.storage.simple_chatstore import SimpleAgentStorage, SimpleChatStore, SimpleRunStore, SimpleThreadStore
+from marvin.extensions.storage.base import (
+    BaseAgentStorage,
+    BaseChatStore,
+    BaseRunStorage,
+    BaseThreadStore,
+)
+from marvin.extensions.storage.simple_chatstore import (
+    SimpleChatStore,
+    SimpleRunStore,
+    SimpleThreadStore,
+)
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.types.start_run import TriggerAgentRun
@@ -35,6 +41,11 @@ from marvin.extensions.utilities.context import (
     RunContext,
     add_run_context,
     clear_run_context,
+)
+from marvin.extensions.utilities.logging import logger, pretty_log
+from marvin.extensions.utilities.message_parsing import (
+    get_openai_assistant_attachments,
+    get_openai_assistant_messages,
 )
 from marvin.extensions.utilities.streaming import send_app_event
 from marvin.extensions.utilities.tenant import (
@@ -92,7 +103,7 @@ def verify_runtime_config(
 
     # TODO: support for fetchin remote agents?
     # TODO: verify agent belongs to tenant
-    
+
     NB: Call this before creating context for run.
     """
     default_config = AgentConfig.default_agent()
@@ -102,15 +113,15 @@ def verify_runtime_config(
             data.agent_config = configure_internal_sql_agent(data)
         elif data.preset == "default":
             data.agent_config = default_config
-    
+
     # this assumes you are storing the agents in some storage,
     # existing config will not be overwritten
     if data.agent_id and data.agent_config is None:
         rich.print(f"agent_id: {data.agent_id}")
-        agent_storage = agent_storage or extensions_settings.storage.agent_storage_class()
-        agent_config = agent_storage.get_agent_config(
-            data.agent_id
+        agent_storage = (
+            agent_storage or extensions_settings.storage.agent_storage_class()
         )
+        agent_config = agent_storage.get_agent_config(data.agent_id)
         data.agent_config = agent_config or default_config
 
     if data.runtime_config:
@@ -168,10 +179,12 @@ def run_context(
         user_id=payload.user_id,
         name=payload.message.content[0].text.value,
     )
-    
-    run_storage_class = run_storage_class or extensions_settings.storage.run_storage_class
+
+    run_storage_class = (
+        run_storage_class or extensions_settings.storage.run_storage_class
+    )
     run_storage = run_storage_class()
-    pretty_log(thread,'new thread')
+    pretty_log(thread, "new thread")
     persisted_run = run_storage.init_db_run(
         payload.run_id,
         thread.id,
@@ -197,12 +210,12 @@ def run_context(
         context_object["storage"]["errors"].append(str(e))
         persisted_run.status = "failed"
         send_close_event(payload, "error", e)
-    
+
     finally:
         # save any data to cache if not failed
         if persisted_run.status != "failed":
             persisted_run.status = "completed"
-        
+
         send_close_event(payload, "close")
         pretty_log(context_object, persisted_run.model_dump())
         persisted_run.save_run_context_data(context_object)
@@ -222,7 +235,7 @@ def memory_with_storage(thread_id, storage=None):
 def add_message_to_remote_thread(data: ChatMessage, assistant_thread_id):
     """
     Add messages to remote thread
-    
+
     Only necessary for attachments and images. To remove when that is handled properly.
     """
 
@@ -240,22 +253,22 @@ def add_message_to_remote_thread(data: ChatMessage, assistant_thread_id):
 
 
 def handle_assistant_run(
-    data: TriggerAgentRun, 
-    thread_store: BaseThreadStore, 
+    data: TriggerAgentRun,
+    thread_store: BaseThreadStore,
     run: BaseRunStorage,
     context: dict,
     chat_store: BaseChatStore | None = None,
     chat_storage_class: type[BaseChatStore] | None = SimpleChatStore,
 ):
     update_marvin_settings()
-    
+
     # initialise any storage
     storage = chat_store or chat_storage_class()
     memory = memory_with_storage(data.thread_id, storage)
-    
+
     # fetch the remote thread
     remote_thread = thread_store.remote_thread(data.thread_id)
-    pretty_log(remote_thread, 'remote thread')
+    pretty_log(remote_thread, "remote thread")
     add_message_to_remote_thread(data.message, remote_thread.id)
     agent_config = data.agent_config
 
@@ -285,14 +298,14 @@ def handle_assistant_run(
         tools=agent_config.get_assistant_tools(),
     )
     run.external_id = remote_run.run.id
-   
+
     send_close_event(data, "close")
     return remote_run
 
 
 def handle_local_run(
-    data: TriggerAgentRun, 
-    thread_storage: BaseThreadStore, 
+    data: TriggerAgentRun,
+    thread_storage: BaseThreadStore,
     context: dict,
     memory: Memory | None = None,
     chat_storage_class: type[BaseChatStore] | None = SimpleChatStore,
@@ -307,16 +320,14 @@ def handle_local_run(
     ChatStorage - pass the chat storage to the memory class.
     ThreadStorage - pass the thread storage to the LocalThread class.
     """
-    
+
     storage = chat_storage_class()
     memory = memory or memory_with_storage(thread_storage.id, storage)
     # the agent to use
     assistant = data.agent_config.as_assistant()
     # add an event handler to save run data and streaming
     handler = DefaultAssistantEventHandler(
-        context=context, 
-        cache=extensions_settings.storage.cache, 
-        memory=memory
+        context=context, cache=extensions_settings.storage.cache, memory=memory
     )
 
     local_thread = LocalThread.create(
@@ -333,7 +344,7 @@ def handle_local_run(
         context=context,
         event_handler=handler,
     )
-    
+
     send_close_event(data, "close")
     return local_run
 
