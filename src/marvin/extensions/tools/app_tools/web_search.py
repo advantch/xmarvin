@@ -28,7 +28,7 @@ def web_browser(url: str) -> WebBrowserResult:
         url = url.replace("http://", "https://")
     fetch_url = "https://r.jina.ai/" + url
     headers = {
-        "API-KEY": 'test',
+        "API-KEY": "test",
         "Accept": "application/json",
         "X-With-Generated-Alt": "true",
         "X-Timeout": "20",

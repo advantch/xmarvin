@@ -1,12 +1,12 @@
-from typing import Literal
-import humps
-from pydantic import Field
 import uuid
+from typing import Literal
+
+import humps
 from asgiref.sync import async_to_sync
 from marvin.extensions.utilities.serialization import to_serializable
 from marvin.utilities.asyncio import is_coro
 from prefect.utilities.asyncutils import run_sync
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 try:
     from channels.layers import get_channel_layer
@@ -22,7 +22,9 @@ def send_app_event(
     event: Literal["message", "close", "error", "final"] = "message",
     message_type: str = "message",
     channel_type="ws",
-    streaming: bool = Field(description="Is streaming set true if incrementally patching", default=False),
+    streaming: bool = Field(
+        description="Is streaming set true if incrementally patching", default=False
+    ),
     camel_case: bool = Field(description="Convert to camel case", default=True),
     run_id: str = None,
     patch: bool = False,
@@ -81,7 +83,9 @@ async def send_app_event_async(
     event: Literal["message", "close", "error", "final"] = "message",
     message_type: str = "message",
     channel_type="ws",
-    streaming: bool = Field(description="Is streaming set true if incrementally patching", default=False),
+    streaming: bool = Field(
+        description="Is streaming set true if incrementally patching", default=False
+    ),
     camel_case: bool = Field(description="Convert to camel case", default=True),
     run_id: str = None,
     patch: bool = False,

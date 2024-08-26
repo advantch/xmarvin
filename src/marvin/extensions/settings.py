@@ -1,4 +1,5 @@
 from typing import Any
+
 from marvin.extensions.storage.base import (
     BaseAgentStorage,
     BaseChatStore,
@@ -16,10 +17,12 @@ from marvin.extensions.storage.simple_chatstore import (
 )
 from pydantic_settings import BaseSettings
 
+
 class S3Settings(BaseSettings):
     """
     Default settings for S3 storage.
     """
+
     bucket_name: str = "marvin-storage"
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""

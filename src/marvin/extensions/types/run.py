@@ -2,18 +2,19 @@ from datetime import datetime
 from typing import Any, Literal, Union
 from uuid import UUID
 
-from pydantic import BaseModel
 from marvin.extensions.types.base import BaseModelConfig
 from openai.types.beta.threads.run import Run as OpenaiRun
 from openai.types.beta.threads.runs import (
+    MessageCreationStepDetails,
     RunStep,
     ToolCallsStepDetails,
-    MessageCreationStepDetails,
 )
 from openai.types.beta.threads.runs.message_creation_step_details import MessageCreation
-from .message import ChatMessage
-from .events import StreamChatMessageEvent
+from pydantic import BaseModel
+
 from .costs import TokenCreditsUsage
+from .events import StreamChatMessageEvent
+from .message import ChatMessage
 from .tools import AnyToolCall
 
 
@@ -45,6 +46,7 @@ class OpenaiRunSchema(OpenaiRun):
     class Config(BaseModelConfig):
         extra = "allow"
 
+
 class PersistedRun(BaseModel):
     id: str | UUID | None = None
     thread_id: str | UUID | None = None
@@ -60,7 +62,6 @@ class PersistedRun(BaseModel):
     class Config(BaseModelConfig):
         extra = "allow"
 
-
     def save_run_context_data(self, context: dict):
         """
         Update the run with the data from the context.
@@ -68,7 +69,7 @@ class PersistedRun(BaseModel):
         """
         storage = context.get("storage", {})
         run_metadata = storage.get("run_metadata", {})
-        openai_run = run_metadata.get('run', None)
+        openai_run = run_metadata.get("run", None)
         metadata = openai_run.get("metadata", {})
         if openai_run:
             self.run = OpenaiRunSchema.model_validate(openai_run)

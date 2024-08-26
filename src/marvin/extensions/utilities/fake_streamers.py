@@ -9,8 +9,9 @@ def send_event(*args, **kwargs):
 
 class FakeChannelLayer(ExposeSyncMethodsMixin):
     async def group_send(self, *args, **kwargs):
-        #pretty_log(*args, **kwargs)
+        # pretty_log(*args, **kwargs)
         pass
+
 
 def get_channel_layer():
     return FakeChannelLayer()

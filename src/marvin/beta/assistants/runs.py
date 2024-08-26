@@ -8,12 +8,13 @@ from pydantic import BaseModel, Field, PrivateAttr, field_validator
 
 import marvin.utilities.openai
 import marvin.utilities.tools
+from marvin.extensions.types.tools import AppFunction, AppToolCall
 from marvin.tools.assistants import ENDRUN_TOKEN, AssistantTool, EndRun
 from marvin.types import Tool
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 from marvin.utilities.logging import get_logger
-from marvin.extensions.types.tools import AppFunction, AppToolCall
 from marvin.utilities.tools import output_to_string
+
 from .assistants import Assistant
 from .threads import Thread
 
@@ -71,11 +72,11 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
         None,
         description="Additional tools to append to the assistant's tools. ",
     )
-    tool_choice: Optional[Union[Literal["none", "auto", "required"], AssistantTool]] = (
-        Field(
-            default=None,
-            description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
-        )
+    tool_choice: Optional[
+        Union[Literal["none", "auto", "required"], AssistantTool]
+    ] = Field(
+        default=None,
+        description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
     )
     run: OpenAIRun = Field(None, repr=False)
     data: Any = None
@@ -199,7 +200,7 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                         if not hasattr(output, "results_string")
                         else output.results_string
                     )
-                    
+
                     if tool_call.type == "function":
                         func = AppToolCall(
                             id=tool_call.id,
@@ -272,10 +273,10 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                 while handler.current_run.status in ["requires_action"]:
                     tool_outputs = await self.get_tool_outputs(run=handler.current_run)
                     # pass in cached tool outputs to the handler so they can be patched.
-                    # we dont have access to the upstream client therefore we cannot 
-                    
+                    # we dont have access to the upstream client therefore we cannot
+
                     # patch the latest context object
-                    self.event_handler_kwargs['context'] = self.handler._context
+                    self.event_handler_kwargs["context"] = self.handler._context
                     handler = event_handler_class(
                         **self.event_handler_kwargs, tool_outputs=self._tool_outputs
                     )

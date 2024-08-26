@@ -1,10 +1,11 @@
+import uuid
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
-import uuid
 
 from marvin.extensions.types.base import BaseModelConfig
 from pydantic import BaseModel, Field
+
 
 class IndexData(BaseModel):
     mime_type: str | None = None
@@ -47,5 +48,6 @@ class DataSource(BaseModel):
         description="Reference file ID. Use this to generate presigned upload URLs.",
         default=None,
     )
+
     class Config(BaseModelConfig):
         pass

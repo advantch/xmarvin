@@ -3,11 +3,10 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from marvin.extensions.types.agent import AgentConfig
-from marvin.utilities.asyncio import ExposeSyncMethodsMixin, run_sync
-
 from marvin.extensions.storage import BaseChatStore
 from marvin.extensions.tools.tool import Tool
+from marvin.extensions.types.agent import AgentConfig
+from marvin.utilities.asyncio import ExposeSyncMethodsMixin, run_sync
 
 
 class LocalAssistant(BaseModel, ExposeSyncMethodsMixin):

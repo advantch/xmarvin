@@ -103,7 +103,6 @@ class DJjangoDBChatStore(BaseChatStore):
         return [self.thread_id]
 
 
-
 class DJangoDBThreadStore(BaseThreadStore):
     """
     Thread storage that saves to the database.

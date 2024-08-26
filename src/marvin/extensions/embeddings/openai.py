@@ -9,18 +9,21 @@ from marvin.extensions.settings import extensions_settings
 from marvin.settings import settings
 from openai import OpenAI
 
+
 def get_client(api_key=None):
     api_key = api_key or settings.openai.api_key
     return OpenAI(api_key=api_key)
 
+
 openai_embeddings_client = get_client()
 
+
 def get_embeddings(
-        text, 
-        model="text-embedding-3-small", 
-        dimensions=None, 
-        api_key=None, 
-        use_default_client=True
+    text,
+    model="text-embedding-3-small",
+    dimensions=None,
+    api_key=None,
+    use_default_client=True,
 ) -> List[float]:
     """
     Get embeddings from OpenAI.

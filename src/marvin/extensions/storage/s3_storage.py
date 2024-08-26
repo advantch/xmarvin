@@ -1,11 +1,12 @@
+import io
 import tempfile
+
 import boto3
 from botocore.exceptions import ClientError
-import io
-from marvin.extensions.storage.base import BaseFileStorage
-from pydantic_settings import BaseSettings
-from marvin.extensions.utilities.logging import logger
 from marvin.extensions.settings import extension_settings
+from marvin.extensions.storage.base import BaseFileStorage
+from marvin.extensions.utilities.logging import logger
+from pydantic_settings import BaseSettings
 
 
 class BucketConfig(BaseSettings):
@@ -24,12 +25,12 @@ class BucketConfig(BaseSettings):
             aws_endpoint_url_s3=extension_settings.s3.aws_endpoint_url_s3,
             aws_region=extension_settings.s3.aws_region,
         )
-    
+
     @classmethod
     def from_django_settings(cls):
         try:
             from django.conf import settings
-        
+
             return cls(
                 bucket_name=settings.S3_BUCKET_NAME,
                 aws_access_key_id=settings.S3_ACCESS_KEY_ID,
@@ -38,10 +39,12 @@ class BucketConfig(BaseSettings):
                 aws_region=settings.S3_REGION,
             )
         except ImportError as e:
-            logger.error(f"""
+            logger.error(
+                f"""
                          Error getting S3 config from django settings: {e}. Make sure you are running in a django project 
                          and have the django setting for S3_BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, 
-                         S3_ENDPOINT_URL, and S3_REGION set.""")
+                         S3_ENDPOINT_URL, and S3_REGION set."""
+            )
             return None
         except Exception as e:
             print(f"Error getting S3 config from django settings: {e}")
@@ -49,7 +52,6 @@ class BucketConfig(BaseSettings):
 
 
 class StorageS3Client(BaseFileStorage):
-
     def __init__(self, config: BucketConfig = None):
         if config is None:
             config = BucketConfig.from_env()
@@ -190,12 +192,11 @@ class StorageS3Client(BaseFileStorage):
                 )
             return False
 
-
     def save_file(self, file_object: io.BytesIO, file_name):
         return self.upload_file(file_object, file_name)
-    
+
     def get_file(self, file_id):
         return self.download_file(file_id, file_path=None)
-    
+
     def delete_file(self, file_id):
         return self.delete_object(file_id)

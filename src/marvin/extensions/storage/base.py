@@ -3,13 +3,13 @@
 from abc import ABC, abstractmethod
 from typing import Any, BinaryIO, List, Optional, Union
 from uuid import UUID
-from marvin.beta.assistants.threads import Thread
 
+from marvin.beta.assistants.threads import Thread
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.run import PersistedRun
 from marvin.extensions.types.thread import ChatThread
-from marvin.extensions.utilities.logging import pretty_log
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
+
 
 class BaseChatStore(ABC, ExposeSyncMethodsMixin):
     @classmethod
@@ -65,16 +65,18 @@ class BaseThreadStore(ABC, ExposeSyncMethodsMixin):
     """
     Storage for threads
     """
+
     @abstractmethod
     async def get_or_add_thread_async(
         self, thread_id: str, tenant_id: str
     ) -> ChatThread:
         """Get or create a thread."""
         raise NotImplementedError("get_or_add_thread_async is not implemented")
-    
 
     @expose_sync_method("remote_thread")
-    async def remote_thread_async(self, thread_id: str | UUID, tenant_id: str | None = 'default') -> Thread:
+    async def remote_thread_async(
+        self, thread_id: str | UUID, tenant_id: str | None = "default"
+    ) -> Thread:
         """Get the remote thread."""
         # first check if the thread exists locally
         thread = await self.get_or_add_thread_async(thread_id, tenant_id)
@@ -87,7 +89,6 @@ class BaseThreadStore(ABC, ExposeSyncMethodsMixin):
             return remote_thread
         except Exception as e:
             raise Exception(f"Unable to sync remote thread: {e}")
-        
 
 
 class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
@@ -115,7 +116,6 @@ class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
 
 
 class BaseRunStorage(ABC, ExposeSyncMethodsMixin):
-
     async def update(self, **kwargs) -> "BaseRunStorage":
         """Update a run."""
         run = await self.get_or_create_async(id=self.id)

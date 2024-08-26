@@ -1,16 +1,17 @@
-from marvin.extensions.utilities.logging import pretty_log
-import pytest
 from uuid import uuid4
+
+import pytest
+from marvin.beta.local.assistant import LocalAssistant
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.beta.local.run import LocalRun
-from marvin.beta.local.assistant import LocalAssistant
 from marvin.beta.local.thread import LocalThread
-from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.memory.temp_memory import Memory
 from marvin.extensions.storage.simple_chatstore import SimpleChatStore
-from marvin.extensions.types.start_run import TriggerAgentRun
 from marvin.extensions.types import ChatMessage, MessageRole
+from marvin.extensions.types.start_run import TriggerAgentRun
+from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.tenant import set_current_tenant_id
+
 
 @pytest.fixture
 def start_run_payload():
@@ -32,6 +33,7 @@ def start_run_payload():
         tenant_id=str(uuid4()),
     )
 
+
 @pytest.fixture
 def local_assistant():
     return LocalAssistant(
@@ -40,6 +42,7 @@ def local_assistant():
         model="gpt-4o-mini",
         instructions="You are a helpful assistant.",
     )
+
 
 class Cache:
     def __init__(self):
@@ -54,6 +57,7 @@ class Cache:
     def delete(self, key):
         del self.c[key]
 
+
 async def mocked_get_llm_response(*args, **kwargs):
     from litellm import acompletion
 
@@ -65,6 +69,7 @@ async def mocked_get_llm_response(*args, **kwargs):
         stream=True,
         mock_response="It's simple to use and easy to get started",
     )
+
 
 @pytest.mark.asyncio
 async def test_local_run(start_run_payload, local_assistant, mocker):
@@ -82,12 +87,11 @@ async def test_local_run(start_run_payload, local_assistant, mocker):
     cache = Cache()
     storage = SimpleChatStore()
     memory = Memory(
-        storage=storage, 
-        context=c, 
-        thread_id=start_run_payload.thread_id, 
-        index=start_run_payload.thread_id
+        storage=storage,
+        context=c,
+        thread_id=start_run_payload.thread_id,
+        index=start_run_payload.thread_id,
     )
-  
 
     handler = DefaultAssistantEventHandler(context=c, cache=cache, memory=memory)
     thread = await LocalThread.create_async(
@@ -108,6 +112,6 @@ async def test_local_run(start_run_payload, local_assistant, mocker):
     assert run.status == "completed"
 
     messages = await thread.list_messages_async(index=start_run_payload.thread_id)
-    assert len(messages) == 2 # User message and assistant's response
+    assert len(messages) == 2  # User message and assistant's response
     assert messages[0].role == MessageRole.USER
     assert messages[1].role == MessageRole.ASSISTANT
