@@ -1,12 +1,5 @@
-import sys
 import typer
 from rich.console import Console
-from typing import Optional
-from marvin.client.openai import AsyncMarvinClient
-from marvin.types import StreamingChatResponse
-from marvin.utilities.asyncio import run_sync
-from marvin.utilities.openai import get_openai_client
-from marvin.beta.assistants import Assistant
 from marvin.cli.threads import threads_app
 from marvin.cli.assistants import assistants_app, say as assistants_say
 
