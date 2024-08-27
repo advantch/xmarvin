@@ -5,7 +5,7 @@ from typing import List
 
 from marvin.extensions.embeddings.base import Embeddings
 from marvin.extensions.monitoring import logger
-from marvin.extensions.settings import extensions_settings
+from marvin.extensions.settings import extension_settings
 from marvin.settings import settings
 from openai import OpenAI
 
@@ -35,7 +35,7 @@ def get_embeddings(
     @return: list[float] The embeddings.
     """
     if dimensions is None:
-        dimensions = extensions_settings.default_vector_dimensions
+        dimensions = extension_settings.default_vector_dimensions
     if not use_default_client:
         client = get_client(api_key)
     else:

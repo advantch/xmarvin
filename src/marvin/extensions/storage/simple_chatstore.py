@@ -191,3 +191,26 @@ class SimpleAgentStorage(BaseAgentStorage):
     def get_agent_config(self, agent_id: str) -> AgentConfig:
         """Get agent config."""
         return self.store.get(agent_id, None)
+
+
+
+class SimpleJsonStorage(BaseStorage):
+    """Simple JSON storage."""
+
+    store: Dict[str, Any] = {}
+
+    def get(self, key: str) -> Any:
+        """Get a value for a key."""
+        return self.store.get(key, None)
+    
+    def create(self, key: str, value: Any) -> None:
+        """Create a value for a key."""
+        return self.set(key, value)
+
+    def set(self, key: str, value: Any) -> None:
+        """Set a value for a key."""
+        self.store[key] = value
+
+    def delete(self, key: str) -> None:
+        """Delete a value for a key."""
+        del self.store[key]

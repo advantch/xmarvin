@@ -3,7 +3,7 @@ import os
 
 import magic
 from magika import Magika
-from marvin.extensions.logging import logger
+from marvin.extensions.utilities.logging import logger
 
 
 def get_magic_mimetype(file_bytes: bytes):

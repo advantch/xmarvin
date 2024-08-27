@@ -20,7 +20,7 @@ from marvin.beta.local.handlers import (
 )
 from marvin.beta.local.thread import LocalThread
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.settings import extensions_settings
+from marvin.extensions.settings import extension_settings
 from marvin.extensions.storage.base import (
     BaseAgentStorage,
     BaseChatStore,
@@ -119,7 +119,7 @@ def verify_runtime_config(
     if data.agent_id and data.agent_config is None:
         rich.print(f"agent_id: {data.agent_id}")
         agent_storage = (
-            agent_storage or extensions_settings.storage.agent_storage_class()
+            agent_storage or extension_settings.storage.agent_storage_class()
         )
         agent_config = agent_storage.get_agent_config(data.agent_id)
         data.agent_config = agent_config or default_config
@@ -181,7 +181,7 @@ def run_context(
     )
 
     run_storage_class = (
-        run_storage_class or extensions_settings.storage.run_storage_class
+        run_storage_class or extension_settings.storage.run_storage_class
     )
     run_storage = run_storage_class()
     pretty_log(thread, "new thread")
@@ -292,7 +292,7 @@ def handle_assistant_run(
             "openai_thread_id": remote_thread.id,
             "openai_assistant_id": assistant.id,
             "memory": memory,
-            "cache": extensions_settings.storage.cache,
+            "cache": extension_settings.storage.cache,
         },
         tool_choice="auto",
         tools=agent_config.get_assistant_tools(),
@@ -327,7 +327,7 @@ def handle_local_run(
     assistant = data.agent_config.as_assistant()
     # add an event handler to save run data and streaming
     handler = DefaultAssistantEventHandler(
-        context=context, cache=extensions_settings.storage.cache, memory=memory
+        context=context, cache=extension_settings.storage.cache, memory=memory
     )
 
     local_thread = LocalThread.create(

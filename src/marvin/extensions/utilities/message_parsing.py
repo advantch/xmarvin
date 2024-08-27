@@ -173,9 +173,9 @@ def to_openai_tool(
 
 
 def as_llm_message(file_id: str):
-    from marvin.extensions.settings import extensions_settings  # noqa
+    from marvin.extensions.settings import extension_settings  # noqa
 
-    storage = extensions_settings.storage.file_storage_class()
+    storage = extension_settings.storage.file_storage_class()
     data_source = storage.get(file_id)
     if data_source:
         return ImageFileContentBlock(
@@ -190,9 +190,9 @@ def as_llm_message(file_id: str):
 
 
 def get_openai_assistant_attachments(message: ChatMessage) -> List[MessageContent]:
-    from marvin.extensions.settings import extensions_settings  # noqa
+    from marvin.extensions.settings import extension_settings  # noqa
 
-    default_storage = extensions_settings.storage.file_storage_class()
+    default_storage = extension_settings.storage.file_storage_class()
     attachments: List[MessageContent] = []
     for attachment in message.metadata.attachments:
         if isinstance(attachment, FileMessageContent):
@@ -210,9 +210,9 @@ def get_openai_assistant_attachments(message: ChatMessage) -> List[MessageConten
 
 def get_openai_assistant_messages(message: ChatMessage) -> List[MessageContent]:
     content: List[MessageContent] = []
-    from marvin.extensions.settings import extensions_settings  # noqa
+    from marvin.extensions.settings import extension_settings  # noqa
 
-    default_storage = extensions_settings.storage.file_storage_class()
+    default_storage = extension_settings.storage.file_storage_class()
     if isinstance(message.content, list):
         for text_message in message.content:
             if isinstance(text_message, TextContentBlock):

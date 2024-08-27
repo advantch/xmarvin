@@ -4,7 +4,7 @@ import tempfile
 import boto3
 from botocore.exceptions import ClientError
 from marvin.extensions.settings import extension_settings
-from marvin.extensions.storage.base import BaseFileStorage
+from marvin.extensions.storage.file_storage import BaseFileStorage
 from marvin.extensions.utilities.logging import logger
 from pydantic_settings import BaseSettings
 

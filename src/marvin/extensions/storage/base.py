@@ -10,7 +10,17 @@ from marvin.extensions.types.run import PersistedRun
 from marvin.extensions.types.thread import ChatThread
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 
+class BaseStorage(ABC, ExposeSyncMethodsMixin):
+    @abstractmethod
+    def get(self, key: str) -> Any:
+        """Get a value for a key."""
+        ...
 
+    @abstractmethod
+    def set(self, key: str, value: Any) -> None:
+        """Set a value for a key."""
+        ...
+        
 class BaseChatStore(ABC, ExposeSyncMethodsMixin):
     @classmethod
     def class_name(cls) -> str:
@@ -113,6 +123,16 @@ class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
     async def get_file_metadata(self, file_id: Union[str, UUID]) -> dict:
         """Retrieve metadata for a file."""
         pass
+
+    @abstractmethod
+    async def sync_with_openai_assistant(self, assistant_id: str) -> List[dict]:
+        """Sync files with a remote OpenAI assistant."""
+        ...
+
+    @abstractmethod
+    async def upload_to_openai(self, file_id: Union[str, UUID], purpose: str) -> dict:
+        """Upload a file to OpenAI."""
+        ...
 
 
 class BaseRunStorage(ABC, ExposeSyncMethodsMixin):

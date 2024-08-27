@@ -1,7 +1,7 @@
 import uuid
 from contextlib import contextmanager
 
-from marvin.extensions.storage import BaseRunStore
+from marvin.extensions.storage.base import BaseRunStorage
 from marvin.extensions.storage.simple_chatstore import SimpleRunStore
 from marvin.extensions.utilities.context import (
     RunContext,
@@ -18,7 +18,7 @@ def tool_run_context(
     input_data: dict,
     toolkit_id: str | uuid.UUID | None = None,
     db_id: str | uuid.UUID | None = None,
-    run_storage_class: BaseRunStore | None = SimpleRunStore,
+    run_storage_class: BaseRunStorage | None = SimpleRunStore,
 ):
     run_id = str(uuid.uuid4())
     tenant_id = get_current_tenant_id()

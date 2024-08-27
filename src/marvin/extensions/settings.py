@@ -3,12 +3,12 @@ from typing import Any
 from marvin.extensions.storage.base import (
     BaseAgentStorage,
     BaseChatStore,
-    BaseFileStorage,
     BaseRunStorage,
     BaseThreadStore,
 )
+
 from marvin.extensions.storage.cache import cache
-from marvin.extensions.storage.file_storage import SimpleFileStorage
+from marvin.extensions.storage.file_storage import SimpleFileStorage, BaseFileStorage
 from marvin.extensions.storage.simple_chatstore import (
     SimpleAgentStorage,
     SimpleChatStore,
@@ -46,4 +46,4 @@ class MarvinExtensionsSettings(BaseSettings):
     default_vector_dimensions: int = 256
 
 
-extensions_settings = MarvinExtensionsSettings()
+extension_settings = MarvinExtensionsSettings()
