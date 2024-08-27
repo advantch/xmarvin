@@ -1,6 +1,6 @@
 [project]
 name = "marvin"
-version = "0.0.1"
+dynamic = ["version"]
 description = "A lightweight AI engineering toolkit for building natural language interfaces that are reliable, scalable, and easy to trust."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -36,7 +36,11 @@ dependencies = [
     "boto3>=1.26.107",
     "asgiref>=3.8.1",
     "prefect>=2.14.9",
+    "python-magic>=0.4.27",
 ]
+
+# [tool.uv.sources]
+# marvin = { path = "./src/marvin" }
 
 [project.optional-dependencies]
 generator = ["datamodel-code-generator>=0.20.0"]
@@ -58,6 +62,7 @@ dev = [
     "pydantic>=2.8.1",
     "pydantic-settings>=2.4.0",
     "ruff>=0.6.0",
+    "django>=5.0.1",
 ]
 tests = [
     "pytest-asyncio>=0.18.2,!=0.22.0,<0.23.0",
@@ -89,9 +94,13 @@ Documentation = "https://xmarvin.advantch.com"
 [project.scripts]
 marvin = "marvin.cli:app"
 
+# [build-system]
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
+
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "src/marvin/_version.py"

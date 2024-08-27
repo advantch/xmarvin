@@ -1,9 +1,11 @@
 import uuid
 
+from marvin.extensions.storage.base import BaseRunStorage
 from marvin.extensions.tools.app_tools import get_tool_by_name, toolkits
 from marvin.extensions.tools.context import tool_run_context
 from marvin.extensions.tools.tool import Tool as DBTool
 from marvin.extensions.utilities.serialization import to_serializable
+from marvin.extensions.settings import extension_settings
 
 
 def get_toolkit_by_id(toolkit_id: str):
@@ -47,21 +49,24 @@ def fetch_and_run_toolkit_tool(
     input_data: dict,
     config: dict = None,
     db_id: str | uuid.UUID | None = None,
+    run_storage: BaseRunStorage = None,
 ):
     config = config or {}
 
     toolkit = get_toolkit_by_id(toolkit_id)
     tool = toolkit.get_runnable_tool(tool_id)
 
+    run_storage = run_storage or extension_settings.storage.run_storage_class()
+
     if not tool or not tool.run or not tool.fn:
         raise ValueError(f"Tool with id {tool_id} not found or is invalid")
     result = {"run_id": None, "result": None}
-    with tool_run_context(tool_id, config, input_data, toolkit_id) as (run, context):
+    with tool_run_context(tool_id, config, input_data, toolkit_id=toolkit_id) as (run, context):
         result["run_id"] = run.id
         result["result"] = tool.run(input_data)
 
         # Update run with result
         run.data["outputs"] = to_serializable(result)
-        run.save()
+        run_storage.update(run)
 
     return result

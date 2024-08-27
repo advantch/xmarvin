@@ -1,3 +1,5 @@
+from marvin.extensions.tools.app_tools.database import db_connection
+from marvin.extensions.tools.services.sql_database import SQLDatabase
 import pytest
 from marvin.extensions.tools.services.db import get_django_db_connection_url
 from marvin.extensions.tools.services.db import (
@@ -21,13 +23,13 @@ def test_get_config_from_string():
     assert config["OPTIONS"]["options"] == "endpoint=ep-withered-dawn-00000"
 
 
-@pytest.mark.django_db
 def test_introspection():
     # Get the database connection
-    table_names = get_table_names()
+    connection = db_connection("sqlite:///:memory:")
+    table_names = connection.get_table_names()
     # Iterate over the table names and retrieve column information
     for table_name in table_names:
-        data = get_table_detail(table_name)
+        data = connection.get_table_info(table_name)
         assert data is not None, data
         assert isinstance(data, dict), data
         assert "columns" in data, data
@@ -36,8 +38,9 @@ def test_introspection():
 
 
 def test_generates_correct_url_for_postgresql(mocker):
+
     mocker.patch(
-        "apps.ai.core.tools.services.db.get_db_config",
+        "marvin.extensions.tools.services.db.get_db_config",
         return_value={
             "ENGINE": "django.db.backends.postgresql",
             "USER": "testuser",

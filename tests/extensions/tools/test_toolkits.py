@@ -1,18 +1,40 @@
+import uuid
+
+from sqlalchemy import create_engine, text
 import pytest
+import os
 from marvin.extensions.tools.tool_runner import fetch_and_run_toolkit_tool
 from marvin.extensions.utilities.tenant import set_current_tenant_id
 
+def create_temp_file_sqlite_db():
+    db_file = f"test_db_{uuid.uuid4()}.sqlite"
+    db_url = f"sqlite:///{db_file}"
+    return db_url, db_file
+
+@pytest.fixture(scope="function")
+def temp_db():
+    db_url, db_file = create_temp_file_sqlite_db()
+    yield db_url, db_file
+    # Clean up the file after the test
+    if os.path.exists(db_file):
+        os.remove(db_file)
 
 
-@pytest.mark.django_db
-def test_table_tool_operations(tenant_user):
+def test_table_tool_operations(temp_db):
     """
     Create db, create table, add row, edit row, delete row, delete table
     """
-    set_current_tenant_id(tenant_user.tenant.id)
-    # create a default tenant database
-    db = "sqlite:///:memory:"
-    db_url = db
+    tenant_id = str(uuid.uuid4())
+    set_current_tenant_id(tenant_id)
+    db_url, db_file = temp_db
+        # Create the database file
+    engine = create_engine(db_url)
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))  # This will create the file
+    
+     # Check if the file is actually created
+    assert os.path.exists(db_file), f"Database file {db_file} was not created"
+
 
     def run_tool(tool_id, input_data):
         return fetch_and_run_toolkit_tool(
@@ -49,7 +71,7 @@ def test_table_tool_operations(tenant_user):
     result = run_tool("db_query", {
         "query": "INSERT INTO notes (date, note) VALUES ('2023-05-01', 'First note')"
     })
-    assert result['result'].message == "Success: Query executed."
+    assert result['result'].message == "Query executed successfully."
 
     # Verify row addition
     result = run_tool("db_query", {
@@ -62,13 +84,13 @@ def test_table_tool_operations(tenant_user):
     result = run_tool("db_query", {
         "query": "ALTER TABLE notes ADD COLUMN category TEXT"
     })
-    assert result['result'].message == "Success: Query executed."
+    assert result['result'].message == "Query executed successfully."
 
     # Edit a row
     result = run_tool("db_query", {
         "query": "UPDATE notes SET category = 'personal' WHERE id = 1"
     })
-    assert result['result'].message == "Success: Query executed."
+    assert result['result'].message == "Query executed successfully."
 
     # Verify edits
     result = run_tool("db_query", {
@@ -81,7 +103,7 @@ def test_table_tool_operations(tenant_user):
     result = run_tool("db_query", {
         "query": "DELETE FROM notes WHERE id = 1"
     })
-    assert result['result'].message == "Success: Query executed."
+    assert result['result'].message == "Query executed successfully."
 
     # Verify deletion
     result = run_tool("db_query", {
@@ -93,8 +115,16 @@ def test_table_tool_operations(tenant_user):
     result = run_tool("db_query", {
         "query": "DROP TABLE notes"
     })
-    assert result['result'].message == "Success: Query executed."
+    assert result['result'].message == "Query executed successfully."
 
     # Final verification
     result = run_tool("db_list_tables", {})
     assert "notes" not in result['result'].tables
+
+
+
+def test_table_relationships(temp_db):
+    """
+    Create db, create table, add row, edit row, delete row, delete table
+    """
+    

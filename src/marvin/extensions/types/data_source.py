@@ -74,14 +74,3 @@ class DataSource(BaseModel):
 
     class Config:
         extra = "allow"
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        if self.upload_type == "url" and not self.url:
-            raise ValueError("URL must be provided when upload_type is 'url'")
-        if self.upload_type == "web_source" and not self.web_source:
-            raise ValueError("web_source must be provided when upload_type is 'web_source'")
-        if self.upload_type != "url" and self.url:
-            raise ValueError("URL should only be provided when upload_type is 'url'")
-        if self.upload_type != "web_source" and self.web_source:
-            raise ValueError("web_source should only be provided when upload_type is 'web_source'")

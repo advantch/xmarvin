@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 from typing import Any, Dict, List, Optional
+import uuid
 
 import fsspec
 from marvin.extensions.storage.base import (
@@ -9,6 +10,7 @@ from marvin.extensions.storage.base import (
     BaseChatStore,
     BaseRunStorage,
     BaseThreadStore,
+    BaseStorage,
 )
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
@@ -152,6 +154,29 @@ class SimpleRunStore(BaseRunStorage):
     """Simple run storage."""
 
     runs: Dict[str, PersistedRun] = {}
+
+    def update_run_data(self, run_id: str, data: dict) -> None:
+        if run_id not in self.runs:
+            raise ValueError(f"Run {run_id} not found")
+        run = self.runs[run_id]
+        for key, value in data.items():
+            setattr(run, key, value)
+        self.runs[run_id] = run
+
+    def get(self, run_id: str) -> PersistedRun:
+        persisted_run = self.runs.get(run_id, None)
+        if persisted_run is None:
+            raise ValueError(f"Run {run_id} not found")
+        return PersistedRun.model_validate(persisted_run)
+
+    def create(self, data: dict | PersistedRun) -> PersistedRun:
+        if isinstance(data, dict):
+            id = data.pop("id", str(uuid.uuid4()))
+            run = PersistedRun(id=id, **data)
+        else:
+            run = data
+        self.runs[run.id] = run
+        return run
 
     @expose_sync_method("get_or_create")
     async def get_or_create_async(self, id: str) -> tuple[PersistedRun, bool]:

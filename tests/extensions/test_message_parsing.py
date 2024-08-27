@@ -1,4 +1,6 @@
 import uuid
+
+from pydantic_core import Url
 import pytest
 from pydantic import ValidationError
 from openai.types.beta.threads.runs.function_tool_call import Function, FunctionToolCall
@@ -18,9 +20,9 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def context(tenant_user):
-    tenant_user.set_session_tenant(tenant_id=tenant_user.tenant.id)
-    run = SimpleRunStore.objects.init_db_run(
+def context():
+    run_store = SimpleRunStore()
+    run = run_store.init_db_run(
         run_id=uuid.uuid4(),
         thread_id=uuid.uuid4(),
     )
@@ -29,7 +31,7 @@ def context(tenant_user):
         channel_id=uuid.uuid4(),
         run_id=run.id,
         thread_id=run.thread_id,
-        tenant_id=tenant_user.tenant.id,
+        tenant_id=uuid.uuid4(),
         agent_config=AgentConfig.default_agent(),
         tool_config=[],
     )
@@ -38,10 +40,10 @@ def context(tenant_user):
 def test_chat_message_parsing():
     # Sample message to be parsed
     # create a dataset with some files
-    message = """{
+    message = {
         "id": "b73fd271-fa14-468f-95ae-25c2cd1db824",
         "role": "user",
-        "run_id": null,
+        "run_id": None,
         "content": [
             {
                 "text": {
@@ -53,31 +55,31 @@ def test_chat_message_parsing():
         ],
         "metadata": {
             "id": "",
-            "name": null,
+            "name": None,
             "type": "message",
             "run_id": "",
-            "streaming": false,
-            "raw_output": null,
-            "tool_calls": null,
+            "streaming": False,
+            "raw_output": None,
+            "tool_calls": None,
             "attachments": [
                 {
                     "type": "image",
                     "file_id": "file-123",
                     "metadata": {
-                        "url": "/media/dicts/pic.png"
+                        "url": "http://localhost:8000/media/dicts/pic.png"
                     }
                 }
             ]
         },
-        "thread_id": null
-    }"""
+        "thread_id": None
+    }
 
-    try:
-        message = ChatMessage.model_validate_json(message)
-    except ValidationError as exc:
-        print(repr(exc.errors()[0]["type"]))
+    
+    message = ChatMessage.model_validate(message)
+    print(message, type(message), message.metadata)
     assert message.metadata.attachments[0].type == "image"
-    assert message.metadata.attachments[0].metadata.url == "/media/dicts/pic.png"
+    assert message.metadata.attachments[0].metadata.url == Url("http://localhost:8000/media/dicts/pic.png")
+
 
 
 def test_runner_message_parsing(

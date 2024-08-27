@@ -69,12 +69,15 @@ class PersistedRun(BaseModel):
         """
         storage = context.get("storage", {})
         run_metadata = storage.get("run_metadata", {})
+
+        # save run and metadata if run was created
         openai_run = run_metadata.get("run", None)
-        metadata = openai_run.get("metadata", {})
         if openai_run:
+            metadata = openai_run.get("metadata", {})
             self.run = OpenaiRunSchema.model_validate(openai_run)
+            self.metadata = RunMetadata.model_validate(metadata)
+
         steps = run_metadata.get("steps", [])
         self.steps = steps
-        self.metadata = RunMetadata.model_validate(metadata)
 
         return self

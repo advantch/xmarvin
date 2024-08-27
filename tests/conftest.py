@@ -6,6 +6,7 @@ import sys
 import pytest
 
 from .fixtures import *
+from .extensions.fixtures import *
 
 
 @pytest.fixture(scope="session")

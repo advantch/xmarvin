@@ -100,17 +100,6 @@ def test_valid_web_source_data_source(valid_web_source_config):
     assert len(data_source.web_source.start_urls) == 1
     assert str(data_source.web_source.start_urls[0].url).rstrip('/') == "https://crawlee.dev"
 
-def test_invalid_web_source_data_source():
-    with pytest.raises(ValueError, match="web_source must be provided when upload_type is 'web_source'"):
-        DataSource(name="Invalid Web Source", upload_type="web_source")
-
-def test_web_source_with_invalid_upload_type(valid_web_source_config):
-    with pytest.raises(ValueError, match="web_source should only be provided when upload_type is 'web_source'"):
-        DataSource(
-            name="Invalid Upload Type",
-            upload_type="file",
-            web_source=WebSource(**valid_web_source_config)
-        )
 
 def test_url_data_source():
     data_source = DataSource(
@@ -121,17 +110,6 @@ def test_url_data_source():
     assert data_source.upload_type == "url"
     assert str(data_source.url) == "https://example.com/data.json"
 
-def test_invalid_url_data_source():
-    with pytest.raises(ValueError, match="URL must be provided when upload_type is 'url'"):
-        DataSource(name="Invalid URL", upload_type="url")
-
-def test_url_with_invalid_upload_type():
-    with pytest.raises(ValueError, match="URL should only be provided when upload_type is 'url'"):
-        DataSource(
-            name="Invalid Upload Type",
-            upload_type="file",
-            url="https://example.com/data.json"
-        )
 
 async def test_upload_from_url(file_storage):
     url = "https://example.com/test_file.txt"

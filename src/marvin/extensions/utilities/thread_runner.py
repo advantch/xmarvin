@@ -184,7 +184,6 @@ def run_context(
         run_storage_class or extension_settings.storage.run_storage_class
     )
     run_storage = run_storage_class()
-    pretty_log(thread, "new thread")
     persisted_run = run_storage.init_db_run(
         payload.run_id,
         thread.id,
@@ -204,7 +203,7 @@ def run_context(
     add_run_context(context_object, payload.run_id)
 
     try:
-        yield persisted_run, thread_store, context_object
+        yield run_storage, thread_store, context_object
     except Exception as e:
         logger.error(f"Error executing agent run pre yield: {e}")
         context_object["storage"]["errors"].append(str(e))
@@ -255,7 +254,7 @@ def add_message_to_remote_thread(data: ChatMessage, assistant_thread_id):
 def handle_assistant_run(
     data: TriggerAgentRun,
     thread_store: BaseThreadStore,
-    run: BaseRunStorage,
+    run_storage: BaseRunStorage,
     context: dict,
     chat_store: BaseChatStore | None = None,
     chat_storage_class: type[BaseChatStore] | None = SimpleChatStore,
@@ -288,7 +287,7 @@ def handle_assistant_run(
         event_handler_class=DefaultAssistantEventHandler,
         event_handler_kwargs={
             "context": context,
-            "openai_run_id": run.id,
+            "openai_run_id": data.run_id,
             "openai_thread_id": remote_thread.id,
             "openai_assistant_id": assistant.id,
             "memory": memory,
@@ -297,7 +296,8 @@ def handle_assistant_run(
         tool_choice="auto",
         tools=agent_config.get_assistant_tools(),
     )
-    run.external_id = remote_run.run.id
+    # patch the run with the remote run
+    run_storage.update_run_data(data.run_id, {"external_id": remote_run.run.id})
 
     send_close_event(data, "close")
     return remote_run

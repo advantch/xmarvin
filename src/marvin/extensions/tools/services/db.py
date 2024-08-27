@@ -1,9 +1,8 @@
 from marvin.extensions.utilities.logging import logger
-
+from marvin.extensions.settings import extension_settings
 try:
     import environ
     from django.conf import settings
-    from django.core.cache import cache
     from django.db.utils import DEFAULT_DB_ALIAS, load_backend
 except ImportError as e:
     print(f"ImportError: {e} - this package is only available in django")
@@ -16,7 +15,11 @@ def get_config_from_string(url):
 
 
 def get_db_config(db_alias="default"):
-    return settings.DATABASES[db_alias]
+    try:
+        return settings.DATABASES[db_alias]
+    except Exception as e:
+        logger.error(f"Error getting db config: {e}")
+        return {}
 
 
 def get_django_db_connection_url(db_alias="default"):
@@ -67,6 +70,7 @@ def create_connection(alias=DEFAULT_DB_ALIAS, url=None):
 
 def get_table_names(connection=None, url=None):
     cache_key = f"table_names_{url}"
+    cache = extension_settings.storage.cache
     names = cache.get(cache_key)
     if names is not None:
         return names

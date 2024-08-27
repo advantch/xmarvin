@@ -23,22 +23,23 @@ def tool_run_context(
     run_id = str(uuid.uuid4())
     tenant_id = get_current_tenant_id()
 
-    storage = run_storage_class or SimpleRunStore()
+    storage = run_storage_class() or SimpleRunStore()
 
     # Create run object in the database
-    run = storage.create(
-        id=run_id,
-        tenant_id=tenant_id,
-        data={
+    
+    run = storage.create({
+        "id": run_id,
+        "tenant_id": tenant_id,
+        "data": {
             "tool_id": tool_id,
             "config": config,
             "input_data": input_data,
             "db_id": db_id,
             "toolkit_id": toolkit_id,
         },
-        status="started",
-        tags=["tool"],
-    )
+        "status": "started",
+        "tags": ["tool"],
+    })
 
     # Create run context
     context = RunContext(
@@ -63,10 +64,10 @@ def tool_run_context(
         yield run, _c
     except Exception as e:
         run.status = "failed"
-        run.save()
+        storage.update(run)
         raise e
     finally:
         # Update run status
         run.status = "completed"
-        run.save()
+        storage.update(run)
         clear_run_context(run_id)

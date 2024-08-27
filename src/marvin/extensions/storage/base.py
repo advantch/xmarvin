@@ -136,12 +136,8 @@ class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
 
 
 class BaseRunStorage(ABC, ExposeSyncMethodsMixin):
-    async def update(self, **kwargs) -> "BaseRunStorage":
+    async def update(self, run: PersistedRun) -> "BaseRunStorage":
         """Update a run."""
-        run = await self.get_or_create_async(id=self.id)
-        m = run.model_dump()
-        m.update(kwargs)
-        run = PersistedRun.model_validate(m)
         return await self.save_async(run)
 
     @abstractmethod

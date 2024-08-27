@@ -183,14 +183,8 @@ def db_query(query: str) -> QueryResult:
 
     try:
         connection = db_connection(url)
-        result = connection.run(query)
-        if result.get("data") and len(result.get("data")) > 0:
-            return QueryResult(
-                data=result.get("data"),
-                headers=result.get("headers"),
-                message="Query has been run and data is visible to user.",
-            )
-        return QueryResult(data=[], headers=[], message="Success: Query executed.")
+        return connection.run(query)
+        
     except Exception as e:
         traceback.print_exc()
         return QueryResult(data=[], headers=[], message=f"Error: {str(e)}")
