@@ -39,5 +39,3 @@ async def test_tenant_context():
     assert _tenant_state.get()["tenant4"] == {"data": "test"}
     clear_thread_state("tenant4")
     assert "tenant4" not in _tenant_state.get()
-
-    print("All tests passed!")

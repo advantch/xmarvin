@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, HttpUrl
-from typing import List, Optional, Literal, Dict, Any
+from typing import BinaryIO, List, Optional, Literal, Dict, Any
 import uuid
 from datetime import datetime
 
@@ -32,6 +32,16 @@ class IndexData(BaseModel):
     mime_type: Optional[str] = None
     base64_string: Optional[str] = None
     prompt: Optional[str] = None
+
+class DataSourceFileUpload(BaseModel):
+    file: BinaryIO
+    file_name: str | None = None
+    file_type: str | None = None
+    file_size: int | None = None
+    file_id: str | None = None
+    file_upload_url: str | None = None
+    file_upload_type: str | None = None
+    reference_file_id: str | None = None
 
 class DataSource(BaseModel):
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -74,3 +84,23 @@ class DataSource(BaseModel):
 
     class Config:
         extra = "allow"
+
+
+    def from_file_upload(cls, upload: DataSourceFileUpload):
+        """
+        Create a DataSource from a file upload.
+        DataSource objects can store metadata about a file.
+        """
+        return cls(
+            name=upload.file_name,
+            description=upload.file_name,
+            file_name=upload.file_name,
+            file_type=upload.file_type,
+            file_size=upload.file_size,
+            file_id=upload.file_id,
+            file_upload_url=upload.file_upload_url,
+            file_upload_type=upload.file_upload_type,
+        )
+
+
+    

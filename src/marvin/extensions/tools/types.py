@@ -1,6 +1,6 @@
 import json
 from abc import abstractmethod
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, List
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
@@ -21,10 +21,10 @@ class ToolMetadata:
     tool_hash: Optional[str] = Field(
         default=None, description="Unique Hash of the tool"
     )
-    variables: Optional[list[str | dict] | dict] = Field(
+    variables: Optional[List[str | dict] | dict] = Field(
         default={}, description="Variables to be used in the tool"
     )
-    required_variables: Optional[list[dict]] = Field(
+    required_variables: Optional[List[dict]] = Field(
         default=[], description="Required variables to be used in the tool"
     )
 
@@ -150,4 +150,4 @@ class SpecDefinition(BaseModel):
 
     name: str
     description: str
-    context_variables: list[str | dict]
+    context_variables: List[str | dict]

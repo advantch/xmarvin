@@ -4,14 +4,14 @@ import httpx
 import magic
 from io import BytesIO
 from unittest.mock import AsyncMock, patch
-from marvin.extensions.storage.file_storage import SimpleFileStorage
+from marvin.extensions.storage.file_storage import LocalFileStorage
 from marvin.extensions.types.data_source import DataSource
 
 pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def file_storage():
-    return SimpleFileStorage()
+    return LocalFileStorage()
 
 async def test_presigned_url(file_storage):
     file_id = str(uuid.uuid4())
@@ -23,7 +23,7 @@ async def test_presigned_url(file_storage):
             "upload_url": f"https://example.com/upload/{file_id}",
         }
         
-        response = await file_storage.request_presigned_url(file_id, private=False)
+        response = await file_storage.request_presigned_url_async(file_id, private=False)
 
         assert response is not None
         assert "upload_url" in response
@@ -38,13 +38,13 @@ async def test_presigned_url(file_storage):
             mock_put.return_value.status_code = 200
             mock_put.return_value.text = ""
             
-            res = await file_storage.save_file(BytesIO(file_content), file_id, {"size": len(file_content), "content_type": content_type})
+            res = await file_storage.save_file_async(BytesIO(file_content), file_id, {"size": len(file_content), "content_type": content_type})
             assert res["file_id"] == file_id
             assert res["size"] == 4
             assert res["content_type"] == content_type
 
         # Verify file content
-        file = await file_storage.get_file(file_id)
+        file = await file_storage.get_file_async(file_id)
         assert file.read() == file_content
 
         # Simulate public access
@@ -53,7 +53,7 @@ async def test_presigned_url(file_storage):
             mock_get.return_value.text = "test"
             mock_get.return_value.headers = {"Content-Type": content_type}
             
-            file_metadata = await file_storage.get_file_metadata(file_id)
+            file_metadata = await file_storage.get_file_metadata_async(file_id)
             res = httpx.get(file_metadata.get("url", ""))
             assert res.status_code == 200
             assert res.text == "test"
@@ -67,10 +67,10 @@ async def test_presigned_url(file_storage):
             "upload_url": f"https://example.com/upload/{file_id2}",
         }
         
-        response = await file_storage.request_presigned_url(file_id2, private=False)
+        response = await file_storage.request_presigned_url_async(file_id2, private=False)
         assert response is not None
         assert "upload_url" in response
-        upload_url = response["upload_url"]
+
 
         # Simulate file upload
         file_content = b"test-public"
@@ -80,13 +80,13 @@ async def test_presigned_url(file_storage):
             mock_put.return_value.status_code = 200
             mock_put.return_value.text = ""
             
-            res = await file_storage.save_file(BytesIO(file_content), file_id2, {"size": len(file_content), "content_type": content_type})
+            res = await file_storage.save_file_async(BytesIO(file_content), file_id2, {"size": len(file_content), "content_type": content_type})
             assert res["file_id"] == file_id2
             assert res["size"] == 11
             assert res["content_type"] == content_type
 
         # Verify file content
-        file = await file_storage.get_file(file_id2)
+        file = await file_storage.get_file_async(file_id2)
         assert file.read() == file_content
 
         # Simulate public access
@@ -95,7 +95,7 @@ async def test_presigned_url(file_storage):
             mock_get.return_value.text = "test-public"
             mock_get.return_value.headers = {"Content-Type": content_type}
             
-            file_metadata = await file_storage.get_file_metadata(file_id2)
+            file_metadata = await file_storage.get_file_metadata_async(file_id2)
             res = httpx.get(file_metadata.get("url", ""))
             assert res.status_code == 200
             assert res.text == "test-public"

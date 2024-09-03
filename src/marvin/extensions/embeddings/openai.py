@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
 from marvin.extensions.embeddings.base import Embeddings
-from marvin.extensions.monitoring import logger
+from marvin.extensions.utilities.logging import logger
 from marvin.extensions.settings import extension_settings
 from marvin.settings import settings
 from openai import OpenAI
@@ -32,7 +32,7 @@ def get_embeddings(
     @param dimensions: The dimensions of the embeddings.
     @param api_key: The API key to use.
     @param use_default_client: Whether to use the default client.
-    @return: list[float] The embeddings.
+    @return: List[float] The embeddings.
     """
     if dimensions is None:
         dimensions = extension_settings.default_vector_dimensions
@@ -48,11 +48,11 @@ class OpenAIEmbeddings(Embeddings):
     def __init__(self, num_threads=50):
         self.num_threads = num_threads
 
-    def embed_documents_legacy(self, texts: list[str]) -> list[list[float]]:
+    def embed_documents_legacy(self, texts: List[str]) -> List[List[float]]:
         """Embed search docs."""
         return [get_embeddings(text) for text in texts]
 
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed search docs using a thread pool."""
 
         logger.info(
@@ -70,17 +70,17 @@ class OpenAIEmbeddings(Embeddings):
                 results.append(result)
             return results
 
-    def embed_query(self, text: str) -> list[float]:
+    def embed_query(self, text: str) -> List[float]:
         """Embed query text."""
         return get_embeddings(text)
 
-    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
+    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
         """Asynchronous Embed search docs."""
         return await asyncio.get_running_loop().run_in_executor(
             None, self.embed_documents, texts
         )
 
-    async def aembed_query(self, text: str) -> list[float]:
+    async def aembed_query(self, text: str) -> List[float]:
         """Asynchronous Embed query text."""
         return await asyncio.get_running_loop().run_in_executor(
             None, self.embed_query, text

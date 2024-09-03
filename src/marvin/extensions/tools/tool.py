@@ -5,7 +5,7 @@ import logging
 import traceback
 import typing
 import uuid
-from typing import Annotated, Any, Callable, Dict, Optional, Union
+from typing import Annotated, Any, Callable, Dict, Optional, Union, List
 
 import langchain_core.tools
 import pydantic
@@ -314,8 +314,8 @@ def tool(
 
 
 def as_tools(
-    tools: list[Union[Callable, langchain_core.tools.BaseTool, Tool]],
-) -> list[Tool]:
+    tools: List[Union[Callable, langchain_core.tools.BaseTool, Tool]],
+) -> List[Tool]:
     """
     Converts a list of tools (either Tool objects or callables) into a list of
     Tool objects.
@@ -345,8 +345,8 @@ def as_tools(
 
 
 def as_lc_tools(
-    tools: list[Union[Callable, langchain_core.tools.BaseTool, Tool]],
-) -> list[langchain_core.tools.BaseTool]:
+    tools: List[Union[Callable, langchain_core.tools.BaseTool, Tool]],
+) -> List[langchain_core.tools.BaseTool]:
     new_tools = []
     for t in tools:
         if isinstance(t, langchain_core.tools.BaseTool):
@@ -385,7 +385,7 @@ class ToolResult(BaseModel):
 
 
 def handle_tool_call(
-    tool_call: Union[ToolCall, InvalidToolCall], tools: list[Tool]
+    tool_call: Union[ToolCall, InvalidToolCall], tools: List[Tool]
 ) -> Any:
     """
     Given a ToolCall and set of available tools, runs the tool call and returns
@@ -429,7 +429,7 @@ def handle_tool_call(
 
 
 async def handle_tool_call_async(
-    tool_call: ToolCall | ChatCompletionMessageToolCall, tools: list[Tool]
+    tool_call: ToolCall | ChatCompletionMessageToolCall, tools: List[Tool]
 ) -> ToolResult:
     """
     Given a ToolCall and set of available tools, runs the tool call and returns
@@ -479,7 +479,7 @@ async def handle_tool_call_async(
 
 
 def get_config_from_context(
-    config_key: str | list[str] | None = None,
+    config_key: str | List[str] | None = None,
 ) -> Dict[str, Any]:
     """
     Get the RunContextToolkitConfig from the context

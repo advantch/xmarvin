@@ -1,155 +1,100 @@
 """Base interface classes for interacting with local storage objects."""
 
 from abc import ABC, abstractmethod
-from typing import Any, BinaryIO, List, Optional, Union
-from uuid import UUID
+from typing import Any, BinaryIO, List, Optional, TypeVar, Generic, Dict
+from marvin.extensions.types.data_source import DataSource
+from marvin.utilities.asyncio import expose_sync_method, ExposeSyncMethodsMixin
+from marvin.extensions.types import ChatMessage, ChatThread, PersistedRun, AgentConfig
+from pydantic import BaseModel, Field
 
-from marvin.beta.assistants.threads import Thread
-from marvin.extensions.types import ChatMessage
-from marvin.extensions.types.run import PersistedRun
-from marvin.extensions.types.thread import ChatThread
-from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
+T = TypeVar('T')
 
-class BaseStorage(ABC, ExposeSyncMethodsMixin):
-    @abstractmethod
-    def get(self, key: str) -> Any:
-        """Get a value for a key."""
-        ...
+class BaseStorage(ABC, Generic[T], ExposeSyncMethodsMixin):
+    model: BaseModel = Field(..., description="The model type for the storage. Required.")
 
-    @abstractmethod
-    def set(self, key: str, value: Any) -> None:
+    @expose_sync_method("list")
+    async def list_async(self, **filters) -> List[T]:
+        """List items with optional filters."""
+        pass
+
+    @expose_sync_method("create")
+    async def create_async(self, key: str, value: T) -> None:
         """Set a value for a key."""
-        ...
-        
-class BaseChatStore(ABC, ExposeSyncMethodsMixin):
-    @classmethod
-    def class_name(cls) -> str:
-        """Get class name."""
-        return "BaseChatStore"
+        pass
 
-    @abstractmethod
-    async def set_messages_async(
-        self, key: str, messages: List[ChatMessage], **kwargs
-    ) -> None:
-        """Set messages for a key."""
-        ...
+    @expose_sync_method("get")
+    async def get_async(self, key: str) -> Optional[T]:
+        """Get a value for a key."""
+        pass
 
-    @abstractmethod
-    async def get_messages_async(self, key: str, **kwargs) -> List[ChatMessage]:
-        """Get messages for a key."""
-        ...
+    @expose_sync_method("update")
+    async def update_async(self, key: str, value: T) -> T:
+        """Update a value for a key."""
+        pass
 
-    @abstractmethod
-    async def add_message_async(self, key: str, message: ChatMessage, **kwargs) -> None:
-        """Add a message for a key."""
-        ...
+    @expose_sync_method("filter")
+    async def filter_async(self, **filters) -> List[T]:
+        """Filter items based on given criteria."""
+        pass
 
-    @abstractmethod
-    async def delete_messages_async(
-        self, key: str, **kwargs
-    ) -> Optional[List[ChatMessage]]:
-        """Delete messages for a key."""
-        ...
+class BaseChatStore(BaseStorage[List[ChatMessage]]):
+    model = ChatMessage
 
-    @abstractmethod
+    @expose_sync_method("set_messages")
+    async def set_messages_async(self, messages: List[ChatMessage]) -> None:
+        for message in messages:
+            await self.create_async(message)
+
+    @expose_sync_method("get_messages")
+    async def get_messages_async(self, **filters) -> List[ChatMessage]:
+        """
+        Memory expects messages to be store by a key. e.g. thread_id.
+        This is up to the storage layer to implement.
+        """
+        return await self.filter_async(**filters) or []
+
+    @expose_sync_method("add_message")
+    async def add_message_async(self, key: str, message: ChatMessage) -> None:
+        messages = await self.get_messages_async(key)
+        messages.append(message)
+        await self.set_messages_async(messages)
+
+    # Preserve existing methods
+    async def delete_messages_async(self, key: str) -> Optional[List[ChatMessage]]:
+        raise NotImplementedError("Method delete_messages_async not implemented")
+
     async def delete_message_async(self, key: str, idx: int) -> Optional[ChatMessage]:
-        """Delete specific message for a key."""
-        ...
+        raise NotImplementedError("Method delete_message_async not implemented")
 
-    @abstractmethod
     async def delete_last_message_async(self, key: str) -> Optional[ChatMessage]:
-        """Delete last message for a key."""
-        ...
+        raise NotImplementedError("Method delete_last_message_async not implemented")
 
-    @abstractmethod
     async def get_keys_async(self) -> List[str]:
-        """Get all keys."""
-        ...
+        raise NotImplementedError("Method get_keys_async not implemented")
 
-    async def add_files_async(self, key: str, files: List[Any]) -> List[Any]:
-        """Add files for a key."""
-        raise NotImplementedError("add_files_async is not implemented")
-
-
-class BaseThreadStore(ABC, ExposeSyncMethodsMixin):
-    """
-    Storage for threads
-    """
-
+class BaseThreadStore(BaseStorage[ChatThread]):
+    model = ChatThread
+    
+    @expose_sync_method("get_or_add_thread")
     @abstractmethod
     async def get_or_add_thread_async(
-        self, thread_id: str, tenant_id: str
+        self,
+        thread_id: str,
+        tenant_id: str,
+        tags: List[str] | None = None,
+        name: str | None = None,
+        user_id: str | None = None,
     ) -> ChatThread:
-        """Get or create a thread."""
-        raise NotImplementedError("get_or_add_thread_async is not implemented")
-
-    @expose_sync_method("remote_thread")
-    async def remote_thread_async(
-        self, thread_id: str | UUID, tenant_id: str | None = "default"
-    ) -> Thread:
-        """Get the remote thread."""
-        # first check if the thread exists locally
-        thread = await self.get_or_add_thread_async(thread_id, tenant_id)
-        if thread and thread.external_id:
-            return Thread(id=thread.external_id)
-        try:
-            remote_thread = Thread()
-            remote_thread = await remote_thread.create_async()
-            thread.external_id = remote_thread.id
-            return remote_thread
-        except Exception as e:
-            raise Exception(f"Unable to sync remote thread: {e}")
-
-
-class BaseFileStorage(ABC, ExposeSyncMethodsMixin):
-    @abstractmethod
-    async def save_file(
-        self, file: BinaryIO, file_id: Union[str, UUID], metadata: Optional[dict] = None
-    ) -> dict:
-        """Save a file to storage and return its metadata."""
         pass
 
-    @abstractmethod
-    async def get_file(self, file_id: Union[str, UUID]) -> BinaryIO:
-        """Retrieve a file from storage."""
-        pass
-
-    @abstractmethod
-    async def delete_file(self, file_id: Union[str, UUID]) -> None:
-        """Delete a file from storage."""
-        pass
-
-    @abstractmethod
-    async def get_file_metadata(self, file_id: Union[str, UUID]) -> dict:
-        """Retrieve metadata for a file."""
-        pass
-
-    @abstractmethod
-    async def sync_with_openai_assistant(self, assistant_id: str) -> List[dict]:
-        """Sync files with a remote OpenAI assistant."""
-        ...
-
-    @abstractmethod
-    async def upload_to_openai(self, file_id: Union[str, UUID], purpose: str) -> dict:
-        """Upload a file to OpenAI."""
-        ...
-
-
-class BaseRunStorage(ABC, ExposeSyncMethodsMixin):
-    async def update(self, run: PersistedRun) -> "BaseRunStorage":
-        """Update a run."""
-        return await self.save_async(run)
-
-    @abstractmethod
+class BaseRunStorage(BaseStorage[PersistedRun]):
+    model = PersistedRun
+    
+    @expose_sync_method("get_or_create")
     async def get_or_create_async(self, id: str) -> tuple[PersistedRun, bool]:
-        """Get or create a run."""
-        ...
+        raise NotImplementedError("Method get_or_create_async not implemented")
 
-    @abstractmethod
-    async def save_async(self, run: PersistedRun) -> PersistedRun:
-        """Save a run."""
-        ...
-
+    @expose_sync_method("init_db_run")
     async def init_db_run_async(
         self,
         run_id: str,
@@ -158,28 +103,32 @@ class BaseRunStorage(ABC, ExposeSyncMethodsMixin):
         remote_run: Any = None,
         agent_id: str | None = None,
         user_message: str | None = None,
-        tags: list[str] | None = None,
+        tags: List[str] | None = None,
     ) -> PersistedRun:
-        """Initialize a run."""
-        run, created = await self.get_or_create_async(id=run_id)
-        if created:
-            run.thread_id = thread_id
-            run.tenant_id = tenant_id
-            run.agent_id = agent_id
-            if user_message:
-                run.data["user_message"] = user_message
-            if tags:
-                run.tags = tags
-            run.status = "started"
+        raise NotImplementedError("Method init_db_run_async not implemented")
 
-        if remote_run:
-            run.external_id = remote_run.id
+class BaseAgentStorage(BaseStorage[AgentConfig]):
+    model = AgentConfig
 
-        return await self.save_async(run)
+class BaseFileStorage(BaseStorage[DataSource]):
+    model:BaseModel = DataSource
 
+    @expose_sync_method("save_file")
+    async def save_file_async(self, file: BinaryIO, file_id: str, metadata: Optional[dict] = None) -> dict:
+        """Save a file to storage and return its metadata."""
+        raise NotImplementedError("Method save_file_async not implemented")
+        
+    @expose_sync_method("get_file") 
+    async def get_file_async(self, file_id: str) -> BinaryIO:
+        """Retrieve a file from storage."""
+        raise NotImplementedError("Method get_file_async not implemented")
 
-class BaseAgentStorage(ABC, ExposeSyncMethodsMixin):
-    @abstractmethod
-    async def get_agent_config(self, agent_id: str) -> "BaseAgentStorage":
-        """Get agent config."""
-        ...
+    @expose_sync_method("sync_with_openai_assistant")
+    async def sync_with_openai_assistant_async(self, assistant_id: str) -> List[dict]:
+        """Sync files with a remote OpenAI assistant."""
+        raise NotImplementedError("Method sync_with_openai_assistant_async not implemented")
+
+    @expose_sync_method("upload_to_openai")
+    async def upload_to_openai_async(self, file_id: str, purpose: str) -> dict:
+        """Upload a file to OpenAI."""
+        raise NotImplementedError("Method upload_to_openai_async not implemented")

@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any
+from typing import Any, List
 
 
 def encode_image(image_path):
@@ -54,8 +54,8 @@ def encode_image_from_url(image_url):
 
 
 def bulk_encode(
-    image_paths: list[str] | list[BytesIO],
-) -> list[str]:
+    image_paths: List[str] | List[BytesIO],
+) -> List[str]:
     """
     Encode given images in bulk
     Runs in a multiprocessing pool to speed up the process

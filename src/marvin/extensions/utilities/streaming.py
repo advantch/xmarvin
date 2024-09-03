@@ -8,6 +8,7 @@ from marvin.utilities.asyncio import is_coro
 from prefect.utilities.asyncutils import run_sync
 from pydantic import BaseModel, Field
 
+
 try:
     from channels.layers import get_channel_layer
     from django_eventstream import send_event
@@ -62,18 +63,11 @@ def send_app_event(
 
     if camel_case:
         data = humps.camelize(data)
-    if channel_type == "sse":
-        # sse listens to thread_id stream
-        send_event(channel_id, "message", data)
-    else:
-        channel_message = {"event": event, "type": "channel_message", "data": data}
-        # check if not in an event loop
-        layer = get_channel_layer()
-        group = f"channel_{str(channel_id)}"
-        if is_coro():
-            run_sync(layer.group_send(group, channel_message))
-        else:
-            async_to_sync(layer.group_send)(group, channel_message)
+    from marvin.extensions.settings import extension_settings # noqa
+    
+    manager = extension_settings.transport.manager
+    manager.broadcast(channel_id, data)
+  
 
 
 async def send_app_event_async(
@@ -113,12 +107,7 @@ async def send_app_event_async(
 
     if camel_case:
         data = humps.camelize(data)
-    if channel_type == "sse":
-        # sse listens to thread_id stream
-        send_event(channel_id, "message", data)
-    else:
-        channel_message = {"event": event, "type": "channel_message", "data": data}
-        # check if not in an event loop
-        layer = get_channel_layer()
-        group = f"channel_{str(channel_id)}"
-        await layer.group_send(group, channel_message)
+
+    from marvin.extensions.settings import extension_settings # noqa
+    manager = extension_settings.transport.manager
+    await manager.broadcast_async(channel_id, data)

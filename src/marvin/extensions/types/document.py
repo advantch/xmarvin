@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Literal, List
 
 from pydantic import BaseModel, Field
 
@@ -31,7 +31,7 @@ class Document(BaseModel):
     score: float | None = 0.0
     type: Literal["Document"] = "Document"
     empty: bool | None = False
-    embeddings: list[float] | None = None
+    embeddings: List[float] | None = None
     search_type: Literal["kw", "vector"] = "vector"
 
     class Config(BaseModelConfig):
@@ -49,7 +49,7 @@ class Document(BaseModel):
         return "\n".join([Document.llm_text_result(i) for i in results])
 
     @classmethod
-    def get_vectorizable_docs(cls, documents: list["Document"] | str):
+    def get_vectorizable_docs(cls, documents: List["Document"] | str):
         """
         Vectorizable the chunks of the documents.
         """

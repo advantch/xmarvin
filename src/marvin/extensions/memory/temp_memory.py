@@ -1,9 +1,9 @@
 import time
 from uuid import UUID
-
+from typing import List
 from marvin.extensions.memory.base import BaseMemory
 from marvin.extensions.storage.base import BaseChatStore
-from marvin.extensions.storage.simple_chatstore import SimpleChatStore
+from marvin.extensions.storage.memory_store import MemoryChatStore
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 
@@ -17,18 +17,18 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
 
     index: str = "default"
     thread_id: str = "default"
-    storage: BaseChatStore | None = SimpleChatStore()
+    storage: BaseChatStore | None = MemoryChatStore()
     context: dict | None = {}
     loaded: bool = False
-    memory: dict[str, list[ChatMessage]] = {}
-    previous_ids: list[str | UUID] = []
+    memory: dict[str, List[ChatMessage]] = {}
+    previous_ids: List[str | UUID] = []
     requires_search: bool = False
     hash_key: str | None = None
 
     def __init__(self, storage=None, context=None, thread_id=None, index=None):
         super().__init__()
         self.memory = {"default": []}
-        self.storage = storage or SimpleChatStore()
+        self.storage = storage or MemoryChatStore()
         self.thread_id = thread_id or "default"
         self.index = thread_id or "default"
         self.load()
@@ -53,12 +53,14 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
         """Load messages from storage."""
         if self.loaded:
             return self.memory
-        print(self.storage, type(self.storage))
-        messages = self.storage.get_messages(self.index)
+
+        messages = await self.storage.filter_async(thread_id=self.index)
         ids = [message.id for message in messages]
+        
         self.previous_ids = ids
         self.memory[self.index] = messages
         self._check_requires_search()
+
         self.loaded = True
         return self.memory
 
@@ -73,7 +75,7 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
             return
         self.memory[index].append(message)
         if self.storage:
-            await self.storage.add_message_async(index, message)
+            await self.storage.update_async(message)
         return self.memory
 
     @expose_sync_method("get")
@@ -82,24 +84,24 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
         return self.memory.get(index, [])
 
     @expose_sync_method("get_all")
-    async def get_all_async(self) -> list[ChatMessage]:
+    async def get_all_async(self) -> List[ChatMessage]:
         """Get all messages from memory."""
         return await self.get_async(index=self.index)
 
     @expose_sync_method("list_messages")
-    async def list_messages_async(self, index=None, run_id=None) -> list[ChatMessage]:
+    async def list_messages_async(self, index=None, run_id=None) -> List[ChatMessage]:
         """
         Retrieve messages as ChatMessage obj
         """
         index = index or self.index
-        messages = await self.get_async(index=index) or []
+        messages = await self.get_messages_async(thread_id=index) or []
         if run_id:
             messages = [message for message in messages if message.run_id == run_id]
 
         return messages
 
     @expose_sync_method("get_messages")
-    async def get_messages_async(self, index=None) -> list[ChatMessage]:
+    async def get_messages_async(self, index=None) -> List[ChatMessage]:
         """
         Retrieve messages for llm
         """

@@ -47,6 +47,7 @@ generator = ["datamodel-code-generator>=0.20.0"]
 chromadb = ["chromadb"]
 prefect = ["prefect>=2.14.9"]
 django = ["django-eventstream>=5.0.1"]
+mvchat = ["streamlit>=1.37.0"]
 dev = [
     "marvin[tests]",
     "black[jupyter]",

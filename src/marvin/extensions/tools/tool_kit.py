@@ -36,10 +36,10 @@ class ToolKit(BaseModel):
         description="Configuration for the toolkit", default=None
     )
     db_id: str | None = Field(description="Database ID for the toolkit", default=None)
-    categories: list[str] = Field(
+    categories: List[str] = Field(
         description="Categories for the toolkit", default=None
     )
-    active_tools: list[str] = Field(
+    active_tools: List[str] = Field(
         description="Active tools for the toolkit", default=None
     )
     icon: str | None = Field(description="Icon for the toolkit", default=None)
@@ -126,7 +126,7 @@ class ToolKit(BaseModel):
         requires_config: bool = False,
         config: dict | None = None,
         config_schema: dict | None = None,
-        categories: list[str] = [],
+        categories: List[str] = [],
         icon: str | None = None,
         requires_integration: bool = False,
         config_type: Literal["static", "integration"] = "static",

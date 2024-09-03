@@ -50,7 +50,9 @@ def get_django_db_connection_url(db_alias="default"):
     return db_url
 
 
-def create_connection(alias=DEFAULT_DB_ALIAS, url=None):
+def create_connection(alias=None, url=None):
+    if alias is None:
+        alias = DEFAULT_DB_ALIAS
     if url is not None:
         config = get_config_from_string(url)
     else:

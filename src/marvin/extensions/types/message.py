@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union, List
 from uuid import UUID
 
 import humps
@@ -89,13 +89,13 @@ class Metadata(BaseModel):
     streaming: bool = False
     run_id: str | UUID | None = None
     id: str | UUID | None = None
-    tool_calls: list[
+    tool_calls: List[
         Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool]
     ] | None | Any = None
     raw_tool_output: Any | None = None
     name: str | None = None
     type: str | None = "message"
-    attachments: list[AttachmentItem] | None = None
+    attachments: List[AttachmentItem] | None = None
     created: datetime = Field(default_factory=datetime.now)
 
     class Config:
@@ -131,7 +131,7 @@ class ChatMessage(BaseModel):
     """
 
     role: MessageRole = MessageRole.USER
-    content: str | list[MessageContentType] | None = None
+    content: str | List[MessageContentType] | None = None
     id: str | UUID = Field(default_factory=uuid.uuid4)
     run_id: str | UUID | None = None
     thread_id: str | UUID | None = None
@@ -174,8 +174,8 @@ class ChatMessage(BaseModel):
                 return
             self.content[0].text.value = self.content[0].text.value + "\n\n" + text
 
-    # def get_openai_assistant_attachments(self) -> list[MessageContent]:
-    #     attachments: list[MessageContent] = []
+    # def get_openai_assistant_attachments(self) -> List[MessageContent]:
+    #     attachments: List[MessageContent] = []
     #     # only relevant for files
     #     for attachment in self.metadata.attachments:
     #         if isinstance(attachment, FileMessageContent):
@@ -185,9 +185,9 @@ class ChatMessage(BaseModel):
     #                 attachments.append(message)
     #     return attachments
 
-    # def get_openai_assistant_messages(self) -> list[MessageContent]:
+    # def get_openai_assistant_messages(self) -> List[MessageContent]:
     #     # image messages should be included
-    #     content: list[MessageContent] = []
+    #     content: List[MessageContent] = []
 
     #     for text_message in self.content:
     #         if isinstance(text_message, TextContentBlock):

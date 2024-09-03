@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal, Union
 from uuid import UUID
-
+from typing import List
 from marvin.extensions.types.base import BaseModelConfig
 from openai.types.beta.threads.run import Run as OpenaiRun
 from openai.types.beta.threads.runs import (
@@ -20,9 +20,9 @@ from .tools import AnyToolCall
 
 class RunMetadata(BaseModel):
     credits: TokenCreditsUsage | None = None
-    events: list[StreamChatMessageEvent] | None = None
-    messages: list[ChatMessage] | None = None
-    message_ids: list[str] | None = None
+    events: List[StreamChatMessageEvent] | None = None
+    messages: List[ChatMessage] | None = None
+    message_ids: List[str] | None = None
 
     class Config(BaseModelConfig):
         extra = "allow"
@@ -34,7 +34,7 @@ class AppMessageCreationStepDetails(MessageCreationStepDetails):
 
 
 class AppToolCallsStepDetails(ToolCallsStepDetails):
-    tool_calls: list[AnyToolCall] | None = None
+    tool_calls: List[AnyToolCall] | None = None
     type: Literal["tool_calls"] = "tool_calls"
 
 
@@ -54,7 +54,7 @@ class PersistedRun(BaseModel):
     created: datetime | str | None = None
     modified: datetime | str | None = None
     run: OpenaiRunSchema | None = None
-    steps: list[AppRunStep] | None = []
+    steps: List[AppRunStep] | None = []
     metadata: dict | RunMetadata | None = RunMetadata()
     data: dict | None = None
     status: Any | None = None

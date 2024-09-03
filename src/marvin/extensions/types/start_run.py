@@ -1,8 +1,7 @@
-from typing import Literal
+from typing import Literal, List
 from uuid import UUID
 
 from pydantic import BaseModel, Field
-
 from .agent import AgentConfig, RuntimeConfig
 from .message import ChatMessage
 
@@ -20,7 +19,7 @@ class TriggerAgentRun(BaseModel):
     thread_id: str | UUID | None = None
     agent_id: str | UUID | None = None
     user_id: str | int | UUID | None = None
-    tags: list[str] | None = ["chat"]
+    tags: List[str] | None = ["chat"]
     runtime_config: RuntimeConfig | None = None
     agent_config: AgentConfig | None = None
     preset: Literal["default", "admin"] | None = Field(

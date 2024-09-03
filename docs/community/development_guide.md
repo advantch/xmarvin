@@ -10,15 +10,21 @@ git clone https://github.com/youFancyUserYou/marvin.git
 cd marvin
 ```
 
+
 Activate a virtual environment:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+
 ```
 
 Install the dependencies in editable mode:
 ```bash
 pip install -e ".[dev]"
+```
+For faster install times, consider using `uv`:
+```bash
+uv pip install -e ".[dev]"
 ```
 
 Install the pre-commit hooks:

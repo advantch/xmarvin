@@ -1,5 +1,5 @@
 import traceback
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 
 from marvin.extensions.types.events import BaseEvent
 from marvin.extensions.utilities.context import RunContext
@@ -17,7 +17,7 @@ class Dispatcher(BaseModel, ExposeSyncMethodsMixin):
     context: RunContext
     data: Dict[str, Any] | None = None
     stack: list | None = []
-    channel_type: str = "ws"
+    channel_type: Literal['ws', 'sse'] = "ws"
 
     class Config:
         arbitrary_types_allowed = True

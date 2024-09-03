@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 from marvin.extensions.settings import extension_settings
 from marvin.extensions.storage.file_storage import BaseFileStorage
 from marvin.extensions.utilities.logging import logger
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class BucketConfig(BaseSettings):
@@ -15,6 +15,8 @@ class BucketConfig(BaseSettings):
     aws_secret_access_key: str
     aws_endpoint_url_s3: str
     aws_region: str
+
+    model_config = SettingsConfigDict(env_prefix="AWS_")
 
     @classmethod
     def from_env(cls):
@@ -50,11 +52,12 @@ class BucketConfig(BaseSettings):
             print(f"Error getting S3 config from django settings: {e}")
             return None
 
-
-class StorageS3Client(BaseFileStorage):
+class S3Storage(BaseFileStorage):
     def __init__(self, config: BucketConfig = None):
+        
         if config is None:
             config = BucketConfig.from_env()
+
         self.s3_client = boto3.client(
             "s3",
             endpoint_url=config.aws_endpoint_url_s3,

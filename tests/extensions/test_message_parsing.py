@@ -7,7 +7,7 @@ from openai.types.beta.threads.runs.function_tool_call import Function, Function
 
 from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.mappers import run_step_to_tool_call_message
-from marvin.extensions.storage.simple_chatstore import SimpleRunStore
+from marvin.extensions.storage.memory_store import MemoryRunStore
 
 from marvin.extensions.types import ChatMessage, TextContentBlock
 from marvin.extensions.utilities.message_parsing import (
@@ -21,7 +21,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def context():
-    run_store = SimpleRunStore()
+    run_store = MemoryRunStore()
     run = run_store.init_db_run(
         run_id=uuid.uuid4(),
         thread_id=uuid.uuid4(),

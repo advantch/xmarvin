@@ -77,7 +77,7 @@ def to_openai_message_dict(
     return message_dict  # type: ignore
 
 
-def split_tool_call_results_to_messages(message: dict) -> list[dict]:
+def split_tool_call_results_to_messages(message: dict) -> List[dict]:
     """
     Split tool calls to messages.
     Does not include the tool call message. only the results.

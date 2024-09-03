@@ -12,6 +12,7 @@ import traceback
 from contextlib import contextmanager
 
 import litellm
+from marvin.beta.assistants.threads import Thread
 import rich
 from marvin import settings as marvin_settings
 from marvin.beta.assistants import Assistant
@@ -27,10 +28,10 @@ from marvin.extensions.storage.base import (
     BaseRunStorage,
     BaseThreadStore,
 )
-from marvin.extensions.storage.simple_chatstore import (
-    SimpleChatStore,
-    SimpleRunStore,
-    SimpleThreadStore,
+from marvin.extensions.storage.memory_store import (
+    MemoryChatStore,
+    MemoryRunStore,
+    MemoryThreadStore,
 )
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
@@ -133,9 +134,9 @@ def verify_runtime_config(
 @contextmanager
 def run_context(
     payload: TriggerAgentRun,
-    thread_storage_class: type[BaseThreadStore] | None = SimpleThreadStore,
+    thread_storage_class: type[BaseThreadStore] | None = MemoryThreadStore,
     thread_store: BaseThreadStore | None = None,
-    run_storage_class: type[BaseRunStorage] | None = SimpleRunStore,
+    run_storage_class: type[BaseRunStorage] | None = MemoryRunStore,
 ):
     """
     Run and thread are automatically created and managed within this context.
@@ -219,7 +220,7 @@ def run_context(
         pretty_log(context_object, persisted_run.model_dump())
         persisted_run.save_run_context_data(context_object)
 
-        run_storage.save(persisted_run)
+        run_storage.update(persisted_run)
         clear_run_context(payload.run_id)
 
 
@@ -229,6 +230,12 @@ def memory_with_storage(thread_id, storage=None):
         index=thread_id,
         thread_id=thread_id,
     )
+
+def create_openai_thread(thread_id):
+    from marvin.beta.assistants import Thread
+    thread = Thread()
+    thread = thread.create()
+    return thread
 
 
 def add_message_to_remote_thread(data: ChatMessage, assistant_thread_id):
@@ -257,17 +264,24 @@ def handle_assistant_run(
     run_storage: BaseRunStorage,
     context: dict,
     chat_store: BaseChatStore | None = None,
-    chat_storage_class: type[BaseChatStore] | None = SimpleChatStore,
+    chat_storage_class: type[BaseChatStore] | None = MemoryChatStore,
 ):
     update_marvin_settings()
+    tenant_id = data.tenant_id or get_current_tenant_id()
 
     # initialise any storage
     storage = chat_store or chat_storage_class()
     memory = memory_with_storage(data.thread_id, storage)
+    thread = thread_store.get_or_add_thread(data.thread_id, tenant_id=tenant_id)
 
     # fetch the remote thread
-    remote_thread = thread_store.remote_thread(data.thread_id)
-    pretty_log(remote_thread, "remote thread")
+    if thread.external_id:
+        remote_thread = Thread(thread.external_id)
+    else:
+        remote_thread = create_openai_thread(data.thread_id)
+        thread.external_id = remote_thread.id
+        thread_store.update(thread)
+
     add_message_to_remote_thread(data.message, remote_thread.id)
     agent_config = data.agent_config
 
@@ -296,8 +310,11 @@ def handle_assistant_run(
         tool_choice="auto",
         tools=agent_config.get_assistant_tools(),
     )
-    # patch the run with the remote run
-    run_storage.update_run_data(data.run_id, {"external_id": remote_run.run.id})
+    # save remote run id
+    persisted_run = run_storage.get(data.run_id)
+    if persisted_run:
+        persisted_run.external_id = remote_run.run.id
+        run_storage.update(persisted_run)
 
     send_close_event(data, "close")
     return remote_run
@@ -308,7 +325,7 @@ def handle_local_run(
     thread_storage: BaseThreadStore,
     context: dict,
     memory: Memory | None = None,
-    chat_storage_class: type[BaseChatStore] | None = SimpleChatStore,
+    chat_storage_class: type[BaseChatStore] | None = MemoryChatStore,
 ):
     """
     Handle a single local run.

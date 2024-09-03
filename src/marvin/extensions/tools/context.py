@@ -2,7 +2,8 @@ import uuid
 from contextlib import contextmanager
 
 from marvin.extensions.storage.base import BaseRunStorage
-from marvin.extensions.storage.simple_chatstore import SimpleRunStore
+from marvin.extensions.storage.memory_store import MemoryRunStore
+from marvin.extensions.types.run import PersistedRun
 from marvin.extensions.utilities.context import (
     RunContext,
     add_run_context,
@@ -18,28 +19,26 @@ def tool_run_context(
     input_data: dict,
     toolkit_id: str | uuid.UUID | None = None,
     db_id: str | uuid.UUID | None = None,
-    run_storage_class: BaseRunStorage | None = SimpleRunStore,
+    run_storage_class: BaseRunStorage | None = MemoryRunStore,
 ):
     run_id = str(uuid.uuid4())
     tenant_id = get_current_tenant_id()
 
-    storage = run_storage_class() or SimpleRunStore()
+    run_storage = run_storage_class() or MemoryRunStore()
 
     # Create run object in the database
-    
-    run = storage.create({
-        "id": run_id,
-        "tenant_id": tenant_id,
-        "data": {
+    persisted_run = PersistedRun(
+        id=run_id,
+        tenant_id=tenant_id,
+        data={
             "tool_id": tool_id,
             "config": config,
             "input_data": input_data,
             "db_id": db_id,
             "toolkit_id": toolkit_id,
         },
-        "status": "started",
-        "tags": ["tool"],
-    })
+    )
+    run_storage.create(persisted_run)
 
     # Create run context
     context = RunContext(
@@ -61,13 +60,13 @@ def tool_run_context(
     add_run_context(_c, run_id)
 
     try:
-        yield run, _c
+        yield persisted_run, _c
     except Exception as e:
-        run.status = "failed"
-        storage.update(run)
+        persisted_run.status = "failed"
+        run_storage.update(persisted_run)
         raise e
     finally:
         # Update run status
-        run.status = "completed"
-        storage.update(run)
+        persisted_run.status = "completed"
+        run_storage.update(persisted_run)
         clear_run_context(run_id)

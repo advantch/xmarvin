@@ -51,9 +51,9 @@ class AgentApiTool(BaseModel):
 
 class TiptapNode(BaseModel):
     type: str
-    content: Optional[list["TiptapNode"]] = None
+    content: Optional[List["TiptapNode"]] = None
     attrs: Optional[dict] = None
-    marks: Optional[list[dict]] = None
+    marks: Optional[List[dict]] = None
     text: Optional[str] = None
 
     class Config:
@@ -62,7 +62,7 @@ class TiptapNode(BaseModel):
 
 class TiptapDoc(BaseModel):
     type: Literal["doc"]
-    content: list[TiptapNode] | None = None
+    content: List[TiptapNode] | None = None
 
 
 class AgentInstructions(BaseModel):
@@ -142,7 +142,7 @@ class AgentConfig(BaseModel):
         short_id = str(self.id)[:4]
         return f"{self.name}-{short_id}"
 
-    def get_assistant_tools(self) -> list[Callable | AssistantTool]:
+    def get_assistant_tools(self) -> List[Callable | AssistantTool]:
         """
         Fetch tools for *assistant running on openai*
         Returns a list of functions for assistant to use.
@@ -172,7 +172,7 @@ class AgentConfig(BaseModel):
         self.toolkit_config = [config] if config else []
         return tools
 
-    def get_tools(self) -> list[AgentApiTool]:
+    def get_tools(self) -> List[AgentApiTool]:
         """
         Fetch agent tools for agents
         Returns a list of functions for agent to use.
@@ -183,7 +183,7 @@ class AgentConfig(BaseModel):
         self.toolkit_config = [config] if config else []
         return tools
 
-    def agent_tools_to_function_tools(self) -> list[AgentApiTool]:
+    def agent_tools_to_function_tools(self) -> List[AgentApiTool]:
         """
         Agent tools to function tools
         """

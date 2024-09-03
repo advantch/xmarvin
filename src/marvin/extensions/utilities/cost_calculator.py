@@ -1,3 +1,4 @@
+from typing import List
 import litellm
 from litellm import Usage, cost_per_token
 from marvin.extensions.types.costs import ServiceCosts
@@ -68,7 +69,7 @@ def get_service_usage_costs(usage: Usage, model: str) -> ServiceCosts:
         )
 
 
-def merge_run_costs(costs: list[dict]):
+def merge_run_costs(costs: List[dict]):
     """
     Sum up the run costs
     """

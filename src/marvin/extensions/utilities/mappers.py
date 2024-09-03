@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import orjson
 from litellm import ModelResponse
@@ -105,7 +105,7 @@ def construct_tool_call_from_remote_call(tool_call):
         return tool_call
 
 
-def patch_step_tool_calls(step: RunStep, tool_calls: list[AnyToolCall]):
+def patch_step_tool_calls(step: RunStep, tool_calls: List[AnyToolCall]):
     """
     Patch the tool calls in a step details
     """
@@ -136,7 +136,7 @@ def run_step_to_tool_call_message(
     run_step: RunStep,
     context: RunContext,
     is_delta: bool = False,
-    tool_calls: list[AnyToolCall] = None,
+    tool_calls: List[AnyToolCall] = None,
 ) -> ChatMessage:
     """
     Convert a run step to a tool call message

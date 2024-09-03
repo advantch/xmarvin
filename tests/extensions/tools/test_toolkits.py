@@ -1,5 +1,5 @@
 import uuid
-
+from typing import List
 from sqlalchemy import create_engine, text
 import pytest
 import os

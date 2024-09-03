@@ -4,7 +4,7 @@ import respx
 import httpx
 from io import BytesIO
 from unittest.mock import AsyncMock, patch
-from marvin.extensions.storage.file_storage import SimpleFileStorage
+from marvin.extensions.storage.file_storage import LocalFileStorage
 from marvin.extensions.types import ChatMessage, Metadata
 from marvin.extensions.types.message import FileMessageContent, ImageMessageContent
 from marvin.extensions.types.data_source import DataSource, WebSource
@@ -18,24 +18,25 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def file_storage():
-    return SimpleFileStorage()
+    return LocalFileStorage()
 
+@pytest.mark.asyncio
 async def test_parse_file_attachments(file_storage):
     # Create an image file upload
     image_content = b"fake image content"
     image_file = BytesIO(image_content)
-    im = await file_storage.save_file(image_file, "image.png", metadata={"content_type": "image/png"})
+    im = await file_storage.save_file_async(image_file, "image.png", metadata={"content_type": "image/png"})
 
     # Create a document file upload
     doc_content = b"fake document content"
     doc_file = BytesIO(doc_content)
-    doc = await file_storage.save_file(doc_file, "document.pdf", metadata={"content_type": "application/pdf"})
+    doc = await file_storage.save_file_async(doc_file, "document.pdf", metadata={"content_type": "application/pdf"})
 
     # Check if the files are saved to the storage
-    im_obj = await file_storage.get_file_metadata(im["file_id"])
+    im_obj = await file_storage.get_file_metadata_async(im["file_id"])
     assert im_obj["content_type"] == "image/png"
 
-    doc_obj = await file_storage.get_file_metadata(doc["file_id"])
+    doc_obj = await file_storage.get_file_metadata_async(doc["file_id"])
     assert doc_obj["content_type"] == "application/pdf"
 
     # Create a message and try parse it
@@ -111,6 +112,7 @@ def test_url_data_source():
     assert str(data_source.url) == "https://example.com/data.json"
 
 
+@pytest.mark.asyncio
 async def test_upload_from_url(file_storage):
     url = "https://example.com/test_file.txt"
     file_id = str(uuid.uuid4())
@@ -227,7 +229,7 @@ async def test_sync_with_openai_thread(file_storage):
             AsyncMock(aread=AsyncMock(return_value=b"file content 2"))
         ]
 
-        synced_files = await file_storage.sync_with_openai_thread(thread_id)
+        synced_files = await file_storage.sync_with_openai_thread_async(thread_id)
 
     assert len(synced_files) == 2
     for file in synced_files:
@@ -259,7 +261,7 @@ async def test_sync_with_openai_assistant(file_storage):
         return_value=httpx.Response(200, content=b"file content")
     )
 
-    synced_files = await file_storage.sync_with_openai_assistant(assistant_id)
+    synced_files = await file_storage.sync_with_openai_assistant_async(assistant_id)
 
     assert len(synced_files) == 2
     for file in synced_files:
@@ -274,7 +276,7 @@ async def test_upload_to_openai(file_storage):
 
     # Prepare a file in the storage
     file_content = b"test file content"
-    await file_storage.save_file(BytesIO(file_content), file_id, {"filename": "test.txt"})
+    await file_storage.save_file_async(BytesIO(file_content), file_id, {"filename": "test.txt"})
 
     # Mock the OpenAI API call
     respx.post("https://api.openai.com/v1/files").mock(
@@ -284,23 +286,22 @@ async def test_upload_to_openai(file_storage):
         })
     )
 
-    result = await file_storage.upload_to_openai(file_id, purpose)
+    result = await file_storage.upload_to_openai_async(file_id, purpose)
 
     assert result["id"] == "openai_file_id"
     assert result["purpose"] == purpose
 
     # Check if local metadata was updated
-    metadata = await file_storage.get_file_metadata(file_id)
+    metadata = await file_storage.get_file_metadata_async(file_id)
     assert metadata["openai_file_id"] == "openai_file_id"
 
 async def test_presigned_url(file_storage):
     file_id = str(uuid.uuid4())
 
-    response = await file_storage.request_presigned_url(file_id, private=False)
+    response = await file_storage.request_presigned_url_async(file_id, private=False)
 
     assert response is not None
     assert "upload_url" in response
-    upload_url = response["upload_url"]
 
     # Simulate file upload
     file_content = b"test"
@@ -308,10 +309,10 @@ async def test_presigned_url(file_storage):
         mock_put.return_value.status_code = 200
         mock_put.return_value.text = ""
 
-        await file_storage.save_file(BytesIO(file_content), file_id, {"size": len(file_content)})
+        await file_storage.save_file_async(BytesIO(file_content), file_id, {"size": len(file_content)})
 
     # Verify file content
-    file = await file_storage.get_file(file_id)
+    file = await file_storage.get_file_async(file_id)
     assert file.read() == file_content
 
     # Simulate public access
@@ -319,7 +320,7 @@ async def test_presigned_url(file_storage):
         mock_get.return_value.status_code = 200
         mock_get.return_value.text = "test"
 
-        file_metadata = await file_storage.get_file_metadata(file_id)
+        file_metadata = await file_storage.get_file_metadata_async(file_id)
         res = httpx.get(file_metadata.get("url", ""))
         assert res.status_code == 200
         assert res.text == "test"

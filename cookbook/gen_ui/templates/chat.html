@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvin Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100 h-screen">
+    <div x-data="chat()" class="container mx-auto p-4 h-full flex flex-col">
+        <h1 class="text-2xl font-bold mb-4">Chat with Marvin</h1>
+        <div class="flex-grow overflow-auto mb-4 bg-white rounded-lg shadow p-4">
+            <template x-for="message in messages" :key="message.id">
+                <div :class="{'text-right': message.role === 'user'}">
+                    <span x-text="message.role" class="font-bold"></span>: 
+                    <span x-text="message.content[0].text.value"></span>
+                </div>
+            </template>
+        </div>
+        <form @submit.prevent="sendMessage" class="flex">
+            <input x-model="newMessage" type="text" class="flex-grow mr-2 p-2 rounded" placeholder="Type your message...">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Send</button>
+        </form>
+    </div>
+
+    <script>
+        function chat() {
+            return {
+                messages: [],
+                newMessage: '',
+                socket: null,
+                threadId: crypto.randomUUID(),
+                runId: crypto.randomUUID(),
+                init() {
+                    this.socket = new WebSocket('ws://localhost:8000/ws/test-cha');
+                    this.socket.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        console.log(data)
+                        if (data.type === 'message') {
+                            this.messages.push(data.data);
+                        } else if (data.type === 'close') {
+                            console.log('Run completed:', data);
+                        }
+                    };
+                },
+                sendMessage() {
+                    if (this.newMessage.trim() === '') return;
+                    const message = {
+                        id: crypto.randomUUID(),
+                        threadId: this.threadId,
+                        runId: this.runId,
+                        role: 'user',
+                        content: [{ type: 'text', text: { value: this.newMessage } , annotations: []}]
+                    };
+                    this.messages.push({...message, id: Date.now()});
+                    this.socket.send(JSON.stringify({
+                        message: message,
+                        threadId: this.threadId
+                    }));
+                    this.newMessage = '';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 import uuid
-from typing import Any
+from typing import Any, List
 
 from asgiref.local import Local
 from marvin.extensions.types import AgentConfig
@@ -26,10 +26,10 @@ class RunContext(BaseModel):
     run_id: str | uuid.UUID | None = None
     thread_id: str | uuid.UUID | None = None
     tenant_id: str | uuid.UUID | None = None
-    data_sources: list[str] | None = None
+    data_sources: List[str] | None = None
     agent_config: AgentConfig | None = None
     variables: dict[str, dict] | None = None
-    tool_config: list[RunContextToolkitConfig] | None = Field(
+    tool_config: List[RunContextToolkitConfig] | None = Field(
         default_factory=list,
         description="The configuration for the tools to be used in the run.",
     )

@@ -33,7 +33,7 @@ class DJjangoDBChatStore(BaseChatStore):
         return "DBChatStore"
 
     @expose_sync_method("set_messages")
-    async def set_messages_async(self, key: str, messages: list[ChatMessage]) -> None:
+    async def set_messages_async(self, key: str, messages: List[ChatMessage]) -> None:
         """Set messages for a key."""
         await self.django_message_model.objects.acreate_many(
             messages,
@@ -115,7 +115,7 @@ class DJangoDBThreadStore(BaseThreadStore):
         self,
         thread_id: str,
         tenant_id: str,
-        tags: list[str] | None = None,
+        tags: List[str] | None = None,
         name: str | None = None,
         user_id: str | None = None,
     ) -> "DJangoDBThreadStore":

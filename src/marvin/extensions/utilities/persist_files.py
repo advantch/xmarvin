@@ -15,7 +15,7 @@ async def save_assistant_image_to_storage(
     file_id = generate_uuid_from_string(str(context.run_id))
 
     # Save the image file
-    result: dict = await file_storage.save_file(
+    result: dict = await file_storage.save_file_async(
         image_file,
         file_id,
         metadata={

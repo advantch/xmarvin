@@ -1,5 +1,6 @@
 from typing import Any, Callable, Literal, Optional, Union
 
+from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from openai import AsyncAssistantEventHandler
 from openai.types.beta.threads import Message
 from openai.types.beta.threads.run import Run as OpenAIRun
@@ -250,8 +251,10 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
         event_handler_class = self.event_handler_class or AsyncAssistantEventHandler
 
         with self.assistant:
+            if isinstance(event_handler_class, DefaultAssistantEventHandler):
+                self.event_handler_kwargs["tool_outputs"] = self._tool_outputs
             handler = event_handler_class(
-                **self.event_handler_kwargs, tool_outputs=self._tool_outputs
+                    **self.event_handler_kwargs
             )
             self.handler = handler
 

@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.utilities.context import RunContext
-from marvin.extensions.storage.simple_chatstore import SimpleRunStore, SimpleChatStore
+from marvin.extensions.storage.memory_store import MemoryRunStore, MemoryChatStore
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.memory.temp_memory import Memory
 from ..factories import (
@@ -22,8 +22,8 @@ from ..factories import (
 
 @pytest.mark.asyncio
 async def test_event_handler_class():
-    run_store = SimpleRunStore()
-    chat_store = SimpleChatStore()
+    run_store = MemoryRunStore()
+    chat_store = MemoryChatStore()
     
     run = run_store.init_db_run(
         run_id=str(uuid.uuid4()),
@@ -81,11 +81,11 @@ async def test_event_handler_class():
 
     # Add assertions here to verify the expected behavior
     # For example:
-    messages = await memory.storage.get_messages_async(run.thread_id)
+    messages = await memory.storage.filter_async(thread_id=run.thread_id)
     assert messages is not None
     #assert len(messages) == 1, messages
     
-    assert await memory.storage.get_messages_async(run.thread_id) is not None
+    assert await memory.storage.filter_async(thread_id=run.thread_id) is not None
 
     # check there is a storage object
     assert handler._context['storage'] is not None
