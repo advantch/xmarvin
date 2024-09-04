@@ -25,7 +25,7 @@ dependencies = [
     "tiktoken>=0.4.0",
     "typer>=0.9.0",
     "typing_extensions>=4.0.0",
-    "tzdata>=2023.3",
+    "tzdata>=2023.3",           # need for windows
     "uvicorn>=0.22.0",
     "partialjson>=0.0.5",
     "litellm>=1.40.20",
@@ -35,21 +35,19 @@ dependencies = [
     "sqlparse>=0.5.1",
     "boto3>=1.26.107",
     "asgiref>=3.8.1",
-    "prefect>=2.14.9",
+    "prefect@git+https://github.com/PrefectHQ/prefect.git",
     "python-magic>=0.4.27",
 ]
-
-# [tool.uv.sources]
-# marvin = { path = "./src/marvin" }
 
 [project.optional-dependencies]
 generator = ["datamodel-code-generator>=0.20.0"]
 chromadb = ["chromadb"]
-prefect = ["prefect>=2.14.9"]
-django = ["django-eventstream>=5.0.1"]
+django = ["django-eventstream>=5.0.1","django>=5.0.1"]
 mvchat = ["streamlit>=1.37.0"]
+prefect = ["prefect@git+https://github.com/PrefectHQ/prefect.git"]
 dev = [
     "marvin[tests]",
+    "marvin[django]",
     "black[jupyter]",
     "ipython",
     "mkdocs-autolinks-plugin~=0.7",
@@ -63,7 +61,6 @@ dev = [
     "pydantic>=2.8.1",
     "pydantic-settings>=2.4.0",
     "ruff>=0.6.0",
-    "django>=5.0.1",
 ]
 tests = [
     "pytest-asyncio>=0.18.2,!=0.22.0,<0.23.0",
