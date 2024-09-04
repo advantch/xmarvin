@@ -12,10 +12,11 @@ import traceback
 from contextlib import contextmanager
 
 import litellm
-from marvin.beta.assistants.threads import Thread
 import rich
+
 from marvin import settings as marvin_settings
 from marvin.beta.assistants import Assistant
+from marvin.beta.assistants.threads import Thread
 from marvin.beta.local.handlers import (
     DefaultAssistantEventHandler,
 )

@@ -1,14 +1,15 @@
 import uuid
+
 import pytest
-from unittest.mock import AsyncMock, patch
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
-from marvin.extensions.utilities.context import RunContext
-from marvin.extensions.storage.stores import RunStore, ChatStore
-from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.storage.stores import ChatStore, RunStore
+from marvin.extensions.types.agent import AgentConfig
+from marvin.extensions.utilities.context import RunContext
+
 from ..factories import (
-    MessageFactory,
     MessageDeltaFactory,
+    MessageFactory,
     RunFactory,
     RunStepDeltaFactory,
     RunStepFactory,

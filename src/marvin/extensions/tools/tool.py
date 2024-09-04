@@ -5,16 +5,13 @@ import logging
 import traceback
 import typing
 import uuid
-from typing import Annotated, Any, Callable, Dict, Optional, Union, List
+from typing import Annotated, Any, Callable, Dict, List, Optional, Union
 
 import langchain_core.tools
 import pydantic
 import pydantic.v1
 from langchain_core.messages import InvalidToolCall, ToolCall
 from litellm import ChatCompletionMessageToolCall
-from marvin.extensions.utilities.logging import pretty_log
-from marvin.utilities.asyncio import run_sync_if_awaitable
-from marvin.utilities.tools import Function, ModelSchemaGenerator
 from pydantic import (
     BaseModel,
     Field,
@@ -22,6 +19,10 @@ from pydantic import (
     TypeAdapter,
     model_validator,
 )
+
+from marvin.extensions.utilities.logging import pretty_log
+from marvin.utilities.asyncio import run_sync_if_awaitable
+from marvin.utilities.tools import Function, ModelSchemaGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -146,9 +147,9 @@ class Tool(BaseModel):
                     param_description = None
 
                 if param_description:
-                    parameters["properties"][param.name]["description"] = (
-                        param_description
-                    )
+                    parameters["properties"][param.name][
+                        "description"
+                    ] = param_description
 
         # Handle return type description
 

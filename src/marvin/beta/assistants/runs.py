@@ -1,6 +1,5 @@
 from typing import Any, Callable, Literal, Optional, Union
 
-
 from openai import AsyncAssistantEventHandler
 from openai.types.beta.threads import Message
 from openai.types.beta.threads.run import Run as OpenAIRun
@@ -73,11 +72,11 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
         None,
         description="Additional tools to append to the assistant's tools. ",
     )
-    tool_choice: Optional[Union[Literal["none", "auto", "required"], AssistantTool]] = (
-        Field(
-            default=None,
-            description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
-        )
+    tool_choice: Optional[
+        Union[Literal["none", "auto", "required"], AssistantTool]
+    ] = Field(
+        default=None,
+        description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
     )
     run: OpenAIRun = Field(None, repr=False)
     data: Any = None

@@ -2,8 +2,9 @@ import uuid
 from typing import Any, List
 
 from asgiref.local import Local
-from marvin.extensions.types import AgentConfig
 from pydantic import BaseModel, Field
+
+from marvin.extensions.types import AgentConfig
 
 _async_locals = Local()
 

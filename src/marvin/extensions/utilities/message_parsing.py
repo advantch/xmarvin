@@ -1,13 +1,6 @@
 import logging
 from typing import Any, Dict, List, Optional, Sequence, Type
 
-from marvin.extensions.types import ChatMessage
-from marvin.extensions.types.message import (
-    ChatMessage,
-    FileMessageContent,
-    ImageMessageContent,
-)
-from marvin.types import ImageFileContentBlock
 from openai.types.beta.threads import MessageContent, TextContentBlock
 from openai.types.chat import (
     ChatCompletionMessageParam,
@@ -15,6 +8,14 @@ from openai.types.chat import (
 )
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from pydantic import BaseModel
+
+from marvin.extensions.types import ChatMessage
+from marvin.extensions.types.message import (
+    ChatMessage,
+    FileMessageContent,
+    ImageMessageContent,
+)
+from marvin.types import ImageFileContentBlock
 
 DEFAULT_OPENAI_API_TYPE = "open_ai"
 DEFAULT_OPENAI_API_BASE = "https://api.openai.com/v1"

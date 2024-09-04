@@ -2,18 +2,15 @@ import uuid
 from typing import Literal
 
 import humps
-from asgiref.sync import async_to_sync
-from marvin.extensions.utilities.serialization import to_serializable
-from marvin.utilities.asyncio import is_coro
-from prefect.utilities.asyncutils import run_sync
 from pydantic import BaseModel, Field
 
+from marvin.extensions.utilities.serialization import to_serializable
 
 try:
     from channels.layers import get_channel_layer
     from django_eventstream import send_event
 except ImportError:
-    from .fake_streamers import get_channel_layer, send_event
+    pass
 
 
 def send_app_event(

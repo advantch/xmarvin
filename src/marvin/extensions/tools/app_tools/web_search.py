@@ -1,7 +1,8 @@
 import httpx
+from pydantic import BaseModel, Field
+
 from marvin.extensions.tools.tool import tool
 from marvin.extensions.tools.tool_kit import ToolKit
-from pydantic import BaseModel, Field
 
 
 class WebBrowserResult(BaseModel):

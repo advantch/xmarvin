@@ -188,9 +188,9 @@ class TranscriptRequest(MarvinType):
             " supplying spelling of complex words, including filler vocalizations, etc."
         ),
     )
-    response_format: Optional[Literal["json", "text", "srt", "verbose_json", "vtt"]] = (
-        None
-    )
+    response_format: Optional[
+        Literal["json", "text", "srt", "verbose_json", "vtt"]
+    ] = None
     language: Optional[str] = None
     temperature: Optional[float] = None
 

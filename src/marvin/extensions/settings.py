@@ -1,14 +1,15 @@
 from typing import Any, Literal
 
+from pydantic_settings import BaseSettings
+
 from marvin.extensions.storage.base import (
     BaseAgentStorage,
     BaseChatStore,
     BaseRunStorage,
     BaseThreadStore,
 )
-
 from marvin.extensions.storage.cache import cache
-from marvin.extensions.storage.file_storage import LocalFileStorage, BaseFileStorage
+from marvin.extensions.storage.file_storage import BaseFileStorage, LocalFileStorage
 from marvin.extensions.storage.stores import (
     AgentStore,
     ChatStore,
@@ -19,7 +20,6 @@ from marvin.extensions.utilities.transport import (
     BaseConnectionManager,
     CLIConnectionManager,
 )
-from pydantic_settings import BaseSettings
 
 
 class S3Settings(BaseSettings):

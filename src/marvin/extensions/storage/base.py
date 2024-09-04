@@ -1,11 +1,13 @@
 """Base interface classes for interacting with local storage objects."""
 
 from abc import ABC, abstractmethod
-from typing import Any, BinaryIO, List, Optional, TypeVar, Generic, Dict
-from marvin.extensions.types.data_source import DataSource
-from marvin.utilities.asyncio import expose_sync_method, ExposeSyncMethodsMixin
-from marvin.extensions.types import ChatMessage, ChatThread, PersistedRun, AgentConfig
+from typing import Any, BinaryIO, Generic, List, Optional, TypeVar
+
 from pydantic import BaseModel, Field
+
+from marvin.extensions.types import AgentConfig, ChatMessage, ChatThread, PersistedRun
+from marvin.extensions.types.data_source import DataSource
+from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 
 T = TypeVar("T")
 

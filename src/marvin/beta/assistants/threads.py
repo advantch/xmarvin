@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Optional
 
+from openai import NotFoundError
 from openai.types.beta.threads import Message
 from pydantic import BaseModel, Field
 
-from openai import NotFoundError
 import marvin.utilities.openai
 from marvin.extensions.types.message import (
     ChatMessage,
@@ -76,7 +76,7 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
         try:
             response = await client.beta.threads.retrieve(thread_id=self.id)
 
-        except NotFoundError as e:
+        except NotFoundError:
             thread = await self.create_async()
             self.id = thread.id
             return thread

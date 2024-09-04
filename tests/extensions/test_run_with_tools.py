@@ -1,8 +1,6 @@
 import traceback
 from uuid import uuid4
 
-from marvin.extensions.utilities.logging import pretty_log
-
 import pytest
 from marvin.beta.local.assistant import LocalAssistant
 from marvin.beta.local.handlers import DefaultAssistantEventHandler

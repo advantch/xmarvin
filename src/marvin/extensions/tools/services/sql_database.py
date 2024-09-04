@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Union
 
-from marvin.extensions.utilities.logging import pretty_log
 import sqlalchemy
 from langchain_core._api import deprecated
-from langchain_core.utils import get_from_env
+from pydantic import BaseModel
 from sqlalchemy import (
     MetaData,
     Table,
@@ -22,7 +21,7 @@ from sqlalchemy.schema import CreateTable
 from sqlalchemy.sql.expression import Executable
 from sqlalchemy.types import NullType
 
-from pydantic import BaseModel, Field
+from marvin.extensions.utilities.logging import pretty_log
 
 
 class ColumnInfo(BaseModel):

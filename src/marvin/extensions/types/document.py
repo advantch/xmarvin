@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Literal, List
+from typing import List, Literal
 
 from pydantic import BaseModel, Field
 

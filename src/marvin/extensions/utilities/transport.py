@@ -1,14 +1,14 @@
-from abc import ABC, abstractmethod
-from typing import Any, Dict, Set
 import logging
+from typing import Any, Dict, Set
+
 from asgiref.sync import async_to_sync
+
 from marvin.utilities.asyncio import (
+    ExposeSyncMethodsMixin,
+    expose_sync_method,
     is_coro,
     run_sync,
-    expose_sync_method,
-    ExposeSyncMethodsMixin,
 )
-
 
 logger = logging.getLogger("marvin")
 
@@ -18,8 +18,8 @@ except ImportError:
     logger.warn("fast api not installed.")
 
 try:
-    from django_eventstream import send_event
     from channels.layers import get_channel_layer
+    from django_eventstream import send_event
 except (
     ImportError,
     Exception,

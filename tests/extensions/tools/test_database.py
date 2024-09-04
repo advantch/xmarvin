@@ -1,11 +1,7 @@
 from marvin.extensions.tools.app_tools.database import db_connection
-from marvin.extensions.tools.services.sql_database import SQLDatabase
-import pytest
-from marvin.extensions.tools.services.db import get_django_db_connection_url
 from marvin.extensions.tools.services.db import (
     get_config_from_string,
-    get_table_detail,
-    get_table_names,
+    get_django_db_connection_url,
 )
 
 

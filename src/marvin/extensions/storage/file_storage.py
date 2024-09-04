@@ -1,11 +1,11 @@
 from io import BytesIO
-from typing import BinaryIO, Optional, Union, List
+from typing import BinaryIO, List, Optional, Union
 from uuid import UUID
+
 import aiohttp
 
-from marvin.extensions.storage.base import expose_sync_method
+from marvin.extensions.storage.base import BaseFileStorage, expose_sync_method
 from marvin.utilities.openai import get_openai_client
-from marvin.extensions.storage.base import BaseFileStorage
 
 
 class LocalFileStorage(BaseFileStorage):

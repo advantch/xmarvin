@@ -1,7 +1,8 @@
-from typing import Literal, List
+from typing import List, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
 from .agent import AgentConfig, RuntimeConfig
 from .message import ChatMessage
 

@@ -3,12 +3,13 @@ from collections import deque
 from typing import Any, Dict, Iterable, List
 
 import sqlparse
-from marvin.extensions.tools.services.sql_database import SQLDatabase
-from marvin.extensions.tools.tool import get_config_from_context, tool
-from marvin.extensions.tools.tool_kit import ToolKit
 from pydantic import BaseModel, Field
 from sqlparse.sql import Token, TokenList
 from sqlparse.tokens import Keyword
+
+from marvin.extensions.tools.services.sql_database import SQLDatabase
+from marvin.extensions.tools.tool import get_config_from_context, tool
+from marvin.extensions.tools.tool_kit import ToolKit
 
 REPORTS_PARAM_TOKEN = "$$"
 # Change the behavior of reports

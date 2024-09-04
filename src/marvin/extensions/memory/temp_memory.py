@@ -1,6 +1,7 @@
 import time
-from uuid import UUID
 from typing import List
+from uuid import UUID
+
 from marvin.extensions.memory.base import BaseMemory
 from marvin.extensions.storage.base import BaseChatStore
 from marvin.extensions.storage.stores import ChatStore
