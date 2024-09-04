@@ -1,8 +1,8 @@
 import asyncio
 import hashlib
 import random
-from typing import List, Optional
 from abc import ABC, abstractmethod
+from typing import List
 
 import numpy as np
 from pydantic import BaseModel

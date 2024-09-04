@@ -2,6 +2,8 @@ import uuid
 from typing import Callable, List, Literal, Optional, Union
 from uuid import UUID
 
+from pydantic import BaseModel, Field
+
 from marvin.extensions.types.base import BaseModelConfig
 from marvin.extensions.types.llms import AIModels
 from marvin.extensions.utilities.render_prompt import (
@@ -9,7 +11,6 @@ from marvin.extensions.utilities.render_prompt import (
     render_instructions,
 )
 from marvin.tools.assistants import AssistantTool
-from pydantic import BaseModel, Field
 
 OPENAI_TOOLS = ["code_interpreter", "file_search"]
 

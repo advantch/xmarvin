@@ -1,18 +1,17 @@
-import pytest
 import asyncio
+import uuid
+
+import pytest
+from httpx import Response
+from marvin.extensions.types import ChatMessage, Metadata
+from marvin.extensions.types.agent import AgentConfig
+from marvin.extensions.types.start_run import TriggerAgentRun
 from marvin.extensions.utilities.context import (
     RunContext,
     get_current_run_id,
     get_run_context,
 )
 from marvin.extensions.utilities.thread_runner import run_context
-from marvin.extensions.types.start_run import TriggerAgentRun
-import uuid
-
-from httpx import Response
-from marvin.extensions.types import Metadata, ChatMessage
-from marvin.extensions.types.agent import AgentConfig
-
 
 pytestmark = pytest.mark.django_db
 

@@ -1,20 +1,18 @@
 import tempfile
-from typing import Annotated
-from fastapi import FastAPI, File, Form, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from humps import decamelize
-import marvin
-from marvin.beta.assistants import Assistant, Thread
-from marvin.extensions.types import ChatMessage, TriggerAgentRun
-from marvin.extensions.types.agent import AgentConfig
-from marvin.extensions.utilities.thread_runner import start_run
-from marvin.extensions.utilities.transport import FastApiWsConnectionManager
-from marvin.extensions.settings import extension_settings
-from marvin.extensions.storage.s3_storage import BucketConfig, S3Storage
-from marvin.extensions.types.data_source import DataSource, DataSourceFileUpload
 import uuid
+from typing import Annotated
 
 import rich
+from fastapi import FastAPI, File, Form, UploadFile, WebSocket, WebSocketDisconnect
+from humps import decamelize
+from marvin.beta.assistants import Assistant
+from marvin.extensions.settings import extension_settings
+from marvin.extensions.storage.s3_storage import BucketConfig, S3Storage
+from marvin.extensions.types import ChatMessage, TriggerAgentRun
+from marvin.extensions.types.agent import AgentConfig
+from marvin.extensions.types.data_source import DataSource, DataSourceFileUpload
+from marvin.extensions.utilities.thread_runner import start_run
+from marvin.extensions.utilities.transport import FastApiWsConnectionManager
 
 extension_settings.transport.default_manager = "fastapi"
 

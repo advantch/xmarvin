@@ -6,10 +6,12 @@ from openai import Client, AsyncClient
 
 class Marvin:
     @overload
-    def __new__(cls: type[Self], client: "Client") -> "MarvinClient": ...
+    def __new__(cls: type[Self], client: "Client") -> "MarvinClient":
+        ...
 
     @overload
-    def __new__(cls: type[Self], client: "AsyncClient") -> "AsyncMarvinClient": ...
+    def __new__(cls: type[Self], client: "AsyncClient") -> "AsyncMarvinClient":
+        ...
 
     def __new__(
         cls: type[Self], client: Union["Client", "AsyncClient"]

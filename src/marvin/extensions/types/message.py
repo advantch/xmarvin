@@ -1,18 +1,10 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, Optional, Union, List
+from typing import Any, List, Literal, Optional, Union
 from uuid import UUID
 
 import humps
-from marvin.extensions.types.base import BaseModelConfig
-from .data_source import DataSource
-from marvin.extensions.types.tools import (
-    AppCodeInterpreterTool,
-    AppFileSearchTool,
-    AppToolCall,
-)
-from marvin.extensions.utilities.logging import logger
 from openai.types.beta.threads.message_content import (
     ImageFileContentBlock,
     TextContentBlock,
@@ -29,6 +21,16 @@ from openai.types.beta.threads.runs.function_tool_call import (
     FunctionToolCall as OpenAIFunctionToolCall,
 )
 from pydantic import BaseModel, Field
+
+from marvin.extensions.types.base import BaseModelConfig
+from marvin.extensions.types.tools import (
+    AppCodeInterpreterTool,
+    AppFileSearchTool,
+    AppToolCall,
+)
+from marvin.extensions.utilities.logging import logger
+
+from .data_source import DataSource
 
 
 class Function(OpenAIFunction):

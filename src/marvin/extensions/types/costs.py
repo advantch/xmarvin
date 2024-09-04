@@ -15,7 +15,7 @@ class TokenCreditsUsage(BaseModel):
     tokens: int
     model: str
     type: Literal["generation", "embedding"] = "generation"
-    provider: Literal["openai", "anthropic", "cohere", "google", "bedrock", "groq"] = (
-        "openai"
-    )
+    provider: Literal[
+        "openai", "anthropic", "cohere", "google", "bedrock", "groq"
+    ] = "openai"
     service_costs: ServiceCosts | dict | None = None

@@ -1,7 +1,7 @@
 import asyncio
 import concurrent
-from typing import List
 from concurrent.futures import ThreadPoolExecutor
+from typing import List
 
 from .base import Embeddings
 

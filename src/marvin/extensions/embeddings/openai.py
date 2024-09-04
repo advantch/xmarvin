@@ -3,11 +3,12 @@ import concurrent
 from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
-from marvin.extensions.embeddings.base import Embeddings
-from marvin.extensions.utilities.logging import logger
-from marvin.extensions.settings import extension_settings
-from marvin.settings import settings
 from openai import OpenAI
+
+from marvin.extensions.embeddings.base import Embeddings
+from marvin.extensions.settings import extension_settings
+from marvin.extensions.utilities.logging import logger
+from marvin.settings import settings
 
 
 def get_client(api_key=None):

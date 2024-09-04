@@ -1,10 +1,11 @@
-from marvin.beta.assistants.formatting import format_run
 from openai import AsyncAssistantEventHandler
 from openai.types.beta.threads import Message, MessageDelta
 from openai.types.beta.threads.runs import RunStep, RunStepDelta
 from rich.console import Group
 from rich.live import Live
 from typing_extensions import override
+
+from marvin.beta.assistants.formatting import format_run
 
 
 class PrintHandler(AsyncAssistantEventHandler):

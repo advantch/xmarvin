@@ -1,5 +1,5 @@
-from marvin.extensions.utilities.logging import logger
 from marvin.extensions.settings import extension_settings
+from marvin.extensions.utilities.logging import logger
 
 try:
     import environ

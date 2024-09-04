@@ -1,20 +1,22 @@
-import pytest
+import uuid
 from datetime import datetime, timedelta
+
+import pytest
+from marvin.extensions.types.agent import AgentConfig
 from polyfactory.pytest_plugin import register_fixture
+
 from .factories import (
     ChatCompletionChunkFactory,
-    MessageFactory,
     MessageDeltaFactory,
-    RunStepFactory,
-    RunStepDeltaFactory,
+    MessageFactory,
     RunFactory,
+    RunStepDeltaFactory,
+    RunStepFactory,
     ThreadRunCompletedFactory,
     ThreadRunFailedFactory,
     ToolCallDeltaObjectFactory,
     ToolCallsStepDetailsFactory,
 )
-import uuid
-from marvin.extensions.types.agent import AgentConfig
 
 
 @pytest.fixture

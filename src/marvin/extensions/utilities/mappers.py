@@ -1,19 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import orjson
 from litellm import ModelResponse
 from litellm.types.utils import Delta
-from marvin.extensions.types import (
-    AnyToolCall,
-    AppToolCall,
-    ChatMessage,
-    Function,
-    FunctionToolCall,
-)
-from marvin.extensions.utilities.context import RunContext
-from marvin.extensions.utilities.unique_id import generate_uuid_from_string
 from openai.types.beta.threads import Message, MessageDelta
 from openai.types.beta.threads.message_content import (
     ImageFileContentBlock,
@@ -33,6 +24,16 @@ from openai.types.beta.threads.runs.run_step_delta import (
 from openai.types.beta.threads.runs.tool_call_delta import FunctionToolCallDelta
 from openai.types.beta.threads.text_delta import TextDelta
 from openai.types.beta.threads.text_delta_block import TextDeltaBlock
+
+from marvin.extensions.types import (
+    AnyToolCall,
+    AppToolCall,
+    ChatMessage,
+    Function,
+    FunctionToolCall,
+)
+from marvin.extensions.utilities.context import RunContext
+from marvin.extensions.utilities.unique_id import generate_uuid_from_string
 
 
 def map_content_to_block(content, is_delta=False):

@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Dict, List, Optional, Type, TypeVar, Generic
+from typing import Any, Generic, List, Optional, TypeVar
 
 from marvin.extensions.storage.base import (
     BaseAgentStorage,
@@ -14,7 +14,8 @@ from marvin.extensions.types.run import PersistedRun
 from marvin.extensions.types.thread import ChatThread
 from marvin.extensions.utilities.serialization import to_serializable
 from marvin.utilities.asyncio import expose_sync_method
-from .layers import MemStore, JsonFileStore
+
+from .layers import JsonFileStore, MemStore
 
 T = TypeVar("T")
 

@@ -1,11 +1,11 @@
-import pytest
 import uuid
-import httpx
-import magic
 from io import BytesIO
 from unittest.mock import AsyncMock, patch
+
+import httpx
+import magic
+import pytest
 from marvin.extensions.storage.file_storage import LocalFileStorage
-from marvin.extensions.types.data_source import DataSource
 
 pytestmark = pytest.mark.asyncio
 

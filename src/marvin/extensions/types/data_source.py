@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, HttpUrl
-from typing import BinaryIO, List, Optional, Literal, Dict, Any
 import uuid
 from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
+
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class Glob(BaseModel):
@@ -67,11 +68,11 @@ class DataSource(BaseModel):
     )
     description: Optional[str] = None
     chunks_length: Optional[int] = None
-    chunks_strategy: Optional[Literal["default", "high_density", "low_density"]] = (
-        Field(
-            description="Strategy for chunking the document",
-            default="default",
-        )
+    chunks_strategy: Optional[
+        Literal["default", "high_density", "low_density"]
+    ] = Field(
+        description="Strategy for chunking the document",
+        default="default",
     )
     temporary: Optional[bool] = None
     created: Optional[datetime] = Field(default_factory=datetime.now)

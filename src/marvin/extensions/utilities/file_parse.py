@@ -3,6 +3,7 @@ import os
 
 import magic
 from magika import Magika
+
 from marvin.extensions.utilities.logging import logger
 
 

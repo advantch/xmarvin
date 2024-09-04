@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+
 from marvin.extensions.settings import extension_settings
 
 

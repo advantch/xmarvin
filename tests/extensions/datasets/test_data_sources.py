@@ -1,18 +1,17 @@
 import uuid
-import pytest
-import respx
-import httpx
 from io import BytesIO
 from unittest.mock import AsyncMock, patch
+
+import httpx
+import pytest
+import respx
 from marvin.extensions.storage.file_storage import LocalFileStorage
 from marvin.extensions.types import ChatMessage, Metadata
-from marvin.extensions.types.message import FileMessageContent, ImageMessageContent
 from marvin.extensions.types.data_source import DataSource, WebSource
-from openai.types.file_object import FileObject
+from marvin.extensions.types.message import FileMessageContent, ImageMessageContent
 from openai.types.beta.thread import Thread
 from openai.types.beta.threads.message import Message
-from openai.types.beta.threads.message_content import MessageContent, TextContentBlock
-from openai.types.beta.threads.text import Text
+from openai.types.file_object import FileObject
 
 pytestmark = pytest.mark.asyncio
 

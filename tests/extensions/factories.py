@@ -1,22 +1,22 @@
 from litellm import ModelResponse
 from litellm.utils import StreamingChoices
-from openai.types import FileObject, CreateEmbeddingResponse
-from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
-from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice
-from polyfactory.factories.pydantic_factory import ModelFactory
+from openai.types import CreateEmbeddingResponse, FileObject
+from openai.types.beta.assistant_stream_event import (
+    ThreadRunCancelled,
+    ThreadRunCompleted,
+    ThreadRunFailed,
+)
 from openai.types.beta.threads import Message, MessageDelta
+from openai.types.beta.threads.run import Run
 from openai.types.beta.threads.runs import (
     RunStep,
     RunStepDelta,
     ToolCallDeltaObject,
     ToolCallsStepDetails,
 )
-from openai.types.beta.threads.run import Run
-from openai.types.beta.assistant_stream_event import (
-    ThreadRunCompleted,
-    ThreadRunFailed,
-    ThreadRunCancelled,
-)
+from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
+from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 
 class ChatCompletionChunkFactory(ModelFactory):

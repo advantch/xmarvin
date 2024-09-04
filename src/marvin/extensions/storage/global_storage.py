@@ -1,12 +1,12 @@
+from marvin.extensions.storage.base import (
+    BaseAgentStorage,
+    BaseChatStore,
+    BaseFileStorage,
+    BaseRunStorage,
+    BaseThreadStore,
+)
 from marvin.extensions.storage.config import StorageConfig
 from marvin.extensions.storage.factory import StorageFactory
-from marvin.extensions.storage.base import (
-    BaseFileStorage,
-    BaseChatStore,
-    BaseThreadStore,
-    BaseRunStorage,
-    BaseAgentStorage,
-)
 
 
 class GlobalStorage:

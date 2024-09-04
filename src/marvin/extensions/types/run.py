@@ -1,8 +1,7 @@
 from datetime import datetime
-from typing import Any, Literal, Union
+from typing import Any, List, Literal, Union
 from uuid import UUID
-from typing import List
-from marvin.extensions.types.base import BaseModelConfig
+
 from openai.types.beta.threads.run import Run as OpenaiRun
 from openai.types.beta.threads.runs import (
     MessageCreationStepDetails,
@@ -11,6 +10,8 @@ from openai.types.beta.threads.runs import (
 )
 from openai.types.beta.threads.runs.message_creation_step_details import MessageCreation
 from pydantic import BaseModel
+
+from marvin.extensions.types.base import BaseModelConfig
 
 from .costs import TokenCreditsUsage
 from .events import StreamChatMessageEvent
