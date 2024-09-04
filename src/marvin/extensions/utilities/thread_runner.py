@@ -231,8 +231,10 @@ def memory_with_storage(thread_id, storage=None):
         thread_id=thread_id,
     )
 
+
 def create_openai_thread(thread_id):
     from marvin.beta.assistants import Thread
+
     thread = Thread()
     thread = thread.create()
     return thread

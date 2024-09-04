@@ -64,10 +64,9 @@ def test_thread_runner(respx_mock):
         assert str(run_context.run_id) == str(start_run_schema.run_id)
         assert str(run_context.thread_id) == str(start_run_schema.thread_id)
 
-
     with run_context(start_run_schema) as (run, thread_storage, context):
         assert str(run.id) == str(start_run_schema.run_id)
-        
+
         # try get tenant_id
         current_run_id = get_current_run_id()
         assert str(current_run_id) == str(start_run_schema.run_id)

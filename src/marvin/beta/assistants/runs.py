@@ -73,11 +73,11 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
         None,
         description="Additional tools to append to the assistant's tools. ",
     )
-    tool_choice: Optional[
-        Union[Literal["none", "auto", "required"], AssistantTool]
-    ] = Field(
-        default=None,
-        description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
+    tool_choice: Optional[Union[Literal["none", "auto", "required"], AssistantTool]] = (
+        Field(
+            default=None,
+            description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
+        )
     )
     run: OpenAIRun = Field(None, repr=False)
     data: Any = None
@@ -237,9 +237,10 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                 tool_calls.append(tool_call)
 
             return tool_outputs
-        
+
     async def update_handler_kwargs(self, handler: AsyncAssistantEventHandler):
         from marvin.beta.local.handlers import DefaultAssistantEventHandler
+
         if isinstance(handler, DefaultAssistantEventHandler):
             handler.tool_outputs = self._tool_outputs
 
@@ -256,10 +257,7 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
         event_handler_class = self.event_handler_class or AsyncAssistantEventHandler
 
         with self.assistant:
-            
-            handler = event_handler_class(
-                    **self.event_handler_kwargs
-            )
+            handler = event_handler_class(**self.event_handler_kwargs)
             # custom tool patching for default event handler
             if hasattr(handler, "tool_outputs"):
                 handler.tool_outputs = self._tool_outputs
@@ -287,9 +285,7 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
 
                     # patch the latest context object
                     self.event_handler_kwargs["context"] = self.handler._context
-                    handler = event_handler_class(
-                        **self.event_handler_kwargs
-                    )
+                    handler = event_handler_class(**self.event_handler_kwargs)
                     if hasattr(handler, "tool_outputs"):
                         handler.tool_outputs = self._tool_outputs
                     # upstream client to submit and handle tool outputs

@@ -71,17 +71,22 @@ class GlobalStorage:
     def set_agent_storage(cls, storage: BaseAgentStorage):
         cls._agent_instance = storage
 
+
 def get_file_storage() -> BaseFileStorage:
     return GlobalStorage.get_file_storage()
+
 
 def get_chat_store() -> BaseChatStore:
     return GlobalStorage.get_chat_store()
 
+
 def get_thread_store() -> BaseThreadStore:
     return GlobalStorage.get_thread_store()
 
+
 def get_run_storage() -> BaseRunStorage:
     return GlobalStorage.get_run_storage()
+
 
 def get_agent_storage() -> BaseAgentStorage:
     return GlobalStorage.get_agent_storage()

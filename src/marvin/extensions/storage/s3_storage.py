@@ -52,9 +52,9 @@ class BucketConfig(BaseSettings):
             print(f"Error getting S3 config from django settings: {e}")
             return None
 
+
 class S3Storage(BaseFileStorage):
     def __init__(self, config: BucketConfig = None):
-        
         if config is None:
             config = BucketConfig.from_env()
 

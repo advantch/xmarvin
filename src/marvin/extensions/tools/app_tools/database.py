@@ -184,7 +184,7 @@ def db_query(query: str) -> QueryResult:
     try:
         connection = db_connection(url)
         return connection.run(query)
-        
+
     except Exception as e:
         traceback.print_exc()
         return QueryResult(data=[], headers=[], message=f"Error: {str(e)}")

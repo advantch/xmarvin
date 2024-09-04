@@ -44,6 +44,7 @@ def start_run_payload():
         tenant_id=str(uuid4()),
     )
 
+
 @pytest.fixture
 def start_run_payload_with_tools():
     run_id = str(uuid4())
@@ -56,7 +57,10 @@ def start_run_payload_with_tools():
             content=[
                 {
                     "type": "text",
-                    "text": {"value": "Fetch the example.com website", "annotations": []},
+                    "text": {
+                        "value": "Fetch the example.com website",
+                        "annotations": [],
+                    },
                 }
             ],
             metadata={"attachments": [], "run_id": run_id},

@@ -3,14 +3,18 @@ from typing import BinaryIO, List, Optional, Literal, Dict, Any
 import uuid
 from datetime import datetime
 
+
 class Glob(BaseModel):
     glob: str
+
 
 class StartUrl(BaseModel):
     url: HttpUrl
 
+
 class ProxyConfiguration(BaseModel):
     use_apify_proxy: bool
+
 
 class WebSource(BaseModel):
     run_mode: Literal["DEVELOPMENT", "PRODUCTION"] = "DEVELOPMENT"
@@ -28,10 +32,12 @@ class WebSource(BaseModel):
     breakpoint_location: Literal["NONE", "BEFORE_GOTO", "AFTER_GOTO"] = "NONE"
     custom_data: Dict[str, Any] = {}
 
+
 class IndexData(BaseModel):
     mime_type: Optional[str] = None
     base64_string: Optional[str] = None
     prompt: Optional[str] = None
+
 
 class DataSourceFileUpload(BaseModel):
     file: Any
@@ -42,6 +48,7 @@ class DataSourceFileUpload(BaseModel):
     file_upload_url: str | None = None
     file_upload_type: str | None = None
     reference_file_id: str | None = None
+
 
 class DataSource(BaseModel):
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -60,9 +67,11 @@ class DataSource(BaseModel):
     )
     description: Optional[str] = None
     chunks_length: Optional[int] = None
-    chunks_strategy: Optional[Literal["default", "high_density", "low_density"]] = Field(
-        description="Strategy for chunking the document",
-        default="default",
+    chunks_strategy: Optional[Literal["default", "high_density", "low_density"]] = (
+        Field(
+            description="Strategy for chunking the document",
+            default="default",
+        )
     )
     temporary: Optional[bool] = None
     created: Optional[datetime] = Field(default_factory=datetime.now)
@@ -85,7 +94,6 @@ class DataSource(BaseModel):
     class Config:
         extra = "allow"
 
-
     def from_file_upload(cls, upload: DataSourceFileUpload):
         """
         Create a DataSource from a file upload.
@@ -101,6 +109,3 @@ class DataSource(BaseModel):
             file_upload_url=upload.file_upload_url,
             file_upload_type=upload.file_upload_type,
         )
-
-
-    

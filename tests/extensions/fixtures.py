@@ -163,10 +163,13 @@ react_flow_json = {
 def react_flow_data():
     return react_flow_json
 
+
 @pytest.fixture
 def rflow_future_scheduled(react_flow_data):
     react_flow_data["nodes"][0]["data"]["schedule"] = "specific_time"
-    react_flow_data["nodes"][0]["data"]["scheduled_at"] = (datetime.now() + timedelta(days=1)).isoformat()
+    react_flow_data["nodes"][0]["data"]["scheduled_at"] = (
+        datetime.now() + timedelta(days=1)
+    ).isoformat()
     return react_flow_data
 
 

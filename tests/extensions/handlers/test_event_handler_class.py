@@ -19,12 +19,11 @@ from ..factories import (
 )
 
 
-
 @pytest.mark.asyncio
 async def test_event_handler_class():
     run_store = RunStore()
     chat_store = ChatStore()
-    
+
     run = run_store.init_db_run(
         run_id=str(uuid.uuid4()),
         thread_id=str(uuid.uuid4()),
@@ -38,7 +37,12 @@ async def test_event_handler_class():
         tool_config=[],
     )
     _context = context.model_dump()
-    memory = Memory(storage=chat_store, context=_context, thread_id=run.thread_id, index=run.thread_id)
+    memory = Memory(
+        storage=chat_store,
+        context=_context,
+        thread_id=run.thread_id,
+        index=run.thread_id,
+    )
 
     handler = DefaultAssistantEventHandler(context=_context, memory=memory)
 
@@ -83,11 +87,10 @@ async def test_event_handler_class():
     # For example:
     messages = await memory.storage.filter_async(thread_id=run.thread_id)
     assert messages is not None
-    #assert len(messages) == 1, messages
-    
+    # assert len(messages) == 1, messages
+
     assert await memory.storage.filter_async(thread_id=run.thread_id) is not None
 
     # check there is a storage object
-    assert handler._context['storage'] is not None
-    assert handler._context['storage']['tool_calls'] is not None
-
+    assert handler._context["storage"] is not None
+    assert handler._context["storage"]["tool_calls"] is not None

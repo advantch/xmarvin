@@ -15,9 +15,11 @@ from marvin.extensions.storage.stores import (
     RunStore,
     ThreadStore,
 )
-from marvin.extensions.utilities.transport import BaseConnectionManager, CLIConnectionManager
+from marvin.extensions.utilities.transport import (
+    BaseConnectionManager,
+    CLIConnectionManager,
+)
 from pydantic_settings import BaseSettings
-
 
 
 class S3Settings(BaseSettings):
@@ -43,9 +45,9 @@ class ExtensionStorageSettings(BaseSettings):
 
 
 class TransportSettings(BaseSettings):
-    channel: Literal['sse', 'ws'] = 'ws'
-    default_manager: Literal['fastapi', 'django'] = 'fastapi'
-    manager: BaseConnectionManager | None= CLIConnectionManager()
+    channel: Literal["sse", "ws"] = "ws"
+    default_manager: Literal["fastapi", "django"] = "fastapi"
+    manager: BaseConnectionManager | None = CLIConnectionManager()
 
 
 class MarvinExtensionsSettings(BaseSettings):

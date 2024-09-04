@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from marvin.extensions.settings import extension_settings
 
+
 class StorageConfig(BaseModel):
     file_storage_type: str = extension_settings.storage.file_storage_class.__name__
     chat_store_type: str = extension_settings.storage.chat_store_class.__name__

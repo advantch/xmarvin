@@ -38,7 +38,6 @@ def test_introspection():
 
 
 def test_generates_correct_url_for_postgresql(mocker):
-
     mocker.patch(
         "marvin.extensions.tools.services.db.get_db_config",
         return_value={

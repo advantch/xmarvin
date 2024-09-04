@@ -56,7 +56,7 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
 
         messages = await self.storage.filter_async(thread_id=self.index)
         ids = [message.id for message in messages]
-        
+
         self.previous_ids = ids
         self.memory[self.index] = messages
         self._check_requires_search()

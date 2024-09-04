@@ -75,7 +75,7 @@ class PersistedRun(BaseModel):
 
         if openai_run:
             metadata = openai_run.get("metadata", {})
-            openai_run['tools'] = openai_run.get("tools", None) or []
+            openai_run["tools"] = openai_run.get("tools", None) or []
             self.run = OpenaiRunSchema.model_validate(openai_run)
             self.metadata = RunMetadata.model_validate(metadata)
 

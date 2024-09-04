@@ -23,7 +23,6 @@ extension_settings.transport.manager = ws_manager
 app = FastAPI()
 
 
-
 s3_config = BucketConfig(_env_file=".env")
 s3_storage = S3Storage(s3_config)
 
@@ -36,24 +35,25 @@ assistant = Assistant(
     personality is helpful and friendly, but humorously based on Marvin the
     Paranoid Android. Try not to refer to the fact that you're an assistant,
     though. Provide concise and direct answers.
-    """
+    """,
 )
+
 
 @app.websocket("/ws/{channel_id}")
 async def websocket_endpoint(websocket: WebSocket, channel_id: str):
     await ws_manager.connect_async(websocket, channel_id)
     thread_id = str(uuid.uuid4())
-    
+
     try:
         while True:
             data = await websocket.receive_json()
-            user_message = data.get('message')
-            thread_id = data.get('threadId') or thread_id
-            run_id = data.get('runId') or str(uuid.uuid4())
+            user_message = data.get("message")
+            thread_id = data.get("threadId") or thread_id
+            run_id = data.get("runId") or str(uuid.uuid4())
             rich.print(f"Received message: {user_message}")
             # Create a ChatMessage object
             chat_message = ChatMessage.model_validate(decamelize(user_message))
-            chat_message.thread_id = thread_id 
+            chat_message.thread_id = thread_id
             chat_message.run_id = run_id
             # Create a TriggerAgentRun object
             trigger_run = TriggerAgentRun(
@@ -66,12 +66,12 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str):
                     model=assistant.model,
                     tools=assistant.tools,
                 ),
-                channel_id=channel_id
+                channel_id=channel_id,
             )
-            
+
             # Start the run
             start_run(trigger_run)
-            
+
             # The response will be sent through the event handler,
             # so we don't need to send it here.
     except WebSocketDisconnect:
@@ -81,6 +81,7 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str):
         print(f"Error: {e}")
     finally:
         await websocket.close()
+
 
 @app.get("/")
 async def get():
@@ -111,6 +112,8 @@ async def create_upload_file(
     data_source = DataSource.from_data_source_upload(data_source_upload)
     return {"file_id": data_source.model_dump()}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

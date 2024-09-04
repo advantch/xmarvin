@@ -17,7 +17,7 @@ class Dispatcher(BaseModel, ExposeSyncMethodsMixin):
     context: RunContext
     data: Dict[str, Any] | None = None
     stack: list | None = []
-    channel_type: Literal['ws', 'sse'] = "ws"
+    channel_type: Literal["ws", "sse"] = "ws"
 
     class Config:
         arbitrary_types_allowed = True

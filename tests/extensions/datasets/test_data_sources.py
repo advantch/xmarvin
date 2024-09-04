@@ -16,21 +16,27 @@ from openai.types.beta.threads.text import Text
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 def file_storage():
     return LocalFileStorage()
+
 
 @pytest.mark.asyncio
 async def test_parse_file_attachments(file_storage):
     # Create an image file upload
     image_content = b"fake image content"
     image_file = BytesIO(image_content)
-    im = await file_storage.save_file_async(image_file, "image.png", metadata={"content_type": "image/png"})
+    im = await file_storage.save_file_async(
+        image_file, "image.png", metadata={"content_type": "image/png"}
+    )
 
     # Create a document file upload
     doc_content = b"fake document content"
     doc_file = BytesIO(doc_content)
-    doc = await file_storage.save_file_async(doc_file, "document.pdf", metadata={"content_type": "application/pdf"})
+    doc = await file_storage.save_file_async(
+        doc_file, "document.pdf", metadata={"content_type": "application/pdf"}
+    )
 
     # Check if the files are saved to the storage
     im_obj = await file_storage.get_file_metadata_async(im["file_id"])
@@ -77,6 +83,7 @@ async def test_parse_file_attachments(file_storage):
         elif attachment.type == "file":
             assert isinstance(attachment, FileMessageContent)
 
+
 @pytest.fixture
 def valid_web_source_config():
     return {
@@ -89,24 +96,26 @@ def valid_web_source_config():
         "proxy_configuration": {"use_apify_proxy": True},
     }
 
+
 def test_valid_web_source_data_source(valid_web_source_config):
     data_source = DataSource(
         name="Web Scraper Test",
         upload_type="web_source",
-        web_source=WebSource(**valid_web_source_config)
+        web_source=WebSource(**valid_web_source_config),
     )
     assert data_source.upload_type == "web_source"
     assert isinstance(data_source.web_source, WebSource)
     assert data_source.web_source.run_mode == "DEVELOPMENT"
     assert len(data_source.web_source.start_urls) == 1
-    assert str(data_source.web_source.start_urls[0].url).rstrip('/') == "https://crawlee.dev"
+    assert (
+        str(data_source.web_source.start_urls[0].url).rstrip("/")
+        == "https://crawlee.dev"
+    )
 
 
 def test_url_data_source():
     data_source = DataSource(
-        name="URL Test",
-        upload_type="url",
-        url="https://example.com/data.json"
+        name="URL Test", upload_type="url", url="https://example.com/data.json"
     )
     assert data_source.upload_type == "url"
     assert str(data_source.url) == "https://example.com/data.json"
@@ -117,7 +126,9 @@ async def test_upload_from_url(file_storage):
     url = "https://example.com/test_file.txt"
     file_id = str(uuid.uuid4())
 
-    with patch.object(file_storage, 'download_file', new_callable=AsyncMock) as mock_download:
+    with patch.object(
+        file_storage, "download_file", new_callable=AsyncMock
+    ) as mock_download:
         mock_download.return_value = {"file_id": file_id, "url": url}
 
         data_source = DataSource(
@@ -130,17 +141,18 @@ async def test_upload_from_url(file_storage):
 
         assert str(data_source.url) == url
 
+
 @respx.mock
 async def test_sync_with_openai_thread(file_storage):
     thread_id = str(uuid.uuid4())
-    
+
     # Prepare mock responses
     thread_response = {
         "id": thread_id,
         "created_at": 1699012949,
         "metadata": {},
         "object": "thread",
-        "tool_resources": None
+        "tool_resources": None,
     }
     message_response = {
         "id": "msg_1",
@@ -148,28 +160,20 @@ async def test_sync_with_openai_thread(file_storage):
         "created_at": 1699012950,
         "thread_id": thread_id,
         "role": "user",
-        "content": [
-            {
-                "type": "text",
-                "text": {
-                    "value": "Hello",
-                    "annotations": []
-                }
-            }
-        ],
+        "content": [{"type": "text", "text": {"value": "Hello", "annotations": []}}],
         "file_ids": ["file1", "file2"],
         "assistant_id": None,
         "run_id": None,
         "metadata": {},
-        "status": "completed"
+        "status": "completed",
     }
-    
+
     messages_response = {
         "object": "list",
         "data": [message_response],
         "first_id": "msg_1",
         "last_id": "msg_1",
-        "has_more": False
+        "has_more": False,
     }
     file1_response = {
         "id": "file1",
@@ -179,9 +183,9 @@ async def test_sync_with_openai_thread(file_storage):
         "object": "file",
         "purpose": "assistants",
         "status": "processed",
-        "status_details": None
+        "status_details": None,
     }
-    
+
     file2_response = {
         "id": "file2",
         "bytes": 140000,
@@ -190,7 +194,7 @@ async def test_sync_with_openai_thread(file_storage):
         "object": "file",
         "purpose": "assistants",
         "status": "processed",
-        "status_details": None
+        "status_details": None,
     }
 
     # Mock the OpenAI API calls
@@ -213,7 +217,7 @@ async def test_sync_with_openai_thread(file_storage):
         return_value=httpx.Response(200, content=b"file content 2")
     )
 
-    with patch('marvin.utilities.openai.get_openai_client') as mock_get_client:
+    with patch("marvin.utilities.openai.get_openai_client") as mock_get_client:
         mock_client = AsyncMock()
         mock_get_client.return_value = mock_client
         mock_client.beta.threads.retrieve.return_value = Thread(**thread_response)
@@ -222,11 +226,11 @@ async def test_sync_with_openai_thread(file_storage):
         )
         mock_client.files.retrieve.side_effect = [
             FileObject(**file1_response),
-            FileObject(**file2_response)
+            FileObject(**file2_response),
         ]
         mock_client.files.content.side_effect = [
             AsyncMock(aread=AsyncMock(return_value=b"file content 1")),
-            AsyncMock(aread=AsyncMock(return_value=b"file content 2"))
+            AsyncMock(aread=AsyncMock(return_value=b"file content 2")),
         ]
 
         synced_files = await file_storage.sync_with_openai_thread_async(thread_id)
@@ -237,16 +241,16 @@ async def test_sync_with_openai_thread(file_storage):
         assert "purpose" in file
         assert file["purpose"] == "assistants"
 
+
 @respx.mock
 async def test_sync_with_openai_assistant(file_storage):
     assistant_id = str(uuid.uuid4())
 
     # Mock the OpenAI API calls
     respx.get(f"https://api.openai.com/v1/assistants/{assistant_id}").mock(
-        return_value=httpx.Response(200, json={
-            "id": assistant_id,
-            "file_ids": ["file1", "file2"]
-        })
+        return_value=httpx.Response(
+            200, json={"id": assistant_id, "file_ids": ["file1", "file2"]}
+        )
     )
     respx.get("https://api.openai.com/v1/files/file1").mock(
         return_value=httpx.Response(200, json={"purpose": "assistants"})
@@ -269,6 +273,7 @@ async def test_sync_with_openai_assistant(file_storage):
         assert "purpose" in file
         assert file["purpose"] == "assistants"
 
+
 @respx.mock
 async def test_upload_to_openai(file_storage):
     file_id = str(uuid.uuid4())
@@ -276,14 +281,15 @@ async def test_upload_to_openai(file_storage):
 
     # Prepare a file in the storage
     file_content = b"test file content"
-    await file_storage.save_file_async(BytesIO(file_content), file_id, {"filename": "test.txt"})
+    await file_storage.save_file_async(
+        BytesIO(file_content), file_id, {"filename": "test.txt"}
+    )
 
     # Mock the OpenAI API call
     respx.post("https://api.openai.com/v1/files").mock(
-        return_value=httpx.Response(200, json={
-            "id": "openai_file_id",
-            "purpose": purpose
-        })
+        return_value=httpx.Response(
+            200, json={"id": "openai_file_id", "purpose": purpose}
+        )
     )
 
     result = await file_storage.upload_to_openai_async(file_id, purpose)
@@ -295,6 +301,7 @@ async def test_upload_to_openai(file_storage):
     metadata = await file_storage.get_file_metadata_async(file_id)
     assert metadata["openai_file_id"] == "openai_file_id"
 
+
 async def test_presigned_url(file_storage):
     file_id = str(uuid.uuid4())
 
@@ -305,18 +312,20 @@ async def test_presigned_url(file_storage):
 
     # Simulate file upload
     file_content = b"test"
-    with patch('httpx.put') as mock_put:
+    with patch("httpx.put") as mock_put:
         mock_put.return_value.status_code = 200
         mock_put.return_value.text = ""
 
-        await file_storage.save_file_async(BytesIO(file_content), file_id, {"size": len(file_content)})
+        await file_storage.save_file_async(
+            BytesIO(file_content), file_id, {"size": len(file_content)}
+        )
 
     # Verify file content
     file = await file_storage.get_file_async(file_id)
     assert file.read() == file_content
 
     # Simulate public access
-    with patch('httpx.get') as mock_get:
+    with patch("httpx.get") as mock_get:
         mock_get.return_value.status_code = 200
         mock_get.return_value.text = "test"
 

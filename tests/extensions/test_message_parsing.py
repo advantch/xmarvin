@@ -45,13 +45,7 @@ def test_chat_message_parsing():
         "role": "user",
         "run_id": None,
         "content": [
-            {
-                "text": {
-                    "value": "describe the image",
-                    "annotations": []
-                },
-                "type": "text"
-            }
+            {"text": {"value": "describe the image", "annotations": []}, "type": "text"}
         ],
         "metadata": {
             "id": "",
@@ -65,21 +59,19 @@ def test_chat_message_parsing():
                 {
                     "type": "image",
                     "file_id": "file-123",
-                    "metadata": {
-                        "url": "http://localhost:8000/media/dicts/pic.png"
-                    }
+                    "metadata": {"url": "http://localhost:8000/media/dicts/pic.png"},
                 }
-            ]
+            ],
         },
-        "thread_id": None
+        "thread_id": None,
     }
 
-    
     message = ChatMessage.model_validate(message)
     print(message, type(message), message.metadata)
     assert message.metadata.attachments[0].type == "image"
-    assert message.metadata.attachments[0].metadata.url == Url("http://localhost:8000/media/dicts/pic.png")
-
+    assert message.metadata.attachments[0].metadata.url == Url(
+        "http://localhost:8000/media/dicts/pic.png"
+    )
 
 
 def test_runner_message_parsing(

@@ -61,7 +61,10 @@ def fetch_and_run_toolkit_tool(
     if not tool or not tool.run or not tool.fn:
         raise ValueError(f"Tool with id {tool_id} not found or is invalid")
     result = {"run_id": None, "result": None}
-    with tool_run_context(tool_id, config, input_data, toolkit_id=toolkit_id) as (run, context):
+    with tool_run_context(tool_id, config, input_data, toolkit_id=toolkit_id) as (
+        run,
+        context,
+    ):
         result["run_id"] = run.id
         result["result"] = tool.run(input_data)
 

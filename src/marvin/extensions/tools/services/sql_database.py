@@ -24,22 +24,26 @@ from sqlalchemy.types import NullType
 
 from pydantic import BaseModel, Field
 
+
 class ColumnInfo(BaseModel):
     name: str
     type: str
     nullable: bool
     default: Optional[str] = None
 
+
 class IndexInfo(BaseModel):
     name: str
     unique: bool
     columns: List[str]
+
 
 class RelationInfo(BaseModel):
     from_table: str
     from_column: str
     to_table: str
     to_column: str
+
 
 class TableInfo(BaseModel):
     name: str
@@ -50,16 +54,15 @@ class TableInfo(BaseModel):
     indexes: Optional[List[IndexInfo]] = None
     sample_rows: Optional[List[Dict[str, Any]]] = None
 
-    
 
 class DatabaseInfo(BaseModel):
     tables: Dict[str, TableInfo]
+
 
 class QueryResult(BaseModel):
     headers: List[str]
     data: List[Dict[str, Any]]
     message: str = "Query executed successfully."
-
 
 
 def _format_index(index: sqlalchemy.engine.interfaces.ReflectedIndex) -> str:
@@ -178,7 +181,6 @@ class SQLDatabase:
         _engine_args = engine_args or {}
         return cls(create_engine(database_uri, **_engine_args), **kwargs)
 
-
     @property
     def dialect(self) -> str:
         """Return string representation of dialect to use."""
@@ -229,21 +231,25 @@ class SQLDatabase:
         tables = {}
         for table in meta_tables:
             if self._custom_table_info and table.name in self._custom_table_info:
-                tables[table.name] = self._parse_custom_table_info(table.name, self._custom_table_info[table.name])
+                tables[table.name] = self._parse_custom_table_info(
+                    table.name, self._custom_table_info[table.name]
+                )
                 continue
 
             tables[table.name] = self._get_structured_table_info(table)
 
         return DatabaseInfo(tables=tables)
-    
+
     def _get_structured_table_info(self, table: Table) -> TableInfo:
         columns = {
             col.name: ColumnInfo(
                 name=col.name,
                 type=str(col.type),
                 nullable=col.nullable,
-                default=str(col.default) if col.default else None
-            ) for col in table.columns if not isinstance(col.type, NullType)
+                default=str(col.default) if col.default else None,
+            )
+            for col in table.columns
+            if not isinstance(col.type, NullType)
         }
 
         foreign_keys = [
@@ -251,13 +257,13 @@ class SQLDatabase:
                 from_table=table.name,
                 from_column=fk.parent.name,
                 to_table=fk.column.table.name,
-                to_column=fk.column.name
+                to_column=fk.column.name,
             )
             for fk in table.foreign_keys
         ]
 
         create_table = str(CreateTable(table).compile(self._engine))
-        
+
         info = TableInfo(
             name=table.name,
             columns=columns,
@@ -268,7 +274,7 @@ class SQLDatabase:
 
         if self._indexes_in_table_info:
             info.indexes = self._get_table_indexes_structured(table)
-        
+
         if self._sample_rows_in_table_info:
             info.sample_rows = self._get_sample_rows_structured(table)
 
@@ -280,8 +286,9 @@ class SQLDatabase:
             IndexInfo(
                 name=index["name"],
                 unique=index["unique"],
-                columns=index["column_names"]
-            ) for index in indexes
+                columns=index["column_names"],
+            )
+            for index in indexes
         ]
 
     def _get_sample_rows_structured(self, table: Table) -> List[Dict[str, Any]]:
@@ -297,8 +304,13 @@ class SQLDatabase:
         # Implement this method to parse custom table info strings
         # into a structured format similar to _get_structured_table_info
         # For now, returning a placeholder
-        return TableInfo(name=table_name, columns={}, primary_key=[], foreign_keys=[], create_statement=custom_info)
-
+        return TableInfo(
+            name=table_name,
+            columns={},
+            primary_key=[],
+            foreign_keys=[],
+            create_statement=custom_info,
+        )
 
     def _get_table_indexes(self, table: Table) -> str:
         indexes = self._inspector.get_indexes(table.name)
@@ -454,7 +466,9 @@ class SQLDatabase:
                 for row in result
             ]
         pretty_log(f"Result: {data}")
-        return QueryResult(headers=headers, data=data, message="Query executed successfully.")
+        return QueryResult(
+            headers=headers, data=data, message="Query executed successfully."
+        )
 
     def get_table_info_no_throw(self, table_names: Optional[List[str]] = None) -> str:
         """Get information about specified tables.
@@ -504,4 +518,7 @@ class SQLDatabase:
         """Return db context that you may want in agent prompt."""
         table_names = list(self.get_usable_table_names())
         table_info = self.get_table_info()
-        return {"table_info": table_info.model_dump(), "table_names": ", ".join(table_names)}
+        return {
+            "table_info": table_info.model_dump(),
+            "table_names": ", ".join(table_names),
+        }

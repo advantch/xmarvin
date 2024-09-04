@@ -89,9 +89,9 @@ class Metadata(BaseModel):
     streaming: bool = False
     run_id: str | UUID | None = None
     id: str | UUID | None = None
-    tool_calls: List[
-        Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool]
-    ] | None | Any = None
+    tool_calls: (
+        List[Union[AppToolCall, AppCodeInterpreterTool, AppFileSearchTool]] | None | Any
+    ) = None
     raw_tool_output: Any | None = None
     name: str | None = None
     type: str | None = "message"
@@ -131,15 +131,20 @@ class ChatMessage(BaseModel):
     """
 
     role: MessageRole = MessageRole.USER
-    content: List[Union[
-    ImageMessageContent,
-    FileMessageContent,
-        TextContentBlock,
-        ImageFileDeltaBlock,  # openai delta
-        ImageFileContentBlock,  # openai
-        TextDeltaBlock,  # openai delta
-        ImageURLDeltaBlock,  # openai delta
-    ]] | None = None
+    content: (
+        List[
+            Union[
+                ImageMessageContent,
+                FileMessageContent,
+                TextContentBlock,
+                ImageFileDeltaBlock,  # openai delta
+                ImageFileContentBlock,  # openai
+                TextDeltaBlock,  # openai delta
+                ImageURLDeltaBlock,  # openai delta
+            ]
+        ]
+        | None
+    ) = None
     id: str | UUID = Field(default_factory=uuid.uuid4)
     run_id: str | UUID | None = None
     thread_id: str | UUID | None = None
