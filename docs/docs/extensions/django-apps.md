@@ -100,6 +100,7 @@ class ThreadManager(models.Manager, TenantModelManagerMixin):
         tags = tags or ["chat"]
         thread = self.filter(id=thread_id).first()
         snippet = trim_message(name)
+        
         if not thread:
             thread = self.create(
                 id=thread_id,

@@ -28,10 +28,10 @@ from marvin.extensions.storage.base import (
     BaseRunStorage,
     BaseThreadStore,
 )
-from marvin.extensions.storage.memory_store import (
-    MemoryChatStore,
-    MemoryRunStore,
-    MemoryThreadStore,
+from marvin.extensions.storage.stores import (
+    ChatStore,
+    RunStore,
+    ThreadStore,
 )
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.agent import AgentConfig
@@ -134,9 +134,9 @@ def verify_runtime_config(
 @contextmanager
 def run_context(
     payload: TriggerAgentRun,
-    thread_storage_class: type[BaseThreadStore] | None = MemoryThreadStore,
+    thread_storage_class: type[BaseThreadStore] | None = ThreadStore,
     thread_store: BaseThreadStore | None = None,
-    run_storage_class: type[BaseRunStorage] | None = MemoryRunStore,
+    run_storage_class: type[BaseRunStorage] | None = RunStore,
 ):
     """
     Run and thread are automatically created and managed within this context.
@@ -264,7 +264,7 @@ def handle_assistant_run(
     run_storage: BaseRunStorage,
     context: dict,
     chat_store: BaseChatStore | None = None,
-    chat_storage_class: type[BaseChatStore] | None = MemoryChatStore,
+    chat_storage_class: type[BaseChatStore] | None = ChatStore,
 ):
     update_marvin_settings()
     tenant_id = data.tenant_id or get_current_tenant_id()
@@ -323,9 +323,10 @@ def handle_assistant_run(
 def handle_local_run(
     data: TriggerAgentRun,
     thread_storage: BaseThreadStore,
+    run_storage: BaseRunStorage,
     context: dict,
     memory: Memory | None = None,
-    chat_storage_class: type[BaseChatStore] | None = MemoryChatStore,
+    chat_storage_class: type[BaseChatStore] | None = ChatStore,
 ):
     """
     Handle a single local run.
@@ -339,7 +340,7 @@ def handle_local_run(
     """
 
     storage = chat_storage_class()
-    memory = memory or memory_with_storage(thread_storage.id, storage)
+    memory = memory or memory_with_storage(data.thread_id, storage)
     # the agent to use
     assistant = data.agent_config.as_assistant()
     # add an event handler to save run data and streaming
@@ -348,7 +349,7 @@ def handle_local_run(
     )
 
     local_thread = LocalThread.create(
-        id=thread_storage.id,
+        id=data.thread_id,
         tenant_id=data.tenant_id,
         tags=data.tags,
         memory=memory,

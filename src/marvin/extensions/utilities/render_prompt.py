@@ -13,7 +13,7 @@ def render_instructions(agent_config=None):
 
     agent_config = agent_config or AgentConfig.default_agent()
     prompt = agent_config.instructions.text or DEFAULT_PROMPT
-    t = Template.from_string(prompt)
+    t = Template(prompt)
     c = {"agent_config": agent_config, "date": datetime.now().isoformat()}
     prompt_str = t.render(c)
     return prompt_str

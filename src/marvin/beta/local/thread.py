@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.memory.base import BaseMemory
 from marvin.extensions.memory.temp_memory import Memory
-from marvin.extensions.storage import BaseChatStore, MemoryChatStore
+from marvin.extensions.storage import BaseChatStore, ChatStore
 from marvin.extensions.storage.base import BaseThreadStore
 from marvin.extensions.tools.tool import Tool
 from marvin.extensions.types import ChatMessage
@@ -22,9 +22,9 @@ from .assistant import LocalAssistant
 
 class LocalThread(BaseModel, ExposeSyncMethodsMixin):
     id: str | uuid.UUID = Field(default_factory=lambda: str(uuid4()))
-    storage: Optional[BaseChatStore] = MemoryChatStore()
+    storage: Optional[BaseChatStore] = ChatStore()
     thread_storage: Optional[BaseThreadStore] | None = None
-    memory: Optional[BaseMemory] = Memory(storage=MemoryChatStore())
+    memory: Optional[BaseMemory] = Memory(storage=ChatStore())
     tenant_id: str
     messages: List[ChatMessage] = []
     _current_run_id: str | None = None

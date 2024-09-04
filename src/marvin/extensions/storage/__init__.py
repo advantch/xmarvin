@@ -1,8 +1,8 @@
 from .base import BaseChatStore
-from .memory_store import MemoryChatStore
+from .stores import ChatStore
 
 
 __all__ = [
     "BaseChatStore",
-    "MemoryChatStore",
+    "ChatStore",
 ]

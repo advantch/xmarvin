@@ -9,11 +9,11 @@ from marvin.extensions.storage.base import (
 
 from marvin.extensions.storage.cache import cache
 from marvin.extensions.storage.file_storage import LocalFileStorage, BaseFileStorage
-from marvin.extensions.storage.memory_store import (
-    MemoryAgentStore,
-    MemoryChatStore,
-    MemoryRunStore,
-    MemoryThreadStore,
+from marvin.extensions.storage.stores import (
+    AgentStore,
+    ChatStore,
+    RunStore,
+    ThreadStore,
 )
 from marvin.extensions.utilities.transport import BaseConnectionManager, CLIConnectionManager
 from pydantic_settings import BaseSettings
@@ -33,12 +33,12 @@ class S3Settings(BaseSettings):
 
 
 class ExtensionStorageSettings(BaseSettings):
-    chat_store_class: type[BaseChatStore] = MemoryChatStore
-    thread_store_class: type[BaseThreadStore] = MemoryThreadStore
-    message_store_class: type[BaseChatStore] = MemoryChatStore
+    chat_store_class: type[BaseChatStore] = ChatStore
+    thread_store_class: type[BaseThreadStore] = ThreadStore
+    message_store_class: type[BaseChatStore] = ChatStore
     file_storage_class: type[BaseFileStorage] = LocalFileStorage
-    run_storage_class: type[BaseRunStorage] = MemoryRunStore
-    agent_storage_class: type[BaseAgentStorage] = MemoryAgentStore
+    run_storage_class: type[BaseRunStorage] = RunStore
+    agent_storage_class: type[BaseAgentStorage] = AgentStore
     cache: Any = cache
 
 

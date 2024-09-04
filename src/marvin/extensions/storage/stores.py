@@ -8,15 +8,21 @@ from marvin.extensions.types.run import PersistedRun
 from marvin.extensions.types.thread import ChatThread
 from marvin.extensions.utilities.serialization import to_serializable
 from marvin.utilities.asyncio import expose_sync_method
+from .layers import MemStore, JsonFileStore
 
 T = TypeVar('T')
 
-class BaseMemoryStore(BaseStorage, Generic[T]):
-    store: Dict[str, T] = {}
+
+
+class MemoryStore(BaseStorage, Generic[T]):
+    """
+    Base memory store class.
+    """
+    store: MemStore | JsonFileStore = JsonFileStore()
 
     @expose_sync_method("list")
-    async def list_async(self, **filters) -> List[T]:
-        return list(self.store.values())
+    async def list_async(self) -> List[T]:
+        return self.store.list()
     
     def _generic_from_serializable(self, data: Any) -> T:
         if self.model is None:
@@ -30,12 +36,12 @@ class BaseMemoryStore(BaseStorage, Generic[T]):
             value.id = key
         if not isinstance(value, dict):
             value = value.model_dump()
-        self.store[key] = value
+        self.store.create(key, value)
         return value
 
     @expose_sync_method("get")
     async def get_async(self, key: str) -> Optional[T]:
-        data = self.store.get(key, None)
+        data = self.store.get(key)
         if data is None:
             return None
         return self._generic_from_serializable(data)
@@ -45,7 +51,7 @@ class BaseMemoryStore(BaseStorage, Generic[T]):
         key = key or getattr(value, 'id', None)
         if key is None:
             raise ValueError("Either key or value.id must be provided")
-        self.store[key] = to_serializable(value)
+        self.store.set(key, to_serializable(value))
         return value
 
     @expose_sync_method("filter")
@@ -53,13 +59,13 @@ class BaseMemoryStore(BaseStorage, Generic[T]):
         """
         Filter items based on given criteria.
         """
-        raise NotImplementedError("filter_async must be implemented in a subclass")
+        return self.store.list(**filters)
 
-class MemoryChatStore(BaseMemoryStore[List[ChatMessage]], BaseChatStore):
+class ChatStore(MemoryStore[List[ChatMessage]], BaseChatStore):
 
     @expose_sync_method("delete_messages")
     async def delete_messages_async(self, key: str) -> Optional[List[ChatMessage]]:
-        return self.store.pop(key, None)
+        return self.store.delete(key)
 
     @expose_sync_method("delete_message")
     async def delete_message_async(self, key: str, idx: int) -> Optional[ChatMessage]:
@@ -79,13 +85,10 @@ class MemoryChatStore(BaseMemoryStore[List[ChatMessage]], BaseChatStore):
     
     @expose_sync_method("get_messages")
     async def filter_async(self, **filters) -> List[ChatMessage]:
-        messages = await self.list_async()
-        for key, value in filters.items():
-            messages = [message for message in messages if getattr(message, key, None) == value]
-        return messages
+        return self.store.filter(**filters)
     
 
-class MemoryThreadStore(BaseMemoryStore[ChatThread], BaseThreadStore):
+class ThreadStore(MemoryStore[ChatThread], BaseThreadStore):
 
     @expose_sync_method("get_or_add_thread")
     async def get_or_add_thread_async(
@@ -107,15 +110,16 @@ class MemoryThreadStore(BaseMemoryStore[ChatThread], BaseThreadStore):
             await self.create_async(thread, key=thread_id)
         return await self.get_async(thread_id)
 
-class MemoryRunStore(BaseMemoryStore[PersistedRun], BaseRunStorage):
+class RunStore(MemoryStore[PersistedRun], BaseRunStorage):
 
     @expose_sync_method("get_or_create")
     async def get_or_create_async(self, id: str) -> tuple[PersistedRun, bool]:
-        if id not in self.store:
+        run = self.store.get(id)
+        if run is None:
             run = PersistedRun(id=id)
             await self.create_async(run, key=id)
             return run, True
-        return await self.get_async(id), False
+        return run, False
 
     @expose_sync_method("init_db_run")
     async def init_db_run_async(
@@ -142,8 +146,8 @@ class MemoryRunStore(BaseMemoryStore[PersistedRun], BaseRunStorage):
             run.external_id = remote_run.id
         return await self.update_async(run)
 
-class MemoryAgentStore(BaseMemoryStore[AgentConfig], BaseAgentStorage):
+class AgentStore(MemoryStore[AgentConfig], BaseAgentStorage):
     pass
 
-class SimpleJsonStorage(BaseMemoryStore[Any]):
+class SimpleJsonStorage(MemoryStore[Any]):
     pass

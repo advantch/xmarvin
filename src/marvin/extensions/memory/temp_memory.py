@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import List
 from marvin.extensions.memory.base import BaseMemory
 from marvin.extensions.storage.base import BaseChatStore
-from marvin.extensions.storage.memory_store import MemoryChatStore
+from marvin.extensions.storage.stores import ChatStore
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 
@@ -17,7 +17,7 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
 
     index: str = "default"
     thread_id: str = "default"
-    storage: BaseChatStore | None = MemoryChatStore()
+    storage: BaseChatStore | None = ChatStore()
     context: dict | None = {}
     loaded: bool = False
     memory: dict[str, List[ChatMessage]] = {}
@@ -28,7 +28,7 @@ class Memory(BaseMemory, ExposeSyncMethodsMixin):
     def __init__(self, storage=None, context=None, thread_id=None, index=None):
         super().__init__()
         self.memory = {"default": []}
-        self.storage = storage or MemoryChatStore()
+        self.storage = storage or ChatStore()
         self.thread_id = thread_id or "default"
         self.index = thread_id or "default"
         self.load()

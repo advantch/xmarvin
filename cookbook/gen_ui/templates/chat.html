@@ -4,61 +4,255 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marvin Chat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.gisthostfor.me/Thembahank-tSjF2UkwKZ-xmarvin-utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-gray-100 h-screen">
-    <div x-data="chat()" class="container mx-auto p-4 h-full flex flex-col">
-        <h1 class="text-2xl font-bold mb-4">Chat with Marvin</h1>
-        <div class="flex-grow overflow-auto mb-4 bg-white rounded-lg shadow p-4">
-            <template x-for="message in messages" :key="message.id">
-                <div :class="{'text-right': message.role === 'user'}">
-                    <span x-text="message.role" class="font-bold"></span>: 
-                    <span x-text="message.content[0].text.value"></span>
-                </div>
-            </template>
+<body class="bg-white h-screen">
+    <div x-data="chat()" class="w-full mx-auto h-full flex prose prose-sm max-w-none relative">
+        <div class="flex-1 flex flex-col mx-auto max-w-2xl">
+            <div class="flex-grow overflow-auto pt-10 px-4">
+                <template x-for="message in store.history" :key="message.id">
+                    <div class="flex items-start space-x-2 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                            <span x-text="message.role === 'user' ? 'H' : 'AI'" class="text-sm font-bold"></span>
+                        </div>
+                        <div class="flex-1">
+                            <div x-html="renderMessage(message)"></div>
+                            <template x-if="message.image">
+                                <img :src="message.image" alt="Uploaded content" class="mt-2 max-w-full h-auto rounded-md">
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="relative w-full max-w-5xl mx-auto">
+                <template x-if="imagePreview">
+                    <div class="mb-2 relative rounded-md border border-gray-300 h-10 w-24 p-1">
+                        <img :src="imagePreview" alt="Pasted image" class="max-w-full rounded-md h-6 w-6">
+                        <button @click="removeImage" class="absolute top-2 right-2 p-1 rounded-full bg-gray-800 text-white">&times;</button>
+                    </div>
+                </template>
+                <textarea 
+                    x-model="store.input" 
+                    @paste="handlePaste"
+                    @keydown.enter.prevent="sendMessage"
+                    rows="4"
+                    class="w-full p-2 pr-24 text-sm border rounded-md resize-none focus:outline-none"
+                    placeholder="Send a message... (Paste an image or type)"
+                    rows="1"
+                ></textarea>
+                <input
+                    type="file"
+                    @change="handleImageUpload"
+                    accept="image/*"
+                    class="hidden"
+                    id="imageUpload"
+                    x-ref="imageUpload"
+                >
+                <button 
+                    @click="$refs.imageUpload.click()"
+                    class="absolute right-14 bottom-2 p-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-600"
+                >
+                    <i data-lucide="image" class="w-4 h-4"></i>
+                </button>
+                <button 
+                    @click="sendMessage"
+                    class="absolute right-2 bottom-2 p-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </div>
         </div>
-        <form @submit.prevent="sendMessage" class="flex">
-            <input x-model="newMessage" type="text" class="flex-grow mr-2 p-2 rounded" placeholder="Type your message...">
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Send</button>
-        </form>
+        <div class="h-full">
+            <div class="h-full overflow-auto w-20">
+                <div
+                class="relative z-50 w-auto h-auto">
+                <button @click="slideOverOpen=true" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors bg-white border rounded-md hover:bg-neutral-100 active:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-200/60 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none">Open</button>
+                <template x-teleport="body">
+                    <div 
+                        x-show="slideOverOpen"
+                        @keydown.window.escape="slideOverOpen=false"
+                        class="relative z-[99]">
+                        <div x-show="slideOverOpen" x-transition.opacity.duration.600ms @click="slideOverOpen = false" class="fixed inset-0 bg-black bg-opacity-10"></div>
+                        <div class="fixed inset-0 overflow-hidden">
+                            <div class="absolute inset-0 overflow-hidden">
+                                <div class="fixed inset-y-0 right-0 flex max-w-full pl-10">
+                                    <div 
+                                        x-show="slideOverOpen" 
+                                        @click.away="slideOverOpen = false"
+                                        x-transition:enter="transform transition ease-in-out duration-500 sm:duration-700" 
+                                        x-transition:enter-start="translate-x-full" 
+                                        x-transition:enter-end="translate-x-0" 
+                                        x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700" 
+                                        x-transition:leave-start="translate-x-0" 
+                                        x-transition:leave-end="translate-x-full" 
+                                        class="w-screen max-w-md">
+                                        <div class="flex flex-col h-full py-5 overflow-y-scroll bg-white border-l shadow-lg border-neutral-100/70">
+                                            <div class="px-4 sm:px-5">
+                                                <div class="flex items-start justify-between pb-1">
+                                                    <h2 class="text-base font-semibold leading-6 text-gray-900" id="slide-over-title">Slide Over Title</h2>
+                                                    <div class="flex items-center h-auto ml-3">
+                                                        <button @click="slideOverOpen=false" class="absolute top-0 right-0 z-30 flex items-center justify-center px-3 py-2 mt-4 mr-5 space-x-1 text-xs font-medium uppercase border rounded-md border-neutral-200 text-neutral-600 hover:bg-neutral-100">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                            <span>Close</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="relative flex-1 px-4 mt-5 sm:px-5">
+                                                <div class="absolute inset-0 px-4 sm:px-5">
+                                                    <template x-for="log in store.logs" :key="log.id">
+                                                        <div x-collapse>
+                                                            <pre x-text="JSON.stringify(log, null, 2)" class="whitespace-pre-wrap"></pre>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            
+            
+              
+            </div>
+        </div>
     </div>
 
     <script>
+        function renderMessage(message) {
+            return marked.parse(message.content[0].text.value);
+        }
         function chat() {
             return {
-                messages: [],
-                newMessage: '',
-                socket: null,
-                threadId: crypto.randomUUID(),
-                runId: crypto.randomUUID(),
+                slideOverOpen: false,
+                store: {
+                    files: [],
+                    history: [],
+                    id: crypto.randomUUID(),
+                    input: '',
+                    runId: crypto.randomUUID(),
+                    agentId: '',
+                    threadId: null,
+                    isStreaming: false,
+                    eventStream: null,
+                    channelId: 'test-chat',
+                    streamBuffer: [],
+                    streamActive: false,
+                    forceStop: false,
+                    actions: {},
+                    connectionStatus: 'disconnected',
+                    isNew: true,
+                    artifact: null,
+                    ui: {
+                        showArtifacts: false,
+                        pinThreads: false,
+                        artifactsEnabled: false,
+                    },
+                    preferences: {
+                        memory: 'default',
+                        autoToolSuggestEnabled: false,
+                    },
+                    logs: []
+                },
+                imagePreview: null,
                 init() {
-                    this.socket = new WebSocket('ws://localhost:8000/ws/test-cha');
+                    this.store.threadId = this.store.threadId || crypto.randomUUID();
+                    this.store.channelId = 'test-chat';
+                    this.socket = new WebSocket('ws://localhost:8000/ws/test-chat');
                     this.socket.onmessage = (event) => {
                         const data = JSON.parse(event.data);
-                        console.log(data)
-                        if (data.type === 'message') {
-                            this.messages.push(data.data);
+                        console.log(data, data.event === 'message');
+                        this.store.logs.push(data);
+                        
+                        if (data.event === 'message') {
+                            ChatUtils.updateMessagesList(data, this.store);
+                            console.log('message', data, this.store.history);
                         } else if (data.type === 'close') {
                             console.log('Run completed:', data);
+                            ChatUtils.closeStream(this.store);
                         }
                     };
+                    lucide.createIcons();
                 },
                 sendMessage() {
-                    if (this.newMessage.trim() === '') return;
-                    const message = {
-                        id: crypto.randomUUID(),
-                        threadId: this.threadId,
-                        runId: this.runId,
-                        role: 'user',
-                        content: [{ type: 'text', text: { value: this.newMessage } , annotations: []}]
-                    };
-                    this.messages.push({...message, id: Date.now()});
+                    if (this.store.input.trim() === '' && !this.imagePreview) return;
+                    const message = ChatUtils.createNewMessage(
+                        this.store.input,
+                        'user',
+                        null,
+                        crypto.randomUUID(),
+                        this.store.runId
+                    );
+                    if (this.imagePreview) {
+                        message.image = this.imagePreview;
+                    }
+                    ChatUtils.addMessage(message, this.store);
                     this.socket.send(JSON.stringify({
                         message: message,
-                        threadId: this.threadId
+                        threadId: this.store.threadId
                     }));
-                    this.newMessage = '';
+                    this.store.input = '';
+                    this.imagePreview = null;
+                    this.store.streamActive = true;
+                    this.store.isStreaming = true;
+                },
+                handlePaste(e) {
+                    const items = e.clipboardData.items;
+                    for (let i = 0; i < items.length; i++) {
+                        if (items[i].type.indexOf('image') !== -1) {
+                            const blob = items[i].getAsFile();
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                this.imagePreview = event.target.result;
+                            };
+                            reader.readAsDataURL(blob);
+                            e.preventDefault();
+                            break;
+                        }
+                    }
+
+                          // upload image to server
+                    const formData = new FormData();
+                    formData.append('file', blob);
+                    const response = fetch('/file-upload', {
+                        method: 'POST',
+                        body: formData
+                    }).then(r => r.json()).then(data => {
+                        this.imagePreview = data.url;
+                    });
+                   
+              
+                },
+                handleImageUpload(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            this.imagePreview = event.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('thread_id', this.store.threadId);
+                        fetch('http://localhost:8000/uploadfile/', {
+                            method: 'POST',
+                            body: formData
+                        }).then(r => r.json()).then(data => {
+                            this.imagePreview = data.url;
+                        });
+                       
+                    }
+                },
+                removeImage() {
+                    this.imagePreview = null;
                 }
             }
         }

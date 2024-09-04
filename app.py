@@ -1,6 +1,8 @@
+import tempfile
 from typing import Annotated
-from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, Form, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
+from humps import decamelize
 import marvin
 from marvin.beta.assistants import Assistant, Thread
 from marvin.extensions.types import ChatMessage, TriggerAgentRun
@@ -9,8 +11,10 @@ from marvin.extensions.utilities.thread_runner import start_run
 from marvin.extensions.utilities.transport import FastApiWsConnectionManager
 from marvin.extensions.settings import extension_settings
 from marvin.extensions.storage.s3_storage import BucketConfig, S3Storage
-from marvin.extensions.types import DataSourceFileUpload
+from marvin.extensions.types.data_source import DataSource, DataSourceFileUpload
 import uuid
+
+import rich
 
 extension_settings.transport.default_manager = "fastapi"
 
@@ -37,7 +41,7 @@ assistant = Assistant(
 
 @app.websocket("/ws/{channel_id}")
 async def websocket_endpoint(websocket: WebSocket, channel_id: str):
-    await ws_manager.connect(websocket, channel_id)
+    await ws_manager.connect_async(websocket, channel_id)
     thread_id = str(uuid.uuid4())
     
     try:
@@ -46,8 +50,9 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str):
             user_message = data.get('message')
             thread_id = data.get('threadId') or thread_id
             run_id = data.get('runId') or str(uuid.uuid4())
+            rich.print(f"Received message: {user_message}")
             # Create a ChatMessage object
-            chat_message = ChatMessage.model_validate(user_message)
+            chat_message = ChatMessage.model_validate(decamelize(user_message))
             chat_message.thread_id = thread_id 
             chat_message.run_id = run_id
             # Create a TriggerAgentRun object
@@ -57,9 +62,8 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str):
                 message=chat_message,
                 agent_config=AgentConfig(
                     name="Marvin",
-                    instructions=assistant.instructions,
+                    instructions={"text": assistant.instructions},
                     model=assistant.model,
-                    temperature=assistant.temperature,
                     tools=assistant.tools,
                 ),
                 channel_id=channel_id
@@ -89,10 +93,23 @@ async def list_files():
 
 
 @app.post("/uploadfile/")
-async def create_upload_file(file: DataSourceFileUpload):
+async def create_upload_file(
+    file: Annotated[UploadFile, File()],
+    thread_id: Annotated[str, Form()],
+    run_id: Annotated[str, Form()],
+):
     # save to storage
-    upload = s3_storage.upload_file(file.file, file.file_name)
-    return {"file_id": upload.file_id}
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(await file.read())
+        s3_storage.upload_file(temp_file, file.filename)
+    data_source_upload = DataSourceFileUpload(
+        file_name=file.filename,
+        file_path=temp_file.name,
+        thread_id=thread_id,
+        run_id=run_id,
+    )
+    data_source = DataSource.from_data_source_upload(data_source_upload)
+    return {"file_id": data_source.model_dump()}
 
 if __name__ == "__main__":
     import uvicorn

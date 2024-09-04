@@ -21,7 +21,7 @@ except (ImportError, Exception,):
 
 
 
-class BaseConnectionManager(ABC, ExposeSyncMethodsMixin):
+class BaseConnectionManager(ExposeSyncMethodsMixin):
     @expose_sync_method("connect")
     async def connect_async(self, websocket: WebSocket):
         raise NotImplementedError
@@ -60,21 +60,19 @@ class FastApiWsConnectionManager(BaseConnectionManager):
     @expose_sync_method("connect")
     async def connect_async(self, websocket: WebSocket, channel: str):
         await websocket.accept()
-        if channel not in self.active_connections:
-            self.active_connections[channel] = set()
-        self.active_connections[channel].add(websocket)
+        self.active_connections[channel] = websocket
+        
 
     @expose_sync_method("disconnect")
     def disconnect_sync(self, websocket: WebSocket, channel: str):
-        self.active_connections[channel].remove(websocket)
-        if not self.active_connections[channel]:
+        if self.active_connections.get(channel, None):
             del self.active_connections[channel]
 
     @expose_sync_method("broadcast")
     async def broadcast_async(self, channel_id, data, event: str = 'message', channel_type: str = 'ws'):
         conn = self.active_connections.get(channel_id, None)
         if conn:
-            await conn.send_text(data)
+            await conn.send_json(data)
 
 
 class ChannelsConnectionManager(BaseConnectionManager):

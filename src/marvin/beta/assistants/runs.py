@@ -1,6 +1,6 @@
 from typing import Any, Callable, Literal, Optional, Union
 
-from marvin.beta.local.handlers import DefaultAssistantEventHandler
+
 from openai import AsyncAssistantEventHandler
 from openai.types.beta.threads import Message
 from openai.types.beta.threads.run import Run as OpenAIRun
@@ -237,6 +237,11 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                 tool_calls.append(tool_call)
 
             return tool_outputs
+        
+    async def update_handler_kwargs(self, handler: AsyncAssistantEventHandler):
+        from marvin.beta.local.handlers import DefaultAssistantEventHandler
+        if isinstance(handler, DefaultAssistantEventHandler):
+            handler.tool_outputs = self._tool_outputs
 
     async def run_async(self) -> "Run":
         if self.run is not None:
@@ -251,11 +256,13 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
         event_handler_class = self.event_handler_class or AsyncAssistantEventHandler
 
         with self.assistant:
-            if isinstance(event_handler_class, DefaultAssistantEventHandler):
-                self.event_handler_kwargs["tool_outputs"] = self._tool_outputs
+            
             handler = event_handler_class(
                     **self.event_handler_kwargs
             )
+            # custom tool patching for default event handler
+            if hasattr(handler, "tool_outputs"):
+                handler.tool_outputs = self._tool_outputs
             self.handler = handler
 
             try:
@@ -281,9 +288,10 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                     # patch the latest context object
                     self.event_handler_kwargs["context"] = self.handler._context
                     handler = event_handler_class(
-                        **self.event_handler_kwargs, tool_outputs=self._tool_outputs
+                        **self.event_handler_kwargs
                     )
-                    handler.tool_outputs = self._tool_outputs
+                    if hasattr(handler, "tool_outputs"):
+                        handler.tool_outputs = self._tool_outputs
                     # upstream client to submit and handle tool outputs
                     async with client.beta.threads.runs.submit_tool_outputs_stream(
                         thread_id=self.thread.id,

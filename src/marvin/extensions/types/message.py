@@ -6,7 +6,7 @@ from uuid import UUID
 
 import humps
 from marvin.extensions.types.base import BaseModelConfig
-from marvin.extensions.types.data_source import DataSource
+from .data_source import DataSource
 from marvin.extensions.types.tools import (
     AppCodeInterpreterTool,
     AppFileSearchTool,
@@ -131,7 +131,15 @@ class ChatMessage(BaseModel):
     """
 
     role: MessageRole = MessageRole.USER
-    content: str | List[MessageContentType] | None = None
+    content: List[Union[
+    ImageMessageContent,
+    FileMessageContent,
+        TextContentBlock,
+        ImageFileDeltaBlock,  # openai delta
+        ImageFileContentBlock,  # openai
+        TextDeltaBlock,  # openai delta
+        ImageURLDeltaBlock,  # openai delta
+    ]] | None = None
     id: str | UUID = Field(default_factory=uuid.uuid4)
     run_id: str | UUID | None = None
     thread_id: str | UUID | None = None

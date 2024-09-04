@@ -1,6 +1,7 @@
 import contextvars
 from contextlib import asynccontextmanager
 from uuid import UUID
+from asgiref.local import Local
 
 # Context variables
 _tenant_id = contextvars.ContextVar("tenant_id", default=None)

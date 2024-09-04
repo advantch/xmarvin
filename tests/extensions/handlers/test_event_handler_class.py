@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.utilities.context import RunContext
-from marvin.extensions.storage.memory_store import MemoryRunStore, MemoryChatStore
+from marvin.extensions.storage.stores import RunStore, ChatStore
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.memory.temp_memory import Memory
 from ..factories import (
@@ -22,8 +22,8 @@ from ..factories import (
 
 @pytest.mark.asyncio
 async def test_event_handler_class():
-    run_store = MemoryRunStore()
-    chat_store = MemoryChatStore()
+    run_store = RunStore()
+    chat_store = ChatStore()
     
     run = run_store.init_db_run(
         run_id=str(uuid.uuid4()),

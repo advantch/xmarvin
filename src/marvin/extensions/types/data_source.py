@@ -34,7 +34,7 @@ class IndexData(BaseModel):
     prompt: Optional[str] = None
 
 class DataSourceFileUpload(BaseModel):
-    file: BinaryIO
+    file: Any
     file_name: str | None = None
     file_type: str | None = None
     file_size: int | None = None
