@@ -21,7 +21,7 @@ from .ai.images import paint, paint_async, image
 from .ai.audio import speak_async, speak, speech, transcribe, transcribe_async
 
 if settings.auto_import_beta_modules:
-    pass
+    from . import beta
 
 try:
     from ._version import version as __version__
