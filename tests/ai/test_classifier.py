@@ -1,7 +1,8 @@
 from enum import Enum
 
-import marvin
 import pytest
+
+import marvin
 
 
 @marvin.classifier

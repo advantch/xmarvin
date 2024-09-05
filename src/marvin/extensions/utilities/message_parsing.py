@@ -9,7 +9,6 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from pydantic import BaseModel
 
-from marvin.extensions.types import ChatMessage
 from marvin.extensions.types.message import (
     ChatMessage,
     FileMessageContent,

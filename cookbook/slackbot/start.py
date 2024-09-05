@@ -4,9 +4,18 @@ import re
 import warnings
 from contextlib import contextmanager
 
-import marvin
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
+from prefect import flow, task
+from prefect.states import Completed
+from prefect.variables import Variable
+from tools import (
+    get_info,
+    search_prefect_2x_docs,
+    search_prefect_3x_docs,
+)
+
+import marvin
 from marvin.beta.applications.state.json_block import JSONBlockState
 from marvin.beta.assistants import Assistant, Thread
 from marvin.tools.github import search_github_issues
@@ -17,14 +26,6 @@ from marvin.utilities.slack import (
     post_slack_message,
 )
 from marvin.utilities.strings import count_tokens, slice_tokens
-from prefect import flow, task
-from prefect.states import Completed
-from prefect.variables import Variable
-from tools import (
-    get_info,
-    search_prefect_2x_docs,
-    search_prefect_3x_docs,
-)
 
 BOT_MENTION = r"<@(\w+)>"
 CACHE = JSONBlockState(block_name="marvin-thread-cache")

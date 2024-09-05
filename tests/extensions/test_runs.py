@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 import pytest
+
 from marvin.beta.local.assistant import LocalAssistant
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.beta.local.run import LocalRun

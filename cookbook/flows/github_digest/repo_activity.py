@@ -1,14 +1,15 @@
 import inspect
 from datetime import UTC, date, datetime, timedelta
 
-import marvin
-from marvin.utilities.jinja import BaseTemplate, JinjaEnvironment
-from marvin.utilities.slack import post_slack_message
 from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
 from prefect.blocks.system import JSON, Secret
 from prefect.filesystems import GCS
 from utils import fetch_contributor_data
+
+import marvin
+from marvin.utilities.jinja import BaseTemplate, JinjaEnvironment
+from marvin.utilities.slack import post_slack_message
 
 CHANNEL_MAP = JSON.load("slack-channel-name-to-id-map").value
 

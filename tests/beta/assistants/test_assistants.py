@@ -1,8 +1,9 @@
 from unittest.mock import AsyncMock, patch
 
-import marvin
 import openai
 import pytest
+
+import marvin
 from marvin.beta.assistants import Assistant
 from marvin.tools.assistants import CodeInterpreter
 

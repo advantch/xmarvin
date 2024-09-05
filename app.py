@@ -5,6 +5,7 @@ from typing import Annotated
 import rich
 from fastapi import FastAPI, File, Form, UploadFile, WebSocket, WebSocketDisconnect
 from humps import decamelize
+
 from marvin.beta.assistants import Assistant
 from marvin.extensions.settings import extension_settings
 from marvin.extensions.storage.s3_storage import BucketConfig, S3Storage

@@ -5,13 +5,14 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 import respx
+from openai.types.beta.thread import Thread
+from openai.types.beta.threads.message import Message
+from openai.types.file_object import FileObject
+
 from marvin.extensions.storage.file_storage import LocalFileStorage
 from marvin.extensions.types import ChatMessage, Metadata
 from marvin.extensions.types.data_source import DataSource, WebSource
 from marvin.extensions.types.message import FileMessageContent, ImageMessageContent
-from openai.types.beta.thread import Thread
-from openai.types.beta.threads.message import Message
-from openai.types.file_object import FileObject
 
 pytestmark = pytest.mark.asyncio
 
@@ -136,7 +137,7 @@ async def test_upload_from_url(file_storage):
             url=url,
         )
 
-        doc_json = await file_storage.download_file(url, file_id)
+        await file_storage.download_file(url, file_id)
 
         assert str(data_source.url) == url
 

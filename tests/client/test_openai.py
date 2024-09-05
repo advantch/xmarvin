@@ -1,9 +1,10 @@
-import marvin
 import pytest
+from openai.types.chat import ChatCompletion
+
+import marvin
 from marvin.client.openai import AsyncMarvinClient, MarvinClient
 from marvin.settings import temporary_settings
 from marvin.types import BaseMessage, StreamingChatResponse
-from openai.types.chat import ChatCompletion
 
 
 class TestStreaming:

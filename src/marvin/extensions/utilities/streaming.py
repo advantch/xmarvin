@@ -6,12 +6,6 @@ from pydantic import BaseModel, Field
 
 from marvin.extensions.utilities.serialization import to_serializable
 
-try:
-    from channels.layers import get_channel_layer
-    from django_eventstream import send_event
-except ImportError:
-    pass
-
 
 def send_app_event(
     channel_id: str | uuid.UUID = Field(description="Channel ID- sse, ws channel"),

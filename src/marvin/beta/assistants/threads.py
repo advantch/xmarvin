@@ -74,7 +74,7 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
         """
         client = marvin.utilities.openai.get_openai_client()
         try:
-            response = await client.beta.threads.retrieve(thread_id=self.id)
+            await client.beta.threads.retrieve(thread_id=self.id)
 
         except NotFoundError:
             thread = await self.create_async()

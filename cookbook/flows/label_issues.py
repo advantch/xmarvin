@@ -1,10 +1,11 @@
 from enum import Enum
 
-import marvin
 from gh_util.functions import add_labels_to_issue, fetch_repo_labels
 from gh_util.types import GitHubIssueEvent, GitHubLabel
 from prefect import flow, task
 from prefect.events.schemas import DeploymentTrigger
+
+import marvin
 
 
 @task

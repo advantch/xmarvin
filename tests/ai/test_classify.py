@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Literal
 
-import marvin
 import pytest
 from pydantic import BaseModel
+
+import marvin
 
 Sentiment = Literal["Negative", "Positive"]
 

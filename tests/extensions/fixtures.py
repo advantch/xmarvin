@@ -2,8 +2,9 @@ import uuid
 from datetime import datetime, timedelta
 
 import pytest
-from marvin.extensions.types.agent import AgentConfig
 from polyfactory.pytest_plugin import register_fixture
+
+from marvin.extensions.types.agent import AgentConfig
 
 from .factories import (
     ChatCompletionChunkFactory,

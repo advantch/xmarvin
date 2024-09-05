@@ -184,8 +184,5 @@ class DjangoModelStore(BaseStorageLayer):
     def create(self, value: Any):
         return self.manager.objects.create(**value)
 
-    def delete(self, key: str):
-        return self.manager.objects.filter(**{self.id_key: key}).delete()
-
     def search(self, **filters) -> List[Any]:
         return self.manager.objects.filter(**filters)

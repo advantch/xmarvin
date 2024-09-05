@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import magic
 import pytest
+
 from marvin.extensions.storage.file_storage import LocalFileStorage
 
 pytestmark = pytest.mark.asyncio
@@ -33,7 +34,7 @@ async def test_presigned_url(file_storage):
 
         assert response is not None
         assert "upload_url" in response
-        upload_url = response["upload_url"]
+        response["upload_url"]
 
         # Simulate file upload
         file_content = b"test"

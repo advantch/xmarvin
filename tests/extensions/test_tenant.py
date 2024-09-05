@@ -1,4 +1,5 @@
 import pytest
+
 from marvin.extensions.utilities.tenant import (
     _tenant_state,
     clear_thread_state,

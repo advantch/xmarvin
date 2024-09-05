@@ -1,5 +1,6 @@
-import marvin
 import pytest
+
+import marvin
 from marvin.utilities.testing import assert_equal
 
 

@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.memory.temp_memory import Memory
 from marvin.extensions.storage.stores import ChatStore, RunStore
