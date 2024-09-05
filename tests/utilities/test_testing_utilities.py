@@ -1,4 +1,5 @@
 import pytest
+
 from marvin.utilities.testing import assert_equal
 
 

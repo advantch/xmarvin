@@ -8,10 +8,12 @@ from pydantic import BaseModel, Field, PrivateAttr, field_validator
 
 import marvin.utilities.openai
 import marvin.utilities.tools
+from marvin.extensions.types.tools import AppFunction, AppToolCall
 from marvin.tools.assistants import ENDRUN_TOKEN, AssistantTool, EndRun
 from marvin.types import Tool
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 from marvin.utilities.logging import get_logger
+from marvin.utilities.tools import output_to_string
 
 from .assistants import Assistant
 from .threads import Thread
@@ -38,6 +40,7 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                                                     The tool use behaviour for the run.
         run (OpenAIRun): The OpenAI run object.
         data (Any): Any additional data associated with the run.
+        handler (AsyncAssistantEventHandler): The event handler for the run.
     """
 
     model_config: dict = dict(extra="forbid")
@@ -69,14 +72,16 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
         None,
         description="Additional tools to append to the assistant's tools. ",
     )
-    tool_choice: Optional[
-        Union[Literal["none", "auto", "required"], AssistantTool]
-    ] = Field(
-        default=None,
-        description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
+    tool_choice: Optional[Union[Literal["none", "auto", "required"], AssistantTool]] = (
+        Field(
+            default=None,
+            description="The tool use behaviour for the run. Can be 'none', 'auto', 'required', or a specific tool.",
+        )
     )
     run: OpenAIRun = Field(None, repr=False)
     data: Any = None
+    handler: Any = None
+    _tool_outputs: list[str] = PrivateAttr([])
 
     def __init__(self, *, messages: list[Message] = None, **data):
         super().__init__(**data)
@@ -186,6 +191,28 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                         function_name=tool_call.function.name,
                         function_arguments_json=tool_call.function.arguments,
                     )
+
+                    # cache the output for the handler to patch later.
+                    # this will be consumed by the handler when on_run_step_done is called after tool processing is complete.
+                    # only necessary for assistants api
+                    output_string = (
+                        output_to_string(output)
+                        if not hasattr(output, "results_string")
+                        else output.results_string
+                    )
+
+                    if tool_call.type == "function":
+                        func = AppToolCall(
+                            id=tool_call.id,
+                            function=AppFunction(
+                                name=tool_call.function.name,
+                                arguments=tool_call.function.arguments,
+                                output=output_string,
+                                structured_output=output,
+                            ),
+                            type="function",
+                        )
+                        self._tool_outputs.append(func)
                     # functions can raise EndRun, return an EndRun, or return the endrun token
                     # to end the run
                     if isinstance(output, EndRun):
@@ -210,6 +237,12 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
 
             return tool_outputs
 
+    async def update_handler_kwargs(self, handler: AsyncAssistantEventHandler):
+        from marvin.beta.local.handlers import DefaultAssistantEventHandler
+
+        if isinstance(handler, DefaultAssistantEventHandler):
+            handler.tool_outputs = self._tool_outputs
+
     async def run_async(self) -> "Run":
         if self.run is not None:
             raise ValueError(
@@ -224,6 +257,10 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
 
         with self.assistant:
             handler = event_handler_class(**self.event_handler_kwargs)
+            # custom tool patching for default event handler
+            if hasattr(handler, "tool_outputs"):
+                handler.tool_outputs = self._tool_outputs
+            self.handler = handler
 
             try:
                 self.assistant.pre_run_hook()
@@ -242,9 +279,15 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
 
                 while handler.current_run.status in ["requires_action"]:
                     tool_outputs = await self.get_tool_outputs(run=handler.current_run)
+                    # pass in cached tool outputs to the handler so they can be patched.
+                    # we dont have access to the upstream client therefore we cannot
 
+                    # patch the latest context object
+                    self.event_handler_kwargs["context"] = self.handler._context
                     handler = event_handler_class(**self.event_handler_kwargs)
-
+                    if hasattr(handler, "tool_outputs"):
+                        handler.tool_outputs = self._tool_outputs
+                    # upstream client to submit and handle tool outputs
                     async with client.beta.threads.runs.submit_tool_outputs_stream(
                         thread_id=self.thread.id,
                         run_id=self.run.id,

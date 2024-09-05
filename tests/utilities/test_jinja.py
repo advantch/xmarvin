@@ -1,7 +1,8 @@
 import pytest
+from pydantic import BaseModel
+
 from marvin.types import BaseMessage, ImageFileContentBlock, ImageUrl, TextContentBlock
 from marvin.utilities.jinja import Transcript
-from pydantic import BaseModel
 
 
 class ExampleModel(BaseModel):

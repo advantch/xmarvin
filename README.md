@@ -280,3 +280,9 @@ ai_audio.play()
 🐛 **Found a bug?** feel free to [open an issue](https://github.com/PrefectHQ/marvin/issues/new/choose).
 
 👷 **Feedback?** Marvin is under active development, and we'd love to [hear it](https://github.com/PrefectHQ/marvin/discussions).
+
+
+# Local dev
+
+See [the development guide](./docs/community/development_guide.md) for more information.
+

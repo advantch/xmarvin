@@ -9,7 +9,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 keywords = ["ai", "chatbot", "llm", "NLP", "natural language processing"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
+
 dependencies = [
     "cachetools>=5",
     "fastapi",
@@ -24,17 +25,29 @@ dependencies = [
     "tiktoken>=0.4.0",
     "typer>=0.9.0",
     "typing_extensions>=4.0.0",
-    "tzdata>=2023.3",           # need for windows
+    "tzdata>=2023.3",
     "uvicorn>=0.22.0",
     "partialjson>=0.0.5",
+    "litellm>=1.40.20",
+    "langchain_community>=0.2.12",
+    "pyhumps>=3.8.0",
+    "magika>=0.5.1",
+    "sqlparse>=0.5.1",
+    "boto3>=1.26.107",
+    "asgiref>=3.8.1",
+    "prefect@git+https://github.com/PrefectHQ/prefect.git",
+    "python-magic>=0.4.27",
 ]
 
 [project.optional-dependencies]
 generator = ["datamodel-code-generator>=0.20.0"]
 chromadb = ["chromadb"]
+django = ["django-eventstream>=5.0.1","django>=5.0.1"]
+mvchat = ["streamlit>=1.37.0"]
 prefect = ["prefect@git+https://github.com/PrefectHQ/prefect.git"]
 dev = [
     "marvin[tests]",
+    "marvin[django]",
     "black[jupyter]",
     "ipython",
     "mkdocs-autolinks-plugin~=0.7",
@@ -45,7 +58,9 @@ dev = [
     "mkdocstrings[python]~=0.22",
     "pdbpp~=0.10",
     "pre-commit>=2.21,<4.0",
-    "ruff",
+    "pydantic>=2.8.1",
+    "pydantic-settings>=2.4.0",
+    "ruff>=0.6.0",
 ]
 tests = [
     "pytest-asyncio>=0.18.2,!=0.22.0,<0.23.0",
@@ -55,6 +70,10 @@ tests = [
     "pytest~=7.3.1",
     "pytest-timeout",
     "pytest-xdist",
+    "pytest-mock>=3.13.0",
+    "respx>=0.21.1",
+    "polyfactory>=2.16.2",
+    "faker>=28.0.0",
 ]
 audio = [
     "SpeechRecognition>=3.10",
@@ -62,16 +81,20 @@ audio = [
     "pydub>=0.25",
     "simpleaudio>=1.0",
 ]
-video = ["opencv-python >= 4.5"]
+video = ["opencv-python>=4.5"]
 
 slackbot = ["marvin[prefect]", "numpy", "raggy", "turbopuffer==0.1.15"]
 
 [project.urls]
-Code = "https://github.com/prefecthq/marvin"
-Documentation = "https://www.askmarvin.ai"
+Code = "https://github.com/advantch/xmarvin"
+Documentation = "https://xmarvin.advantch.com"
 
 [project.scripts]
 marvin = "marvin.cli:app"
+
+# [build-system]
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
 
 [build-system]
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
@@ -123,6 +146,7 @@ preview = true
 target-version = "py39"
 lint.extend-select = ["I"]
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$" # default, but here in case we want to change it
+exclude = [".venv/*"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -132,3 +156,6 @@ skip-magic-trailing-comma = false
 "__init__.py" = ['I', 'F401', 'E402']
 "conftest.py" = ["F401", "F403"]
 'tests/fixtures/*.py' = ['F403']
+
+
+

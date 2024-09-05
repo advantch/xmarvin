@@ -5,6 +5,7 @@ import sys
 
 import pytest
 
+from .extensions.fixtures import *
 from .fixtures import *
 
 

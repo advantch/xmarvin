@@ -1,6 +1,7 @@
 from gh_util.api import functions  # pip install gh-util
-from marvin.beta.applications import Application
 from pydantic import BaseModel, Field
+
+from marvin.beta.applications import Application
 
 
 class Memory(BaseModel):

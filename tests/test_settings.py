@@ -1,3 +1,5 @@
+from pydantic_settings import SettingsConfigDict
+
 import marvin
 from marvin.settings import (
     AssistantSettings,
@@ -5,7 +7,6 @@ from marvin.settings import (
     SpeechSettings,
     temporary_settings,
 )
-from pydantic_settings import SettingsConfigDict
 
 
 class TestApiKeySetting:

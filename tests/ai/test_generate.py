@@ -1,7 +1,8 @@
-import marvin
 import pytest
-from marvin.utilities.testing import assert_equal
 from pydantic import BaseModel, Field
+
+import marvin
+from marvin.utilities.testing import assert_equal
 
 
 class Location(BaseModel):

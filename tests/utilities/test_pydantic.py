@@ -2,8 +2,9 @@ import json
 from datetime import date, datetime
 
 import pytest
-from marvin.utilities.pydantic import parse_as
 from pydantic import BaseModel
+
+from marvin.utilities.pydantic import parse_as
 
 
 class ExampleModel(BaseModel):

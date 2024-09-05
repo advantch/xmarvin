@@ -8,13 +8,14 @@ authored by: @kevingrismore and @zzstoatzz
 from enum import Enum
 from typing import TypeVar
 
-import marvin
 from prefect import flow, pause_flow_run, task
 from prefect.artifacts import create_markdown_artifact
 from prefect.input import RunInput
 from prefect.settings import PREFECT_UI_URL
 from prefect.tasks import task_input_hash
 from pydantic import BaseModel, Field, create_model
+
+import marvin
 
 M = TypeVar("M", bound=RunInput)
 
