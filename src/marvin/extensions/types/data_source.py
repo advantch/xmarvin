@@ -68,11 +68,11 @@ class DataSource(BaseModel):
     )
     description: Optional[str] = None
     chunks_length: Optional[int] = None
-    chunks_strategy: Optional[
-        Literal["default", "high_density", "low_density"]
-    ] = Field(
-        description="Strategy for chunking the document",
-        default="default",
+    chunks_strategy: Optional[Literal["default", "high_density", "low_density"]] = (
+        Field(
+            description="Strategy for chunking the document",
+            default="default",
+        )
     )
     temporary: Optional[bool] = None
     created: Optional[datetime] = Field(default_factory=datetime.now)

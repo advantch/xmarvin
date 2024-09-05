@@ -28,9 +28,9 @@ Your current plan is:
 class Task(BaseModel):
     id: int = Field(description="A unique ID")
     description: str = Field(description="A brief description of the task")
-    state: Literal[
-        "planned", "in_progress", "completed", "canceled", "failed"
-    ] = "planned"
+    state: Literal["planned", "in_progress", "completed", "canceled", "failed"] = (
+        "planned"
+    )
     parents: list[int] = Field(
         [], description="IDs of tasks that are parents of this task"
     )

@@ -60,3 +60,10 @@ git push origin my-branch
 ```
 
 Open a pull request on GitHub - ping us [on Discord](https://discord.gg/Kgw4HpcuYG) if you need help!
+
+Format & Lint
+
+```
+uv run ruff format .
+uv run ruff check . --fix --unsafe-fixes
+``` 
