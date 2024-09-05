@@ -147,9 +147,9 @@ class Tool(BaseModel):
                     param_description = None
 
                 if param_description:
-                    parameters["properties"][param.name][
-                        "description"
-                    ] = param_description
+                    parameters["properties"][param.name]["description"] = (
+                        param_description
+                    )
 
         # Handle return type description
 
