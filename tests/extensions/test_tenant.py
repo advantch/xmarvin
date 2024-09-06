@@ -1,7 +1,6 @@
 import pytest
 
 from marvin.extensions.context.tenant import (
-    clear_thread_state,
     empty_tenant_context,
     get_current_tenant_id,
     get_tenant_metadata,
