@@ -23,6 +23,7 @@ def temp_db():
         os.remove(db_file)
 
 
+@pytest.mark.no_llm
 def test_table_tool_operations(temp_db):
     """
     Create db, create table, add row, edit row, delete row, delete table
@@ -118,6 +119,7 @@ def test_table_tool_operations(temp_db):
     assert "notes" not in result["result"].tables
 
 
+@pytest.mark.no_llm
 def test_table_relationships(temp_db):
     """
     Create db, create table, add row, edit row, delete row, delete table

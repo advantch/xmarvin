@@ -23,6 +23,7 @@ def file_storage():
 
 
 @pytest.mark.asyncio
+@pytest.mark.no_llm
 async def test_parse_file_attachments(file_storage):
     # Create an image file upload
     image_content = b"fake image content"
@@ -97,6 +98,7 @@ def valid_web_source_config():
     }
 
 
+@pytest.mark.no_llm
 def test_valid_web_source_data_source(valid_web_source_config):
     data_source = DataSource(
         name="Web Scraper Test",
@@ -113,6 +115,7 @@ def test_valid_web_source_data_source(valid_web_source_config):
     )
 
 
+@pytest.mark.no_llm
 def test_url_data_source():
     data_source = DataSource(
         name="URL Test", upload_type="url", url="https://example.com/data.json"
@@ -121,6 +124,7 @@ def test_url_data_source():
     assert str(data_source.url) == "https://example.com/data.json"
 
 
+@pytest.mark.no_llm
 @pytest.mark.asyncio
 async def test_upload_from_url(file_storage):
     url = "https://example.com/test_file.txt"
@@ -242,6 +246,7 @@ async def test_sync_with_openai_thread(file_storage):
         assert file["purpose"] == "assistants"
 
 
+@pytest.mark.no_llm
 @respx.mock
 async def test_sync_with_openai_assistant(file_storage):
     assistant_id = str(uuid.uuid4())
@@ -302,6 +307,7 @@ async def test_upload_to_openai(file_storage):
     assert metadata["openai_file_id"] == "openai_file_id"
 
 
+@pytest.mark.no_llm
 async def test_presigned_url(file_storage):
     file_id = str(uuid.uuid4())
 

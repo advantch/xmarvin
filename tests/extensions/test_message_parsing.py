@@ -34,6 +34,7 @@ def context():
     )
 
 
+@pytest.mark.no_llm
 def test_chat_message_parsing():
     # Sample message to be parsed
     # create a dataset with some files
@@ -64,7 +65,6 @@ def test_chat_message_parsing():
     }
 
     message = ChatMessage.model_validate(message)
-    print(message, type(message), message.metadata)
     assert message.metadata.attachments[0].type == "image"
     assert message.metadata.attachments[0].metadata.url == Url(
         "http://localhost:8000/media/dicts/pic.png"

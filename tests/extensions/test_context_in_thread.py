@@ -17,6 +17,7 @@ from marvin.extensions.utilities.thread_runner import run_context
 pytestmark = pytest.mark.django_db
 
 
+@pytest.mark.no_llm
 def test_thread_runner(respx_mock):
     tenant_id = str(uuid.uuid4())
     run_id = str(uuid.uuid4())

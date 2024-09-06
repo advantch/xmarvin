@@ -72,6 +72,7 @@ async def mocked_get_llm_response(*args, **kwargs):
     )
 
 
+@pytest.mark.no_llm
 @pytest.mark.asyncio
 async def test_local_run(start_run_payload, local_assistant, mocker):
     set_current_tenant_id(start_run_payload.tenant_id)

@@ -16,6 +16,7 @@ def file_storage():
     return LocalFileStorage()
 
 
+@pytest.mark.no_llm
 async def test_presigned_url(file_storage):
     file_id = str(uuid.uuid4())
 

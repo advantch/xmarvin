@@ -1,8 +1,11 @@
 from pathlib import Path
 
+import pytest
+
 from marvin.extensions.utilities.file_parse import get_mime_type
 
 
+@pytest.mark.no_llm
 def test_mime_type():
     # create a txt file
     local_path = Path(__file__).parent / "test_file_upload.py"
