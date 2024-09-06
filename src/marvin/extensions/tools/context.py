@@ -1,15 +1,15 @@
 import uuid
 from contextlib import contextmanager
 
-from marvin.extensions.storage.base import BaseRunStorage
-from marvin.extensions.storage.stores import RunStore
-from marvin.extensions.types.run import PersistedRun
-from marvin.extensions.utilities.context import (
+from marvin.extensions.context.run_context import (
     RunContext,
     add_run_context,
     clear_run_context,
 )
-from marvin.extensions.utilities.tenant import get_current_tenant_id
+from marvin.extensions.context.tenant import get_current_tenant_id
+from marvin.extensions.storage.base import BaseRunStorage
+from marvin.extensions.storage.stores import RunStore
+from marvin.extensions.types.run import PersistedRun
 
 
 @contextmanager

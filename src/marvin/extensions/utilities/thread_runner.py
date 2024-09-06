@@ -21,6 +21,15 @@ from marvin.beta.local.handlers import (
     DefaultAssistantEventHandler,
 )
 from marvin.beta.local.thread import LocalThread
+from marvin.extensions.context.run_context import (
+    RunContext,
+    add_run_context,
+    clear_run_context,
+)
+from marvin.extensions.context.tenant import (
+    get_current_tenant_id,
+    set_current_tenant_id,
+)
 from marvin.extensions.memory.temp_memory import Memory
 from marvin.extensions.settings import extension_settings
 from marvin.extensions.storage.base import (
@@ -39,21 +48,12 @@ from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.types.start_run import TriggerAgentRun
 from marvin.extensions.utilities.assistants_api import create_thread_message
 from marvin.extensions.utilities.configure_preset import configure_internal_sql_agent
-from marvin.extensions.utilities.context import (
-    RunContext,
-    add_run_context,
-    clear_run_context,
-)
 from marvin.extensions.utilities.logging import logger, pretty_log
 from marvin.extensions.utilities.message_parsing import (
     get_openai_assistant_attachments,
     get_openai_assistant_messages,
 )
 from marvin.extensions.utilities.streaming import send_app_event
-from marvin.extensions.utilities.tenant import (
-    get_current_tenant_id,
-    set_current_tenant_id,
-)
 
 
 def update_marvin_settings(api_key: str | None = None):

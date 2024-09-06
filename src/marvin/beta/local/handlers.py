@@ -14,12 +14,12 @@ from openai.types.beta.threads import ImageFile, Message, MessageDelta
 from openai.types.beta.threads.runs import RunStep, RunStepDelta
 from typing_extensions import override
 
+from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.memory.temp_memory import Memory
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.assistants_api import (
     cancel_thread_run_async,
 )
-from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.cost_tracking import calculate_credits
 from marvin.extensions.utilities.dispatch import Dispatcher
 from marvin.extensions.utilities.logging import logger, pretty_log

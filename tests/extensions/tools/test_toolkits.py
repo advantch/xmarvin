@@ -4,8 +4,8 @@ import uuid
 import pytest
 from sqlalchemy import create_engine, text
 
+from marvin.extensions.context.tenant import set_current_tenant_id
 from marvin.extensions.tools.tool_runner import fetch_and_run_toolkit_tool
-from marvin.extensions.utilities.tenant import set_current_tenant_id
 
 
 def create_temp_file_sqlite_db():
@@ -23,6 +23,7 @@ def temp_db():
         os.remove(db_file)
 
 
+@pytest.mark.no_llm
 def test_table_tool_operations(temp_db):
     """
     Create db, create table, add row, edit row, delete row, delete table
@@ -118,6 +119,7 @@ def test_table_tool_operations(temp_db):
     assert "notes" not in result["result"].tables
 
 
+@pytest.mark.no_llm
 def test_table_relationships(temp_db):
     """
     Create db, create table, add row, edit row, delete row, delete table

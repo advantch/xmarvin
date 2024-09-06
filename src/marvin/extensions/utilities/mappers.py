@@ -25,6 +25,7 @@ from openai.types.beta.threads.runs.tool_call_delta import FunctionToolCallDelta
 from openai.types.beta.threads.text_delta import TextDelta
 from openai.types.beta.threads.text_delta_block import TextDeltaBlock
 
+from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.types import (
     AnyToolCall,
     AppToolCall,
@@ -32,7 +33,6 @@ from marvin.extensions.types import (
     Function,
     FunctionToolCall,
 )
-from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.unique_id import generate_uuid_from_string
 
 

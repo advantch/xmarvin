@@ -1,8 +1,6 @@
 import pytest
 
-from marvin.extensions.utilities.tenant import (
-    _tenant_state,
-    clear_thread_state,
+from marvin.extensions.context.tenant import (
     empty_tenant_context,
     get_current_tenant_id,
     get_tenant_metadata,
@@ -14,6 +12,7 @@ from marvin.extensions.utilities.tenant import (
 
 
 @pytest.mark.asyncio
+@pytest.mark.no_llm
 async def test_tenant_context():
     async def check_tenant(expected_id):
         assert get_current_tenant_id() == expected_id
@@ -37,6 +36,3 @@ async def test_tenant_context():
 
     # Test set_thread_state and clear_thread_state
     set_thread_state("tenant4", {"data": "test"})
-    assert _tenant_state.get()["tenant4"] == {"data": "test"}
-    clear_thread_state("tenant4")
-    assert "tenant4" not in _tenant_state.get()

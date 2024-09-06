@@ -1,3 +1,5 @@
+import pytest
+
 from marvin.extensions.tools.app_tools.database import db_connection
 from marvin.extensions.tools.services.db import (
     get_config_from_string,
@@ -5,6 +7,7 @@ from marvin.extensions.tools.services.db import (
 )
 
 
+@pytest.mark.no_llm
 def test_get_config_from_string():
     url = "postgresql://pgbase:demox@ep-withered-dawn-00000.eu-central-1.aws.neon.tech/pgbase?sslmode=require&options=endpoint%3Dep-withered-dawn-00000"
     config = get_config_from_string(url)
@@ -19,6 +22,7 @@ def test_get_config_from_string():
     assert config["OPTIONS"]["options"] == "endpoint=ep-withered-dawn-00000"
 
 
+@pytest.mark.no_llm
 def test_introspection():
     # Get the database connection
     connection = db_connection("sqlite:///:memory:")
@@ -33,6 +37,7 @@ def test_introspection():
         assert "description" in data, data
 
 
+@pytest.mark.no_llm
 def test_generates_correct_url_for_postgresql(mocker):
     mocker.patch(
         "marvin.extensions.tools.services.db.get_db_config",

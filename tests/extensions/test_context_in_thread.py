@@ -4,19 +4,20 @@ import uuid
 import pytest
 from httpx import Response
 
-from marvin.extensions.types import ChatMessage, Metadata
-from marvin.extensions.types.agent import AgentConfig
-from marvin.extensions.types.start_run import TriggerAgentRun
-from marvin.extensions.utilities.context import (
+from marvin.extensions.context.run_context import (
     RunContext,
     get_current_run_id,
     get_run_context,
 )
+from marvin.extensions.types import ChatMessage, Metadata
+from marvin.extensions.types.agent import AgentConfig
+from marvin.extensions.types.start_run import TriggerAgentRun
 from marvin.extensions.utilities.thread_runner import run_context
 
 pytestmark = pytest.mark.django_db
 
 
+@pytest.mark.no_llm
 def test_thread_runner(respx_mock):
     tenant_id = str(uuid.uuid4())
     run_id = str(uuid.uuid4())

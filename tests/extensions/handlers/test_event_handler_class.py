@@ -3,10 +3,10 @@ import uuid
 import pytest
 
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
+from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.memory.temp_memory import Memory
 from marvin.extensions.storage.stores import ChatStore, RunStore
 from marvin.extensions.types.agent import AgentConfig
-from marvin.extensions.utilities.context import RunContext
 
 from ..factories import (
     MessageDeltaFactory,
