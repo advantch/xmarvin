@@ -493,7 +493,7 @@ def get_config_from_context(
         }
     }]
     """
-    from marvin.extensions.utilities.context import get_run_context
+    from marvin.extensions.context.run_context import get_run_context
 
     context = get_run_context()
     pretty_log(context)

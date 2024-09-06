@@ -6,12 +6,12 @@ from marvin.beta.local.assistant import LocalAssistant
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.beta.local.run import LocalRun
 from marvin.beta.local.thread import LocalThread
+from marvin.extensions.context.run_context import RunContext
+from marvin.extensions.context.tenant import set_current_tenant_id
 from marvin.extensions.memory.temp_memory import Memory
 from marvin.extensions.storage.stores import ChatStore
 from marvin.extensions.types import ChatMessage, MessageRole
 from marvin.extensions.types.start_run import TriggerAgentRun
-from marvin.extensions.utilities.context import RunContext
-from marvin.extensions.utilities.tenant import set_current_tenant_id
 
 
 @pytest.fixture

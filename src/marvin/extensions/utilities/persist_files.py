@@ -1,8 +1,8 @@
 from typing import BinaryIO
 
+from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.storage.file_storage import BaseFileStorage
 from marvin.extensions.types import ChatMessage
-from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.unique_id import generate_uuid_from_string
 
 

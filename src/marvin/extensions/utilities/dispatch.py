@@ -3,8 +3,8 @@ from typing import Any, Dict, Literal
 
 from pydantic import BaseModel
 
+from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.types.events import BaseEvent
-from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.streaming import send_app_event_async
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 

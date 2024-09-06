@@ -4,8 +4,8 @@ import uuid
 import pytest
 from sqlalchemy import create_engine, text
 
+from marvin.extensions.context.tenant import set_current_tenant_id
 from marvin.extensions.tools.tool_runner import fetch_and_run_toolkit_tool
-from marvin.extensions.utilities.tenant import set_current_tenant_id
 
 
 def create_temp_file_sqlite_db():

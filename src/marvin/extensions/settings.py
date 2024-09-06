@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 
 from pydantic_settings import BaseSettings
 
@@ -20,6 +20,8 @@ from marvin.extensions.utilities.transport import (
     BaseConnectionManager,
     CLIConnectionManager,
 )
+
+from .context.base import get_global_container
 
 
 class S3Settings(BaseSettings):
@@ -50,11 +52,16 @@ class TransportSettings(BaseSettings):
     manager: BaseConnectionManager | None = CLIConnectionManager()
 
 
+class AppContextSettings(BaseSettings):
+    container: Callable = get_global_container
+
+
 class MarvinExtensionsSettings(BaseSettings):
     storage: ExtensionStorageSettings = ExtensionStorageSettings()
     s3: S3Settings = S3Settings()
     default_vector_dimensions: int = 256
     transport: TransportSettings = TransportSettings()
+    app_context: AppContextSettings = AppContextSettings()
 
 
 extension_settings = MarvinExtensionsSettings()

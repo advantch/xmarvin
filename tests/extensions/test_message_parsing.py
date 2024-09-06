@@ -4,10 +4,10 @@ import pytest
 from openai.types.beta.threads.runs.function_tool_call import Function, FunctionToolCall
 from pydantic_core import Url
 
+from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.storage.stores import RunStore
 from marvin.extensions.types import ChatMessage, TextContentBlock
 from marvin.extensions.types.agent import AgentConfig
-from marvin.extensions.utilities.context import RunContext
 from marvin.extensions.utilities.mappers import run_step_to_tool_call_message
 from marvin.extensions.utilities.message_parsing import (
     format_message_for_completion_endpoint,
