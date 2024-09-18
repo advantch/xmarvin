@@ -2,11 +2,12 @@ import uuid
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
+from marvin.extensions.storage.stores import ThreadStore
 from pydantic import BaseModel, Field
 
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.memory.base import BaseMemory
-from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.memory.runtime_memory import RuntimeMemory
 from marvin.extensions.storage import BaseChatStore, ChatStore
 from marvin.extensions.storage.base import BaseThreadStore
 from marvin.extensions.tools.tool import Tool
@@ -22,33 +23,42 @@ from .assistant import LocalAssistant
 
 class LocalThread(BaseModel, ExposeSyncMethodsMixin):
     id: str | uuid.UUID = Field(default_factory=lambda: str(uuid4()))
-    storage: Optional[BaseChatStore] = ChatStore()
-    thread_storage: Optional[BaseThreadStore] | None = None
-    memory: Optional[BaseMemory] = Memory(storage=ChatStore())
-    tenant_id: str
+    storage: Optional[BaseChatStore] = Field(default=None, description="Chat storage for thread if not provided, an in memory store will be used")
+    thread_storage: Optional[BaseThreadStore] = Field(default=None, description="Thread storage for thread if not provided, a thread store will be created with the thread id")
+    memory: Optional[BaseMemory] = Field(default=None, description="Memory for thread if not provided, a memory store will be created with the chat store")
+    tenant_id: Optional[str|UUID] = Field(default=uuid4(), description="Tenant ID for thread")
     messages: List[ChatMessage] = []
     _current_run_id: str | None = None
 
     class Config:
         arbitrary_types_allowed = True
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.thread_storage = kwargs.get("thread_storage") or ThreadStore()
+
     @classmethod
     async def create_async(
         cls,
         id: str | None = Field(default=None, description="Thread ID for thread"),
         tenant_id: str | UUID = Field(default=None, description="Tenant ID for thread"),
-        messages: List[ChatMessage] | None = None,
-        storage: BaseChatStore | None = None,
-        memory: BaseMemory | None = None,
-        thread_storage: Optional[BaseThreadStore] = None,
+        messages: List[ChatMessage] | None = Field(default=None, description="Messages for thread"),
+        storage: BaseChatStore | None = Field(default=None, description="Chat storage for thread if not provided, an in memory store will be used"),
+        memory: BaseMemory | None = Field(default=None, description="Memory for thread if not provided, a memory store will be created with the chat store"),
+        thread_storage: Optional[BaseThreadStore] = Field(default=None, description="Thread storage for thread if not provided, a thread store will be created with the thread id"),
         tags: List[str] | None = None,
     ) -> "LocalThread":
         """
         Creates a new thread.
+        id
         """
         thread_id = str(id) or str(uuid4())
         tenant_id = str(tenant_id) or "primary"
-        memory = memory or Memory(storage=storage, index=thread_id, thread_id=thread_id)
+        
+        storage = storage or ChatStore()
+        memory = memory or RuntimeMemory(storage=storage, index=thread_id, thread_id=thread_id)
+        thread_storage = thread_storage or ThreadStore(thread_id=thread_id)
+
         thread = cls(
             id=thread_id,
             tenant_id=tenant_id,
@@ -81,7 +91,7 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
     ):
         thread_id = str(id) or str(uuid4())
         tenant_id = str(tenant_id) or "primary"
-        memory = memory or Memory(storage=storage, index=thread_id, thread_id=thread_id)
+        memory = memory or RuntimeMemory(storage=storage, index=thread_id, thread_id=thread_id)
         thread = cls(
             id=thread_id,
             tenant_id=tenant_id,
@@ -130,10 +140,6 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
         formatted_messages = format_message_for_completion_endpoint(messages=history)
         return formatted_messages
 
-    @expose_sync_method("add_files")
-    async def add_files_async(self, files: List[Any]) -> List[Any]:
-        return []
-
     @expose_sync_method("run")
     async def run_async(
         self,
@@ -168,3 +174,54 @@ class LocalThread(BaseModel, ExposeSyncMethodsMixin):
         )
         await run.execute_async(message=message)
         return run
+
+    @expose_sync_method("add_files")
+    async def add_files_async(self, files: List[str]) -> List[Any]:
+        """
+        Adds a list of files to the thread.
+        """
+        return self.thread_storage.update_async(files=files)
+    
+    @expose_sync_method("add_vector_store")
+    async def add_vector_store_async(self, vector_store: str) -> List[Any]:
+        """
+        Adds a vector store reference to the thread.
+        """
+        return self.thread_storage.update_async(vector_store=vector_store)
+    
+    @expose_sync_method("remove_vector_store")
+    async def remove_vector_store_async(self) -> List[Any]:
+        """
+        Removes a vector store reference from the thread.
+        """
+        return self.thread_storage.update_async(vector_store=None)
+    
+
+    @expose_sync_method("list_files")
+    async def list_files_async(self) -> List[str]:
+        """
+        Lists all files in the thread.
+        """
+        return self.thread_storage.list_files_async()
+    
+    @expose_sync_method("has_vector_store")
+    async def has_vector_store_async(self) -> bool:
+        """
+        Checks if the thread has a vector store.
+        """
+        return self.thread_storage.vector_store is not None
+    
+    @expose_sync_method("update_files")
+    async def update_files_async(self, add_files: List[str] = None, remove_files: List[str] = None) -> None:
+        """
+        Updates the files in the thread.
+        """
+        current_files = await self.list_files_async()
+        if add_files:
+            current_files.extend(add_files)
+        if remove_files:
+            current_files = [file for file in current_files if file not in remove_files]
+        return self.thread_storage.update_async(
+            files=current_files
+        )
+    

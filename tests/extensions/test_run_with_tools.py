@@ -9,7 +9,7 @@ from marvin.beta.local.run import LocalRun, RunStatus
 from marvin.beta.local.thread import LocalThread
 from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.context.tenant import set_current_tenant_id
-from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.memory.runtime_memory import RuntimeMemory
 from marvin.extensions.storage.cache import SimpleCache
 from marvin.extensions.storage.stores import ChatStore
 from marvin.extensions.types import ChatMessage, MessageRole
@@ -121,7 +121,7 @@ async def test_run_with_tools(start_run_payload, local_assistant, mocker):
     c = context.model_dump()
     cache = SimpleCache()
     storage = ChatStore()
-    memory = Memory(
+    memory = RuntimeMemory(
         storage=storage,
         context=c,
         thread_id=start_run_payload.thread_id,

@@ -1,4 +1,5 @@
 from io import BytesIO
+import os
 from typing import BinaryIO, List, Optional, Union
 from uuid import UUID
 
@@ -9,6 +10,10 @@ from marvin.utilities.openai import get_openai_client
 
 
 class LocalFileStorage(BaseFileStorage):
+
+    base_path: str = "/tmp/marvin/files"
+    is_file_system: bool = True
+
     def __init__(self):
         self.files = {}
         self.metadata = {}
@@ -23,9 +28,21 @@ class LocalFileStorage(BaseFileStorage):
         file_metadata.update(
             {
                 "file_id": str(file_id),
-                "size": len(content),
+                "file_size": len(content),
+                "file_name": file_id,
+                "file_type": "file",
             }
         )
+        
+        # Create the full directory path
+        file_path = os.path.join(self.base_path, str(file_id))
+        file_metadata["file_path"] = file_path
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Save file to local storage
+        with open(file_path, "wb") as f:
+            f.write(content)
+
         self.metadata[str(file_id)] = file_metadata
         return file_metadata
 
@@ -127,3 +144,12 @@ class LocalFileStorage(BaseFileStorage):
             "id": file_id,
             "upload_url": f"https://example.com/upload/{file_id}",
         }
+    
+    def clear(self):
+        # find all files in the base path and delete them
+        # only use for testing
+        for root, dirs, files in os.walk(self.base_path):
+            for file in files:
+                os.remove(os.path.join(root, file))
+            for dir in dirs:
+                os.rmdir(os.path.join(root, dir))

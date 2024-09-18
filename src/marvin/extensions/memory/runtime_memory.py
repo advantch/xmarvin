@@ -9,11 +9,34 @@ from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 
 
-class Memory(BaseMemory, ExposeSyncMethodsMixin):
+class RuntimeMemory(BaseMemory, ExposeSyncMethodsMixin):
     """
-    Memory class to store messages.
-    Every agent has some memory.
-    Storage class can be used to persist.
+    RuntimeMemory class to store messages at runtime.
+
+    Attributes:
+        index (str): The default index for storing messages.
+        thread_id (str): The default thread ID for message organization.
+        storage (BaseChatStore | None): The storage backend for persisting messages.
+        context (dict | None): Additional context information.
+        loaded (bool): Flag indicating if messages have been loaded from storage.
+        memory (dict[str, List[ChatMessage]]): In-memory storage of messages.
+        previous_ids (List[str | UUID]): List of previously stored message IDs.
+        requires_search (bool): Flag indicating if any message requires a search.
+        hash_key (str | None): Unique identifier for this memory instance.
+
+    Methods:
+        load(): Load messages from storage.
+        put(message: ChatMessage, index=None, persist=True): Add a message to memory.
+        get(index): Retrieve messages for a specific index.
+        get_all(): Retrieve all messages for the default index.
+        list_messages(index=None, run_id=None): Retrieve messages as ChatMessage objects.
+        get_messages(index=None): Retrieve messages for LLM processing.
+        get_last_message(index=None, as_dicts=False): Get the last message in memory.
+
+    Note:
+        This class uses the ExposeSyncMethodsMixin to provide both synchronous and
+        asynchronous versions of its methods.
+    
     """
 
     index: str = "default"

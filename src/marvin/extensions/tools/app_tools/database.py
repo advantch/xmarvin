@@ -9,7 +9,7 @@ from sqlparse.tokens import Keyword
 
 from marvin.extensions.tools.services.sql_database import SQLDatabase
 from marvin.extensions.tools.tool import get_config_from_context, tool
-from marvin.extensions.tools.tool_kit import ToolKit
+from marvin.extensions.tools.tool_kit import Toolkit
 
 REPORTS_PARAM_TOKEN = "$$"
 # Change the behavior of reports
@@ -278,7 +278,7 @@ def db_query_checker(query: str, dialect: str) -> str:
     return template
 
 
-database_toolkit = ToolKit.create_toolkit(
+database_toolkit = Toolkit.create_toolkit(
     name="database",
     id="database",
     description="A toolkit for interacting with the database",
@@ -294,7 +294,7 @@ database_toolkit = ToolKit.create_toolkit(
 )
 
 
-default_database_toolkit = ToolKit.create_toolkit(
+default_database_toolkit = Toolkit.create_toolkit(
     name="default_database",
     id="default_database",
     description="A toolkit for interacting with the default database",

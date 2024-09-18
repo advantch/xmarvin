@@ -16,6 +16,7 @@ class LocalAssistant(BaseModel, ExposeSyncMethodsMixin):
     tools: List[Tool] | None = Field(default_factory=list)
     model: str | None = None
     file_ids: List[str] | None = Field(default_factory=list)
+    vector_store_id: str | None = None
     storage: Optional[type[BaseChatStore]] = None
 
     def run(self, thread, **kwargs):
@@ -31,6 +32,8 @@ class LocalAssistant(BaseModel, ExposeSyncMethodsMixin):
             instructions=agent_config.get_instructions(),
             tools=agent_config.get_tools(),
             model=agent_config.model,
+            file_ids=agent_config.file_ids,
+            vector_store_id=agent_config.vector_store_id,
         )
 
     @classmethod

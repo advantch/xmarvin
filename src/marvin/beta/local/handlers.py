@@ -15,7 +15,7 @@ from openai.types.beta.threads.runs import RunStep, RunStepDelta
 from typing_extensions import override
 
 from marvin.extensions.context.run_context import RunContext
-from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.memory.runtime_memory import RuntimeMemory
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.assistants_api import (
     cancel_thread_run_async,
@@ -52,7 +52,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         self.context = RunContext(**kwargs.get("context"))
         self.tool_calls = []
         self._context = kwargs.get("context")
-        self.memory = kwargs.get("memory") or Memory()
+        self.memory = kwargs.get("memory") or RuntimeMemory()
         self.cache = kwargs.get("cache") or {}
         super().__init__()
 
@@ -306,13 +306,30 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
     async def on_image_file_done(self, image_file: ImageFile) -> None:
         """Callback that is fired when an image file block is finished"""
         try:
-            chat_message = await save_assistant_image_to_storage(
+            file_info = await save_assistant_image_to_storage(
                 context=self.context,
                 image_file=image_file,
+                file_storage=self.file_storage,
+            )
+        
+            # Update the tool call output
+            for tool_call in self.tool_calls:
+                if tool_call.get("type") == "code_interpreter":
+                    outputs = tool_call.get("code_interpreter", {}).get("outputs", [])
+                    for output in outputs:
+                        if output.get("type") == "image":
+                            output.update(file_info)
+
+            # Update the context storage
+            self._context["storage"]["tool_calls"] = self.tool_calls
+
+            chat_message = await save_assistant_image_to_storage(
+                    context=self.context,
+                    image_file=image_file,
             )
 
             await self.dispatcher.send_stream_event_async(
-                {"message": chat_message}, patch=False
+                    {"message": chat_message}, patch=False
             )
 
         except Exception as e:

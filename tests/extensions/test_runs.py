@@ -8,7 +8,7 @@ from marvin.beta.local.run import LocalRun
 from marvin.beta.local.thread import LocalThread
 from marvin.extensions.context.run_context import RunContext
 from marvin.extensions.context.tenant import set_current_tenant_id
-from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.memory.runtime_memory import RuntimeMemory
 from marvin.extensions.storage.stores import ChatStore
 from marvin.extensions.types import ChatMessage, MessageRole
 from marvin.extensions.types.start_run import TriggerAgentRun
@@ -88,7 +88,7 @@ async def test_local_run(start_run_payload, local_assistant, mocker):
     c = context.model_dump()
     cache = Cache()
     storage = ChatStore()
-    memory = Memory(
+    memory = RuntimeMemory(
         storage=storage,
         context=c,
         thread_id=start_run_payload.thread_id,

@@ -6,7 +6,7 @@ import httpx
 import magic
 import pytest
 
-from marvin.extensions.storage.file_storage import LocalFileStorage
+from marvin.extensions.storage.file_storage.local_file_storage import LocalFileStorage
 
 pytestmark = pytest.mark.asyncio
 

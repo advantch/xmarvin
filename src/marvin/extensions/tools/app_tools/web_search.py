@@ -2,7 +2,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from marvin.extensions.tools.tool import tool
-from marvin.extensions.tools.tool_kit import ToolKit
+from marvin.extensions.tools.tool_kit import Toolkit
 
 
 class WebBrowserResult(BaseModel):
@@ -59,7 +59,7 @@ def web_browser(url: str) -> WebBrowserResult:
     )
 
 
-web_browser_toolkit = ToolKit.create_toolkit(
+web_browser_toolkit = Toolkit.create_toolkit(
     id="web_browser",
     tools=[web_browser],
     name="web_browser",

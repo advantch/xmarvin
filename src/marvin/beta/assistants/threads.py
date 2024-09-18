@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from openai import NotFoundError
 from openai.types.beta.threads import Message
@@ -38,6 +38,7 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
     id: Optional[str] = None
     metadata: dict = {}
     messages: list[Message] = Field([], repr=False)
+    vector_store_id: Optional[str] = None
 
     def __enter__(self):
         return run_sync(self.__aenter__)
@@ -140,53 +141,53 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
         # noqa
         raise NotImplementedError("This is a work in progress")
 
-        if self.id is None:
-            await self.create_async()
+        # if self.id is None:
+        #     await self.create_async()
 
-        added_messages = []
+        # added_messages = []
 
-        for message in messages:
-            content = []
-            attachments = []
+        # for message in messages:
+        #     content = []
+        #     attachments = []
 
-            # Handle text content
-            if isinstance(message.content, str):
-                content.append({"type": "text", "text": message.content})
-            elif isinstance(message.content, list):
-                for item in message.content:
-                    if isinstance(item, TextContentBlock):
-                        content.append({"type": "text", "text": item.text.value})
+        #     # Handle text content
+        #     if isinstance(message.content, str):
+        #         content.append({"type": "text", "text": message.content})
+        #     elif isinstance(message.content, list):
+        #         for item in message.content:
+        #             if isinstance(item, TextContentBlock):
+        #                 content.append({"type": "text", "text": item.text.value})
 
-            # Handle attachments
-            if message.metadata.attachments:
-                for attachment in message.metadata.attachments:
-                    if isinstance(attachment, ImageMessageContent):
-                        content.append(
-                            {
-                                "type": "image_url",
-                                "image_url": {"url": attachment.metadata.url},
-                            }
-                        )
-                    elif isinstance(attachment, FileMessageContent):
-                        with open(attachment.metadata.path, "rb") as file:
-                            response = await client.files.create(
-                                file=file, purpose="assistants"
-                            )
-                            attachments.append(
-                                {
-                                    "file_id": response.id,
-                                    "tools": [{"type": "file_search"}],
-                                }
-                            )
+        #     # Handle attachments
+        #     if message.metadata.attachments:
+        #         for attachment in message.metadata.attachments:
+        #             if isinstance(attachment, ImageMessageContent):
+        #                 content.append(
+        #                     {
+        #                         "type": "image_url",
+        #                         "image_url": {"url": attachment.metadata.url},
+        #                     }
+        #                 )
+        #             elif isinstance(attachment, FileMessageContent):
+        #                 with open(attachment.metadata.path, "rb") as file:
+        #                     response = await client.files.create(
+        #                         file=file, purpose="assistants"
+        #                     )
+        #                     attachments.append(
+        #                         {
+        #                             "file_id": response.id,
+        #                             "tools": [{"type": "file_search"}],
+        #                         }
+        #                     )
 
-            # Create the message with the attached files
-            response = await client.beta.threads.messages.create(
-                thread_id=self.id,
-                role=message.role,
-                content=content,
-                attachments=attachments,
-            )
-            added_messages.append(response)
+        #     # Create the message with the attached files
+        #     response = await client.beta.threads.messages.create(
+        #         thread_id=self.id,
+        #         role=message.role,
+        #         content=content,
+        #         attachments=attachments,
+        #     )
+        #     added_messages.append(response)
 
     @expose_sync_method("get_messages")
     async def get_messages_async(
@@ -254,3 +255,64 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
             **run_kwargs,
         )
         return await run.run_async()
+
+    @expose_sync_method("create_vector_store")
+    async def create_vector_store_async(self, name: str) -> str:
+        client = marvin.utilities.openai.get_openai_client()
+        vector_store = await client.beta.vector_stores.create(name=name)
+        self.vector_store_id = vector_store.id
+        return vector_store.id
+
+    @expose_sync_method("add_files_to_vector_store")
+    async def add_files_to_vector_store_async(self, file_paths: List[str]) -> None:
+        if not self.vector_store_id:
+            raise ValueError("Vector store not created. Call create_vector_store first.")
+        
+        client = marvin.utilities.openai.get_openai_client()
+        file_streams = [open(path, "rb") for path in file_paths]
+        await client.beta.vector_stores.file_batches.upload_and_poll(
+            vector_store_id=self.vector_store_id,
+            files=file_streams
+        )
+
+    @expose_sync_method("remove_vector_store")
+    async def remove_vector_store_async(self) -> None:
+        if not self.vector_store_id:
+            return
+        
+        client = marvin.utilities.openai.get_openai_client()
+        await client.beta.vector_stores.delete(self.vector_store_id)
+        self.vector_store_id = None
+
+    @expose_sync_method("has_vector_store")
+    async def has_vector_store_async(self) -> bool:
+        return self.vector_store_id is not None
+
+    @expose_sync_method("list_files")
+    async def list_files_async(self) -> List[str]:
+        if not self.vector_store_id:
+            return []
+        
+        client = marvin.utilities.openai.get_openai_client()
+        files = await client.beta.vector_stores.files.list(self.vector_store_id)
+        return [file.filename for file in files.data]
+
+    @expose_sync_method("update_files")
+    async def update_files_async(self, add_files: List[str] = None, remove_files: List[str] = None) -> None:
+        if not self.vector_store_id:
+            raise ValueError("Vector store not created. Call create_vector_store first.")
+        
+        client = marvin.utilities.openai.get_openai_client()
+        
+        if add_files:
+            file_streams = [open(path, "rb") for path in add_files]
+            await client.beta.vector_stores.file_batches.upload_and_poll(
+                vector_store_id=self.vector_store_id,
+                files=file_streams
+            )
+        
+        if remove_files:
+            files = await client.beta.vector_stores.files.list(self.vector_store_id)
+            for file in files.data:
+                if file.filename in remove_files:
+                    await client.beta.vector_stores.files.delete(self.vector_store_id, file.id)

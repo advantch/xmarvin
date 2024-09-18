@@ -13,7 +13,6 @@ from marvin.extensions.utilities.message_parsing import (
     format_message_for_completion_endpoint,
 )
 
-pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture

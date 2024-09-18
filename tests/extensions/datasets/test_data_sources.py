@@ -9,7 +9,7 @@ from openai.types.beta.thread import Thread
 from openai.types.beta.threads.message import Message
 from openai.types.file_object import FileObject
 
-from marvin.extensions.storage.file_storage import LocalFileStorage
+from marvin.extensions.storage.file_storage.local_file_storage import LocalFileStorage
 from marvin.extensions.types import ChatMessage, Metadata
 from marvin.extensions.types.data_source import DataSource, WebSource
 from marvin.extensions.types.message import FileMessageContent, ImageMessageContent

@@ -10,6 +10,39 @@ from marvin.extensions.utilities.serialization import to_serializable
 class BaseStorageLayer(BaseModel):
     """
     Base storage layer.
+
+    Persistence layer for storing and retrieving data.
+    Use the relevant PydanticModel to store and retrieve data.
+
+    The memory class will write to the storage layer when this is available.
+    Memory -> uses -> ChatStore -> to persists data in -> DBChatStorage
+
+    Here is how it could be implemented.
+    *Scenario: Store messages in a database*
+
+    class DBChatStorage(BaseModel):
+        
+        def get(self, key: str) -> Optional[Any]:
+            database.select(id=key)
+
+        def set(self, key: str, value: Any):
+            database.insert(id=key, value=value)
+
+        def update(self, key: str, value: Any):
+            database.update(id=key, value=value)
+
+        def delete(self, key: str):
+            database.delete(id=key)
+            
+    
+    class ChatStore():
+        store: BaseStorageLayer = DBChatStorage()
+
+    memory = Memory(store=ChatStore())
+        
+    # during a run
+    memory.set("id", message)
+    
     """
 
     def get(self, key: str) -> Optional[Any]:
@@ -67,6 +100,7 @@ class MemStore(BaseStorageLayer):
         del self.store[key]
 
     def filter(self, **filters) -> List[Any]:
+        print(filters, self.store,'the data')
         items = list(self.store.values())
         for key, value in filters.items():
             items = [item for item in items if getattr(item, key, None) == value]
@@ -74,6 +108,9 @@ class MemStore(BaseStorageLayer):
 
     def list(self, **filters) -> List[Any]:
         return list(self.store.values())
+    
+    def clear(self):
+        self.store = {}
 
 
 class JsonFileStore(BaseStorageLayer):

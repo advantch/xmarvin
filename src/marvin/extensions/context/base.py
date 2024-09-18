@@ -21,5 +21,5 @@ def get_context(key: str, container: Local | None = None) -> Any:
     return container[key]
 
 
-def get_global_container() -> Local:
+def get_global_state() -> Local:
     return _async_local

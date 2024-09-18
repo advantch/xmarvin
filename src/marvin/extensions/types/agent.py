@@ -130,9 +130,14 @@ class AgentConfig(BaseModel):
 
     # file search
     file_search_enabled: bool | None = None
-    max_runs: int | None = 10
+    vector_store_id: str | None = None
+    file_ids: List[str] | None = Field(default_factory=list)
     search_all_files: bool | None = None
+
+    max_runs: int | None = 10
+
     use_optimised_prompt: bool | None = False
+    
     # system
     is_internal: bool | None = False
 

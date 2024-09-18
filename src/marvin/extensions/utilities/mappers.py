@@ -98,7 +98,8 @@ def message_type_from_tool_call_step_details(details) -> str:
 
 def construct_tool_call_from_remote_call(tool_call):
     """
-    Construct a tool call from the step details
+    Construct a tool call from the step details.
+    We modify the tool call to also store structured data
     """
     if tool_call.type == "function":
         return AppToolCall(**orjson.loads(tool_call.model_dump_json()))

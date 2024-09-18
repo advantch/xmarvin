@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, BinaryIO, Generic, List, Optional, TypeVar
 
+from marvin.extensions.tools.tool_kit import Toolkit
 from pydantic import BaseModel, Field
 
 from marvin.extensions.types import AgentConfig, ChatMessage, ChatThread, PersistedRun
@@ -13,6 +14,10 @@ T = TypeVar("T")
 
 
 class BaseStorage(ABC, Generic[T], ExposeSyncMethodsMixin):
+    """
+    Interface for storage classes.
+    API between RuntimeMemory and storage layers.
+    """
     model: BaseModel = Field(
         ..., description="The model type for the storage. Required."
     )
@@ -121,7 +126,9 @@ class BaseAgentStorage(BaseStorage[AgentConfig]):
 
 
 class BaseFileStorage(BaseStorage[DataSource]):
+
     model: BaseModel = DataSource
+    is_file_system: bool = False
 
     @expose_sync_method("save_file")
     async def save_file_async(
@@ -135,6 +142,10 @@ class BaseFileStorage(BaseStorage[DataSource]):
         """Retrieve a file from storage."""
         raise NotImplementedError("Method get_file_async not implemented")
 
+    @expose_sync_method("list_files")
+    async def list_files_async(self, thread_id: str| None = None) -> List[DataSource]:
+        raise NotImplementedError("Method list_files_async not implemented")
+    
     @expose_sync_method("sync_with_openai_assistant")
     async def sync_with_openai_assistant_async(self, assistant_id: str) -> List[dict]:
         """Sync files with a remote OpenAI assistant."""
@@ -146,3 +157,53 @@ class BaseFileStorage(BaseStorage[DataSource]):
     async def upload_to_openai_async(self, file_id: str, purpose: str) -> dict:
         """Upload a file to OpenAI."""
         raise NotImplementedError("Method upload_to_openai_async not implemented")
+
+    @expose_sync_method("request_presigned_url")
+    async def request_presigned_url_async(
+        self, file_id: str, private: bool = True
+    ) -> dict:
+        """Request a presigned URL for a file."""
+        raise NotImplementedError("Method request_presigned_url_async not implemented")
+    
+    @expose_sync_method("delete_file")
+    async def delete_file_async(self, file_id: str) -> bool:
+        """Delete a file from storage."""
+        raise NotImplementedError("Method delete_file_async not implemented")
+    
+    @expose_sync_method("update_file_metadata")
+    async def update_file_metadata_async(self, file_id: str, metadata: dict) -> dict:
+        """Update a file's metadata."""
+        raise NotImplementedError("Method update_file_metadata_async not implemented")
+    
+    @expose_sync_method("clear")
+    async def clear_async(self) -> None:
+        """Clear all files from storage."""
+        raise NotImplementedError("Method clear_async not implemented")
+    
+class BaseToolkitStorage(BaseStorage[Toolkit]):
+    model = Toolkit
+
+
+class BaseDataSourceStorage(BaseStorage[DataSource]):
+    model = DataSource
+
+    @expose_sync_method("save_file")
+    async def save_file_async(
+        self, file: BinaryIO, file_id: str, metadata: Optional[dict] = None
+    ) -> dict:
+        """Save a file to storage and return its metadata."""
+        raise NotImplementedError("Method save_file_async not implemented")
+    
+    @expose_sync_method("get_file")
+    async def get_file_async(self, file_id: str) -> BinaryIO:
+        """Retrieve a file from storage."""
+        raise NotImplementedError("Method get_file_async not implemented")
+    
+    @expose_sync_method("delete_file")
+    async def delete_file_async(self, file_id: str) -> bool:
+        """Delete a file from storage."""
+        raise NotImplementedError("Method delete_file_async not implemented")
+    
+    @expose_sync_method("update_file_metadata")
+    async def update_file_metadata_async(self, file_id: str, metadata: dict) -> dict:
+        """Update a file's metadata."""

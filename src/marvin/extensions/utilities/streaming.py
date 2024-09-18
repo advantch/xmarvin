@@ -55,7 +55,6 @@ def send_app_event(
     if camel_case:
         data = humps.camelize(data)
     from marvin.extensions.settings import extension_settings  # noqa
-
     manager = extension_settings.transport.manager
     manager.broadcast(channel_id, data)
 
@@ -99,6 +98,5 @@ async def send_app_event_async(
         data = humps.camelize(data)
 
     from marvin.extensions.settings import extension_settings  # noqa
-
     manager = extension_settings.transport.manager
     await manager.broadcast_async(channel_id, data)

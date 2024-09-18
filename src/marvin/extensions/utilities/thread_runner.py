@@ -30,7 +30,7 @@ from marvin.extensions.context.tenant import (
     get_current_tenant_id,
     set_current_tenant_id,
 )
-from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.memory.runtime_memory import RuntimeMemory
 from marvin.extensions.settings import extension_settings
 from marvin.extensions.storage.base import (
     BaseAgentStorage,
@@ -54,7 +54,7 @@ from marvin.extensions.utilities.message_parsing import (
     get_openai_assistant_messages,
 )
 from marvin.extensions.utilities.streaming import send_app_event
-
+from marvin.extensions.utilities.sync_threads import sync_thread
 
 def update_marvin_settings(api_key: str | None = None):
     if api_key:
@@ -226,7 +226,7 @@ def run_context(
 
 
 def memory_with_storage(thread_id, storage=None):
-    return Memory(
+    return RuntimeMemory(
         storage=storage or {},
         index=thread_id,
         thread_id=thread_id,
@@ -328,7 +328,7 @@ def handle_local_run(
     thread_storage: BaseThreadStore,
     run_storage: BaseRunStorage,
     context: dict,
-    memory: Memory | None = None,
+    memory: RuntimeMemory | None = None,
     chat_storage_class: type[BaseChatStore] | None = ChatStore,
 ):
     """

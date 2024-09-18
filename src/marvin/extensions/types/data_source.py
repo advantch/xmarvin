@@ -52,7 +52,7 @@ class DataSourceFileUpload(BaseModel):
 
 
 class DataSource(BaseModel):
-    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: Optional[str| uuid.UUID] = Field(default_factory=lambda: str(uuid.uuid4().hex))
     name: Optional[str] = None
     file_name: Optional[str] = None
     file_id: Optional[str] = Field(
@@ -61,6 +61,7 @@ class DataSource(BaseModel):
     )
     file_type: Optional[str] = None
     file_size: Optional[int] = None
+    file_path: Optional[str] = None
     upload_url: Optional[HttpUrl] = None
     upload_type: Literal["file", "image", "url", "web_source"] = Field(
         description="Source of the document: file upload, image upload, URL, or web scraping source.",

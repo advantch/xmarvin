@@ -4,7 +4,7 @@ import pytest
 
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.extensions.context.run_context import RunContext
-from marvin.extensions.memory.temp_memory import Memory
+from marvin.extensions.memory.runtime_memory import RuntimeMemory
 from marvin.extensions.storage.stores import ChatStore, RunStore
 from marvin.extensions.types.agent import AgentConfig
 
@@ -39,7 +39,7 @@ async def test_event_handler_class():
         tool_config=[],
     )
     _context = context.model_dump()
-    memory = Memory(
+    memory = RuntimeMemory(
         storage=chat_store,
         context=_context,
         thread_id=run.thread_id,

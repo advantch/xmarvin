@@ -1,7 +1,7 @@
 from typing import BinaryIO
 
 from marvin.extensions.context.run_context import RunContext
-from marvin.extensions.storage.file_storage import BaseFileStorage
+from marvin.extensions.storage.file_storage.local_file_storage import BaseFileStorage
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.unique_id import generate_uuid_from_string
 
@@ -24,19 +24,12 @@ async def save_assistant_image_to_storage(
             "tenant_id": context.tenant_id,
         },
     )
-
-    # Create a chat message
-    m = ChatMessage(
-        id=file_id,
-        role="assistant",
-        content=[result],
-        run_id=context.run_id,
-        thread_id=context.thread_id,
-        metadata={
-            "streaming": False,
-            "type": "image",
-            "run_id": context.run_id,
-        },
-    )
-
-    return m
+    metadata = {
+        "thread_id": context.thread_id,
+        "run_id": context.run_id,
+        "tenant_id": context.tenant_id,
+        "type": "image",
+    }
+    from marvin.extensions.settings import extension_settings
+    data_source_store = extension_settings.storage.data_source_storage_class()
+    return await data_source_store.save_file_async(image_file, metadata)

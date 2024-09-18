@@ -14,8 +14,6 @@ from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.types.start_run import TriggerAgentRun
 from marvin.extensions.utilities.thread_runner import run_context
 
-pytestmark = pytest.mark.django_db
-
 
 @pytest.mark.no_llm
 def test_thread_runner(respx_mock):

@@ -57,7 +57,6 @@ class Assistant(BaseModel, ExposeSyncMethodsMixin):
     """
 
     name: str = "Assistant"
-
     id: Optional[str] = None
     description: Optional[str] = None
     instructions: Optional[str] = Field(None)
@@ -66,6 +65,7 @@ class Assistant(BaseModel, ExposeSyncMethodsMixin):
     tool_resources: dict[str, Any] = Field(default_factory=dict)
     metadata: dict[str, str] = Field(default_factory=dict)
     response_format: Optional[Union[Literal["auto"], AssistantResponseFormat]] = "auto"
+    vector_store_id: Optional[str] = None
     # context level tracks nested assistant contexts
     _context_level: int = PrivateAttr(0)
 
@@ -254,6 +254,27 @@ class Assistant(BaseModel, ExposeSyncMethodsMixin):
                 await self.say_async(message, **kwargs)
             except KeyboardInterrupt:
                 break
+
+    @expose_sync_method("add_vector_store")
+    async def add_vector_store_async(self, vector_store_id: str) -> None:
+        client = marvin.utilities.openai.get_openai_client()
+        await client.beta.assistants.update(
+            assistant_id=self.id,
+            tool_resources={"file_search": {"vector_store_ids": [vector_store_id]}}
+        )
+        self.vector_store_id = vector_store_id
+
+    @expose_sync_method("remove_vector_store")
+    async def remove_vector_store_async(self) -> None:
+        if not self.vector_store_id:
+            return
+
+        client = marvin.utilities.openai.get_openai_client()
+        await client.beta.assistants.update(
+            assistant_id=self.id,
+            tool_resources={"file_search": {"vector_store_ids": []}}
+        )
+        self.vector_store_id = None
 
     def pre_run_hook(self):
         pass
