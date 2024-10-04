@@ -67,3 +67,8 @@ Format & Lint
 uv run ruff format .
 uv run ruff check . --fix --unsafe-fixes
 ``` 
+
+```
+uv pip install -r pyproject.toml ".[tests]"
+uv pytest
+```

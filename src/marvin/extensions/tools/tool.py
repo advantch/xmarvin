@@ -20,7 +20,6 @@ from pydantic import (
     model_validator,
 )
 
-from marvin.extensions.utilities.logging import pretty_log
 from marvin.utilities.asyncio import run_sync_if_awaitable
 from marvin.utilities.tools import Function, ModelSchemaGenerator
 
@@ -75,6 +74,7 @@ class Tool(BaseModel):
         return dict(type="function", function=payload)
 
     def run(self, input: dict):
+        print(f"Running tool {self.name} with input {input}")
         result = self.fn(**input)
         result = run_sync_if_awaitable(result)
 
@@ -484,9 +484,9 @@ def get_config_from_context(
 ) -> Dict[str, Any]:
     """
     Get the RunContextToolkitConfig from the context
-    For example for a 'default_database' toolkit_id, the config will be returned
+    For example for a 'database' toolkit_id, the config will be returned
     [{
-        "toolkit_id": "default_database",
+        "toolkit_id": "database",
         "config": {
             "url": DatabaseSettings.objects.get_default_tenant_database().url,
             "database": DatabaseSettings.objects.get_default_tenant_database().database,
@@ -496,7 +496,6 @@ def get_config_from_context(
     from marvin.extensions.context.run_context import get_run_context
 
     context = get_run_context()
-    pretty_log(context)
     if not context:
         return {}
     tool_configs = context.get("tool_config", [])

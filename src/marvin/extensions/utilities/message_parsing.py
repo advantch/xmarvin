@@ -9,6 +9,7 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from pydantic import BaseModel
 
+from marvin.extensions.context.run_context import get_current_run
 from marvin.extensions.types.message import (
     ChatMessage,
     FileMessageContent,
@@ -173,16 +174,15 @@ def to_openai_tool(
 
 
 def as_llm_message(file_id: str):
-    from marvin.extensions.settings import extension_settings  # noqa
-
-    storage = extension_settings.storage.file_storage_class()
+    ctx = get_current_run()
+    storage = ctx.stores.data_source_store
     data_source = storage.get(file_id)
     if data_source:
         return ImageFileContentBlock(
             **{
                 "type": "image_url",
                 "image_url": {
-                    "url": data_source.base_64_string(),
+                    "url": data_source.url,
                 },
             }
         )
@@ -192,11 +192,16 @@ def as_llm_message(file_id: str):
 def get_openai_assistant_attachments(message: ChatMessage) -> List[MessageContent]:
     from marvin.extensions.settings import extension_settings  # noqa
 
-    default_storage = extension_settings.storage.file_storage_class()
+    ctx = get_current_run()
+    storage = ctx.stores.data_source_store
+
     attachments: List[MessageContent] = []
+    if not message.metadata or not message.metadata.attachments:
+        return attachments
+
     for attachment in message.metadata.attachments:
         if isinstance(attachment, FileMessageContent):
-            file_content = default_storage.get_file(attachment.file_id)
+            file_content = storage.get_file_content_by_file_id(attachment.file_id)
             if file_content:
                 attachments.append(
                     {
@@ -210,25 +215,25 @@ def get_openai_assistant_attachments(message: ChatMessage) -> List[MessageConten
 
 def get_openai_assistant_messages(message: ChatMessage) -> List[MessageContent]:
     content: List[MessageContent] = []
-    from marvin.extensions.settings import extension_settings  # noqa
-
-    default_storage = extension_settings.storage.file_storage_class()
+    ctx = get_current_run()
+    storage = ctx.stores.data_source_store
     if isinstance(message.content, list):
         for text_message in message.content:
             if isinstance(text_message, TextContentBlock):
                 content.append({"type": "text", "text": text_message.text.value})
 
-    for attachment in message.metadata.attachments:
-        if isinstance(attachment, ImageMessageContent):
-            image_content = default_storage.get_file(attachment.file_id)
-            if image_content:
-                content.append(
-                    {
-                        "type": "image_file",
-                        "image_file": {
-                            "file_id": attachment.file_id,
-                        },
-                    }
-                )
+    if message.metadata and message.metadata.attachments:
+        for attachment in message.metadata.attachments:
+            if isinstance(attachment, ImageMessageContent):
+                image_content = storage.get(attachment.file_id)
+                if image_content:
+                    content.append(
+                        {
+                            "type": "image_file",
+                            "image_file": {
+                                "file_id": attachment.file_id,
+                            },
+                        }
+                    )
 
     return content

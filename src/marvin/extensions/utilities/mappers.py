@@ -33,7 +33,7 @@ from marvin.extensions.types import (
     Function,
     FunctionToolCall,
 )
-from marvin.extensions.utilities.unique_id import generate_uuid_from_string
+from marvin.extensions.utilities.unique_id import generate_id
 
 
 def map_content_to_block(content, is_delta=False):
@@ -98,7 +98,8 @@ def message_type_from_tool_call_step_details(details) -> str:
 
 def construct_tool_call_from_remote_call(tool_call):
     """
-    Construct a tool call from the step details
+    Construct a tool call from the step details.
+    We modify the tool call to also store structured data
     """
     if tool_call.type == "function":
         return AppToolCall(**orjson.loads(tool_call.model_dump_json()))
@@ -148,7 +149,7 @@ def run_step_to_tool_call_message(
     message_type = message_type_from_tool_call_step_details(details)
     # we should save tool calls
     m = ChatMessage(
-        id=generate_uuid_from_string(run_step.id),
+        id=generate_id("cs", run_step.id),
         role="assistant",
         content=[],
         run_id=context.run_id,
@@ -164,7 +165,9 @@ def run_step_to_tool_call_message(
     return m
 
 
-def create_step_from_model_response(response: ModelResponse, context):
+def create_step_from_model_response(
+    response: ModelResponse, context, structured_model_class=None
+):
     step_details: Union[MessageCreationStepDetails, ToolCallsStepDetails] = None
 
     if (
@@ -215,7 +218,7 @@ def create_step_from_model_response(response: ModelResponse, context):
         failed_at=None,
         last_error=None,
         step_details=step_details,
-        metadata={"message_id": generate_uuid_from_string(str(response.id))},
+        metadata={"message_id": generate_id("cs", str(response.id))},
         usage=Usage(**response.usage.model_dump()),
     )
 

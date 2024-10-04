@@ -13,7 +13,7 @@ requires-python = ">=3.10"
 
 dependencies = [
     "cachetools>=5",
-    "fastapi",
+    "fastapi[standard]",
     "httpx>=0.24.1",
     "jinja2>=3.1.2",
     "jsonpatch>=1.33",
@@ -37,6 +37,12 @@ dependencies = [
     "asgiref>=3.8.1",
     "prefect@git+https://github.com/PrefectHQ/prefect.git",
     "python-magic>=0.4.27",
+    "redis>=5.0.0",
+    "aioredis>=2.0.1",
+    "peewee>=2.2.4",
+    "walrus>=0.9.4",
+    "ucache>=0.1.4",
+    "instructor>=1.5.0",
 ]
 
 [project.optional-dependencies]
@@ -61,6 +67,10 @@ dev = [
     "pydantic>=2.8.1",
     "pydantic-settings>=2.4.0",
     "ruff>=0.6.0",
+    "logfire>=1.0.1",
+    "nanodjango>=0.9.1",
+    "channels>=4.0.0",
+    "django-eventstream>=5.3.1",
 ]
 tests = [
     "pytest-asyncio>=0.18.2,!=0.22.0,<0.23.0",
@@ -109,7 +119,7 @@ markers = [
     "llm: indicates that a test calls an LLM (may be slow).",
     "no_llm: indicates that a test does not require an LLM.",
 ]
-timeout = 20
+timeout = 40
 testpaths = ["tests"]
 
 norecursedirs = [

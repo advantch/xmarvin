@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, HttpUrl
 
+from marvin.extensions.utilities.unique_id import generate_id
+
 
 class Glob(BaseModel):
     glob: str
@@ -40,6 +42,12 @@ class IndexData(BaseModel):
     prompt: Optional[str] = None
 
 
+class ReferenceMetadata(BaseModel):
+    file_id: str | None = None
+    detail: str | None = None
+    model_config = dict(extra="allow")
+
+
 class DataSourceFileUpload(BaseModel):
     file: Any
     file_name: str | None = None
@@ -49,32 +57,64 @@ class DataSourceFileUpload(BaseModel):
     file_upload_url: str | None = None
     file_upload_type: str | None = None
     reference_file_id: str | None = None
+    file_path: str | None = None
+
+
+class FileStoreMetadata(BaseModel):
+    """
+    Information about where the file is stored.
+    """
+
+    storage_type: Literal["local", "s3", "gcs", "memory"] = "local"
+    bucket: str | None = None
+    file_id: str | None = None
+    file_name: str | None = None
+    file_type: str | None = None
+    file_size: int | None = None
+    file_path: str | None = None
+    created: datetime | None = None
+    modified: datetime | None = None
+    presigned_url: str | None = None
+    url: str | None = None
+
+
+class VectorStoreMetadata(BaseModel):
+    """
+    Information about how the file is indexed.
+    """
+
+    vector_store_id: str | None = None
+    chunk_size: int | None = None
+    chunk_overlap: int | None = None
+    chunk_strategy: Literal["default", "high_density", "low_density"] = "default"
+
+
+class ExternalFileReference(BaseModel):
+    """
+    Reference to a file in an external system.
+    """
+
+    file_id: str
+    type: Literal["file_reference", "vector_store_reference"] = "file_reference"
+    purpose: Literal["file_search", "code_interpreter", "image"] = "file_search"
+
+    model_config = dict(extra="allow")
 
 
 class DataSource(BaseModel):
-    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: Optional[str | uuid.UUID] = Field(default_factory=lambda: generate_id("ds"))
     name: Optional[str] = None
-    file_name: Optional[str] = None
     file_id: Optional[str] = Field(
         description="File ID from request. If not provided, a new UUID will be generated.",
         default_factory=lambda: str(uuid.uuid4()),
     )
-    file_type: Optional[str] = None
-    file_size: Optional[int] = None
+
     upload_url: Optional[HttpUrl] = None
-    upload_type: Literal["file", "image", "url", "web_source"] = Field(
+    upload_type: Literal["file", "image", "url"] = Field(
         description="Source of the document: file upload, image upload, URL, or web scraping source.",
         default="file",
     )
     description: Optional[str] = None
-    chunks_length: Optional[int] = None
-    chunks_strategy: Optional[Literal["default", "high_density", "low_density"]] = (
-        Field(
-            description="Strategy for chunking the document",
-            default="default",
-        )
-    )
-    temporary: Optional[bool] = None
     created: Optional[datetime] = Field(default_factory=datetime.now)
     modified: Optional[datetime] = Field(default_factory=datetime.now)
     index: Optional[IndexData] = None
@@ -82,14 +122,25 @@ class DataSource(BaseModel):
         description="URL of the data source if upload_type is 'url'",
         default=None,
     )
+    source_type: Literal["file", "image", "url", "web_source", "video", "audio"] = (
+        "file"
+    )
     web_source: Optional[WebSource] = Field(
         description="Web scraping configuration if upload_type is 'web_source'",
         default=None,
     )
-    status: Literal["loaded", "indexing", "indexed", "failed", ""] = "loaded"
-    reference_file_id: Optional[str] = Field(
-        description="Reference file ID. Use this to generate presigned upload URLs.",
-        default=None,
+    status: Literal[
+        "stored", "indexing", "indexed", "indexing_failed", "done", "uploaded"
+    ] = "stored"
+
+    # reference fields
+    vector_store_metadata: Optional[VectorStoreMetadata] = None
+    metadata: Optional[ReferenceMetadata] = None
+    file_store_metadata: Optional[FileStoreMetadata] = None
+    external_file_reference: Optional[ExternalFileReference] = None
+
+    reference: Optional[dict] = Field(
+        default=None, description="Reference to the file in the file store."
     )
 
     class Config:
@@ -110,3 +161,26 @@ class DataSource(BaseModel):
             file_upload_url=upload.file_upload_url,
             file_upload_type=upload.file_upload_type,
         )
+
+    def as_reference(self):
+        return {
+            "file_id": self.reference_file_id,
+            "type": "file_reference",
+        }
+
+    @classmethod
+    def test_data_source(cls):
+        return cls(
+            name="Test Data Source",
+            description="This is a test data source",
+            file_name="test.txt",
+            file_type="text/plain",
+            file_size=100,
+            file_id="test_file_id",
+        )
+
+
+class VectorStore(BaseModel):
+    id: Optional[str | uuid.UUID] = Field(default_factory=lambda: generate_id("vs"))
+    name: str
+    data_source_ids: List[str]

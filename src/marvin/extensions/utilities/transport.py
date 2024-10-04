@@ -53,17 +53,17 @@ class CLIConnectionManager(BaseConnectionManager):
 
     @expose_sync_method("connect")
     async def connect_async(self, websocket: WebSocket, channel: str):
-        print(f"CLIConnectionManager: {channel} {websocket} connected")
+        pass
 
     @expose_sync_method("disconnect")
     def disconnect_sync(self, websocket: WebSocket, channel: str):
-        print(f"CLIConnectionManager: {channel} {websocket} disconnected")
+        pass
 
     @expose_sync_method("broadcast")
     async def broadcast_async(
         self, channel_id, data, event: str = "message", channel_type: str = "ws"
     ):
-        print(f"CLIConnectionManager: {channel_id} {data} {event} {channel_type}")
+        pass
 
 
 class FastApiWsConnectionManager(BaseConnectionManager):

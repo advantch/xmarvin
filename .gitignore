@@ -181,3 +181,6 @@ src/marvin/_version.py
 .prefect/
 .prefect/*.json
 .prefectignore
+
+*.db
+*.sqlite3

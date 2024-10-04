@@ -1,49 +1,33 @@
-from typing import Any, Callable, Literal
+import os
+from pathlib import Path
+from typing import Any, Callable, Literal, Union
 
-from pydantic_settings import BaseSettings
+import litellm
+from asgiref.local import Local
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from marvin.extensions.storage.base import (
-    BaseAgentStorage,
-    BaseChatStore,
-    BaseRunStorage,
-    BaseThreadStore,
-)
-from marvin.extensions.storage.cache import cache
-from marvin.extensions.storage.file_storage import BaseFileStorage, LocalFileStorage
-from marvin.extensions.storage.stores import (
-    AgentStore,
-    ChatStore,
-    RunStore,
-    ThreadStore,
-)
 from marvin.extensions.utilities.transport import (
     BaseConnectionManager,
     CLIConnectionManager,
 )
+from marvin.settings import settings as marvin_settings
 
-from .context.base import get_global_container
+from .context.base import get_global_state
 
 
 class S3Settings(BaseSettings):
     """
-    Default settings for S3 storage.
+    Settings for S3 storage.
     """
 
     bucket_name: str = "marvin-storage"
-    aws_access_key_id: str = ""
-    aws_secret_access_key: str = ""
-    aws_endpoint_url_s3: str = ""
-    aws_region: str = ""
+    access_key_id: str = ""
+    secret_access_key: str = ""
+    endpoint_url: str = ""
+    region: str = ""
 
-
-class ExtensionStorageSettings(BaseSettings):
-    chat_store_class: type[BaseChatStore] = ChatStore
-    thread_store_class: type[BaseThreadStore] = ThreadStore
-    message_store_class: type[BaseChatStore] = ChatStore
-    file_storage_class: type[BaseFileStorage] = LocalFileStorage
-    run_storage_class: type[BaseRunStorage] = RunStore
-    agent_storage_class: type[BaseAgentStorage] = AgentStore
-    cache: Any = cache
+    model_config = SettingsConfigDict(env_prefix="MARVIN_S3_")
 
 
 class TransportSettings(BaseSettings):
@@ -53,15 +37,52 @@ class TransportSettings(BaseSettings):
 
 
 class AppContextSettings(BaseSettings):
-    container: Callable = get_global_container
+    container: Callable[[], Local] = get_global_state
+    get_default_db_url: Callable[[], str] = lambda: "sqlite:///:memory:"
 
 
 class MarvinExtensionsSettings(BaseSettings):
-    storage: ExtensionStorageSettings = ExtensionStorageSettings()
-    s3: S3Settings = S3Settings()
+    home_path: Path = litellm.Field(
+        default="~/.marvin_extensions",
+        description="The path to the Marvin Extensions home directory.",
+        validate_default=True,
+    )
     default_vector_dimensions: int = 256
     transport: TransportSettings = TransportSettings()
-    app_context: AppContextSettings = AppContextSettings()
+    global_context: AppContextSettings = AppContextSettings()
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        # wrap bare strings in SecretStr if the field is annotated with SecretStr
+        field = self.model_fields.get(name)
+        if field:
+            annotation = field.annotation
+            base_types = (
+                getattr(annotation, "__args__", None)
+                if getattr(annotation, "__origin__", None) is Union
+                else (annotation,)
+            )
+            if SecretStr in base_types and not isinstance(value, SecretStr):  # type: ignore # noqa: E501
+                value = SecretStr(value)
+        super().__setattr__(name, value)
 
 
+# global settings
 extension_settings = MarvinExtensionsSettings()
+s3_settings = S3Settings()
+
+
+def update_marvin_settings(api_key: str | None = None):
+    if api_key:
+        marvin_settings.openai.api_key = api_key
+    else:
+        marvin_settings.openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
+def update_litellm_settings(api_key: str | None = None):
+    if api_key:
+        litellm.openai.api_key = api_key
+    else:
+        litellm.openai.api_key = marvin_settings.openai.api_key
+    # update anthropic api key
+    litellm.anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    litellm.cohere_key = os.getenv("COHERE_API_KEY")

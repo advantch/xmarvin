@@ -146,7 +146,7 @@ def call_function_tool(
     tools: list[FunctionTool],
     function_name: str,
     function_arguments_json: str,
-) -> str:
+) -> Any:
     """
     Helper function for calling a function tool from a list of tools, using the arguments
     provided by an LLM as a JSON string. This function handles many common errors.

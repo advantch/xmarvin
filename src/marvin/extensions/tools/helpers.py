@@ -2,7 +2,6 @@ from typing import List
 
 from marvin.extensions.tools.app_tools import all_tools, toolkits
 from marvin.extensions.tools.tool import Tool
-from marvin.extensions.utilities.logging import pretty_log
 
 
 def get_agent_tools(agent_config, is_assistant=False) -> tuple[List[Tool], dict]:
@@ -19,7 +18,6 @@ def get_agent_tools(agent_config, is_assistant=False) -> tuple[List[Tool], dict]
             if code_tool:
                 all_agent_tools.append(code_tool)
 
-    pretty_log(f"Agent {agent_config.name} has {all_agent_tools} tools")
     if is_assistant:
         return [t.function_tool() for t in all_agent_tools], config
 

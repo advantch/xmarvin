@@ -29,11 +29,6 @@ class Dispatcher(BaseModel, ExposeSyncMethodsMixin):
     ):
         """
         Sends event to the channel.
-        In the ui these are shown as 'actions'
-        They represent an instance of a `RunStep` taken by the agent.
-        This is only available during the run.
-        After the run all events can be fetched from the backend.
-
         """
         try:
             if not event:
@@ -107,7 +102,3 @@ class Dispatcher(BaseModel, ExposeSyncMethodsMixin):
             message_type="close",
             event="close",
         )
-
-    @expose_sync_method("run_events")
-    async def run_events_async(self):
-        return self.stack

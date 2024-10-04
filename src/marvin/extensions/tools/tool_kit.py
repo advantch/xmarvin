@@ -6,7 +6,7 @@ from marvin.extensions.tools.tool import ApiTool, Tool
 from marvin.extensions.types.base import BaseModelConfig
 
 
-class ToolKitTokenIntegration(BaseModel):
+class ToolkitTokenIntegration(BaseModel):
     id: str = Field(description="DB ID of the token integration")
     type: Literal["oauth", "api"] = Field(
         description="Type of token for the toolkit", default="oauth"
@@ -14,7 +14,7 @@ class ToolKitTokenIntegration(BaseModel):
     active: bool = Field(description="Whether the integration is active", default=True)
 
 
-class ToolKit(BaseModel):
+class Toolkit(BaseModel):
     id: str = Field(description="DB ID of the toolkit")
     name: str = Field(description="Name of the toolkit")
     description: str = Field(description="Description of the toolkit")
@@ -47,7 +47,7 @@ class ToolKit(BaseModel):
     requires_integration: bool = Field(
         description="Whether the toolkit requires an integration", default=False
     )
-    integrations: List[ToolKitTokenIntegration] | None = Field(
+    integrations: List[ToolkitTokenIntegration] | None = Field(
         description="List of integrations for the toolkit", default=None
     )
 

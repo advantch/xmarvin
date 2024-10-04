@@ -26,8 +26,8 @@ class ToolResponse(BaseModel):
 
 
 class ToolCall(BaseModel):
-    arguments: str | None
-    tool_call_id: str | None
+    arguments: Dict[str, Any] | None
+    id: str | None
     name: str | None
 
     class Config:
@@ -43,12 +43,16 @@ class ToolSelection(BaseModel):
 
 
 class AppFunction(OpenAIFunction):
+    """Function with structured output."""
+
     structured_output: Any | None = Field(
         description="Structured output of the tool.", default=None
     )
 
 
 class AppCodeInterpreterTool(OpenAICodeInterpreterToolCall):
+    """Code interpreter tool with structured output."""
+
     structured_output: Any | None = Field(
         description="Structured output of the tool.", default=None
     )
@@ -67,12 +71,16 @@ class AppCodeInterpreterTool(OpenAICodeInterpreterToolCall):
 
 
 class AppFileSearchTool(OpenAIFileSearchToolCall):
+    """File search tool with structured output."""
+
     structured_output: Any | None = Field(
         description="Structured output of the tool.", default=None
     )
 
 
 class AppToolCall(OpenAIFunctionToolCall):
+    """Structured tool call."""
+
     function: AppFunction
 
 

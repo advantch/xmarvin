@@ -200,7 +200,7 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
                         if not hasattr(output, "results_string")
                         else output.results_string
                     )
-
+                    print(output_string)
                     if tool_call.type == "function":
                         func = AppToolCall(
                             id=tool_call.id,
@@ -279,14 +279,23 @@ class Run(BaseModel, ExposeSyncMethodsMixin):
 
                 while handler.current_run.status in ["requires_action"]:
                     tool_outputs = await self.get_tool_outputs(run=handler.current_run)
-                    # pass in cached tool outputs to the handler so they can be patched.
-                    # we dont have access to the upstream client therefore we cannot
 
-                    # patch the latest context object
-                    self.event_handler_kwargs["context"] = self.handler._context
+                    # Update the handler with cached tool outputs
+                    # we do this so we can patch the tool outputs coming from the assistant with our own
+                    # A new handler instance is created each time, so we update its context here
+
+                    # Update the context with the latest tool outputs
+                    old_context_dict = handler._context
+                    _tool_outputs = self.handler.tool_outputs
+
+                    # new handler instance
                     handler = event_handler_class(**self.event_handler_kwargs)
-                    if hasattr(handler, "tool_outputs"):
-                        handler.tool_outputs = self._tool_outputs
+
+                    # Create a new handler instance with the updated context
+                    if hasattr(self.event_handler_class, "_context"):
+                        handler._context = old_context_dict
+                        handler.tool_outputs = _tool_outputs
+
                     # upstream client to submit and handle tool outputs
                     async with client.beta.threads.runs.submit_tool_outputs_stream(
                         thread_id=self.thread.id,
