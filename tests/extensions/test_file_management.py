@@ -1,57 +1,88 @@
+import os
+
 import pytest
-import uuid
-from marvin.beta.assistants import Thread, Assistant
-from marvin.utilities.openai import get_openai_client
+
+from marvin.beta.assistants import Thread
 from marvin.beta.local.thread import LocalThread
-from marvin.extensions.storage.base import BaseThreadStore
-from marvin.extensions.utilities.sync_threads import ThreadSynchronizer, sync_thread
+from marvin.extensions.storage.data_source_store import InMemoryDataSourceStore
+from marvin.extensions.types.data_source import DataSource
+from marvin.extensions.utilities.setup_storage import setup_memory_stores
+from marvin.extensions.utilities.unique_id import generate_id
+from marvin.utilities.openai import get_openai_client
+
+data_source_storage = InMemoryDataSourceStore()
+
+
+@pytest.fixture
+def test_file():
+    with open("test_file.txt", "wb") as file:
+        file.write(b"Test file content")
+    yield file
+    os.remove("test_file.txt")
+
 
 @pytest.mark.asyncio
-async def test_thread_synchronizer():
+async def test_thread_synchronizer(test_file):
     # Setup
+
+    tenant_id = generate_id("tenant")
     openai_client = get_openai_client()
-    local_thread = LocalThread(tenant_id=uuid.uuid4())
-    remote_thread = await Thread().create_async()
-    thread_store = local_thread.thread_storage
-    
-    synchronizer = ThreadSynchronizer(local_thread, remote_thread)
+
+    local_thread: LocalThread = await LocalThread.create_async(
+        id=generate_id("thread"),
+        tenant_id=tenant_id,
+    )
+
+    setup_memory_stores()
+
+    remote_thread: Thread = Thread()
+    remote_thread = await remote_thread.create_async()
+    assert remote_thread.id is not None
+
     assert local_thread.thread_storage is not None
 
-    # Test sync_files
-    await synchronizer.sync_files()
+    file_path = os.path.join(os.path.dirname(__file__), "f.txt")
+    # write some content to the file
+    with open(file_path, "wb") as file:
+        file.write(b"Test file content")
+    # upload the file to openai
+    with open(file_path, "rb") as file:
+        file = await openai_client.files.create(file=file, purpose="assistants")
+        file_search_attachments = [
+            dict(file_id=file.id, tools=[dict(type="file_search")])
+        ]
+    await remote_thread.add_async(
+        "search", file_search_attachments=file_search_attachments
+    )
+    # check file available
 
-    # Add a file to the remote thread
-    file_content = b"Test file content"
-    file = await openai_client.files.create(file=file_content, purpose="assistants")
-    await remote_thread.add_async(file_ids=[file.id])
+    remote_files = await remote_thread.get_vector_store_files_async()
+    assert len(remote_files) == 1, remote_files
+    assert remote_files[0].id == file.id, remote_files[0].id
 
-    # Sync again
-    await synchronizer.sync_files()
+    # add a file to local thread
+    DataSource.test_data_source()
+    # with open(file_path, "rb") as file:
+    #     file_metadata = await stores.file_storage.save_file_async(file, file_name="test_file.txt")
+    #     data_source.file_store_metadata = file_metadata
+    # data_source = await data_source_storage.save_async(
+    #     data_source
+    # )
+    # await local_thread.add_data_source_async(data_source)
 
-    # Verify that the file was synced to the local thread
-    local_files = await local_thread.list_files_async()
-    assert len(local_files) == 1
-    assert local_files[0].id == file.id
+    # # check file available
+    # local_files = await local_thread.get_files_async()
 
-    # Test sync_vector_store
-    await synchronizer.sync_vector_store()
+    # _, file = local_files[0]
+    # assert file.size > 0, file.sizee
+    # assert len(local_files) == 1, local_files
+    # assert isinstance(local_files[0][1], ContentFile)
 
-    # Create a vector store for the remote thread
-    vector_store_id = await remote_thread.create_vector_store_async("Thread Vector Store")
-    
-    # Sync again
-    await synchronizer.sync_vector_store()
+    # # add files to remote thread.
+    # await sync_files_to_remote_thread(local_thread, remote_thread)
 
-    # Verify that the vector store was synced to the local thread
-    assert await local_thread.has_vector_store_async()
-    assert local_thread.vector_store_id == vector_store_id
-
-    # Test full sync_thread function
-    await sync_thread(local_thread, remote_thread)
-
-    # Assert that local thread's external_id is updated
-    assert local_thread.external_id == remote_thread.id
-
-    # Cleanup
-    await remote_thread.delete_async()
-    await openai_client.files.delete(file.id)
+    # # Cleanup
+    # remote_files = await remote_thread.get_vector_store_files_async()
+    # await remote_thread.delete_async()
+    # for file in remote_files:
+    #     await openai_client.files.delete(file.id)

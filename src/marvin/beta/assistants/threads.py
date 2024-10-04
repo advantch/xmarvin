@@ -1,16 +1,16 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from openai import NotFoundError
 from openai.types.beta.threads import Message
+from openai.types.beta.vector_store import VectorStore
+from openai.types.beta.vector_stores import VectorStoreFile
 from pydantic import BaseModel, Field
 
 import marvin.utilities.openai
 from marvin.extensions.types.message import (
     ChatMessage,
-    FileMessageContent,
-    ImageMessageContent,
 )
-from marvin.types import TextContentBlock
+from marvin.extensions.utilities.file_utilities import ContentFile
 from marvin.utilities.asyncio import (
     ExposeSyncMethodsMixin,
     expose_sync_method,
@@ -82,6 +82,27 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
             self.id = thread.id
             return thread
 
+    @expose_sync_method("add_formatted_message")
+    async def add_formatted_message_async(
+        self,
+        content: List[Dict[str, Any]],
+        role: str = "user",
+        attachments: List[Dict[str, Any]] = None,
+        formatted_image_files: List[Dict[str, Any]] = None,
+    ):
+        """
+        Add a formatted message to the thread.
+        """
+        client = marvin.utilities.openai.get_openai_client()
+        if self.id is None:
+            await self.create_async()
+
+        content = content.append(formatted_image_files)
+        response = await client.beta.threads.messages.create(
+            thread_id=self.id, role=role, content=content, attachments=attachments
+        )
+        return response
+
     @expose_sync_method("add")
     async def add_async(
         self,
@@ -90,9 +111,14 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
         code_interpreter_files: Optional[list[str]] = None,
         file_search_files: Optional[list[str]] = None,
         image_files: Optional[list[str]] = None,
+        file_search_attachments: List[Dict[str, Any]] = None,
+        code_interpreter_attachments: List[Dict[str, Any]] = None,
+        formatted_image_files: List[Dict[str, Any]] = None,
     ) -> Message:
         """
         Add a user message to the thread.
+
+        You can also pass in pre-created attachments for code_interpreter and file_search tools.
         """
         client = marvin.utilities.openai.get_openai_client()
 
@@ -122,6 +148,15 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
                     dict(image_file=dict(file_id=response.id), type="image_file")
                 )
 
+        if formatted_image_files:
+            content.append(formatted_image_files)
+
+        if file_search_attachments:
+            attachments.extend(file_search_attachments)
+
+        if code_interpreter_attachments:
+            attachments.extend(code_interpreter_attachments)
+
         # Create the message with the attached files
         response = await client.beta.threads.messages.create(
             thread_id=self.id, role=role, content=content, attachments=attachments
@@ -137,7 +172,7 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
         Add multiple messages to the thread, handling attachments, images, and file content.
         # TODO: THIS IS A WORK IN PROGRESS
         """
-        client = marvin.utilities.openai.get_openai_client()
+        marvin.utilities.openai.get_openai_client()
         # noqa
         raise NotImplementedError("This is a work in progress")
 
@@ -259,60 +294,120 @@ class Thread(BaseModel, ExposeSyncMethodsMixin):
     @expose_sync_method("create_vector_store")
     async def create_vector_store_async(self, name: str) -> str:
         client = marvin.utilities.openai.get_openai_client()
-        vector_store = await client.beta.vector_stores.create(name=name)
+        vector_store = await client.beta.vector_stores.create()
         self.vector_store_id = vector_store.id
-        return vector_store.id
+        return vector_store
+
+    @expose_sync_method("get_vector_store")
+    async def get_vector_store_async(self) -> VectorStore:
+        client = marvin.utilities.openai.get_openai_client()
+        return await client.beta.vector_stores.retrieve(self.vector_store_id)
 
     @expose_sync_method("add_files_to_vector_store")
-    async def add_files_to_vector_store_async(self, file_paths: List[str]) -> None:
-        if not self.vector_store_id:
-            raise ValueError("Vector store not created. Call create_vector_store first.")
-        
+    async def add_files_to_vector_store_async(
+        self, file_streams: List[ContentFile]
+    ) -> None:
+        vector_store_id = await self.get_vector_store_id_async()
+        if not vector_store_id:
+            vector_store = await self.create_vector_store_async()
+            vector_store_id = vector_store.id
+
         client = marvin.utilities.openai.get_openai_client()
-        file_streams = [open(path, "rb") for path in file_paths]
-        await client.beta.vector_stores.file_batches.upload_and_poll(
-            vector_store_id=self.vector_store_id,
-            files=file_streams
+        # bulk open file streams
+
+        file_streams = [(file.name, file.read()) for file in file_streams]
+        response = await client.beta.vector_stores.file_batches.upload_and_poll(
+            vector_store_id=vector_store_id, files=file_streams
         )
+
+        return response
+
+    @expose_sync_method("remove_file_from_vector_store")
+    async def remove_file_from_vector_store_async(self, file_id: str) -> None:
+        files = await self.get_vector_store_files_async()
+        if file_id not in [file.id for file in files]:
+            return
+
+        client = marvin.utilities.openai.get_openai_client()
+        await client.beta.vector_stores.files.delete(self.vector_store_id, file_id)
 
     @expose_sync_method("remove_vector_store")
     async def remove_vector_store_async(self) -> None:
         if not self.vector_store_id:
             return
-        
+
         client = marvin.utilities.openai.get_openai_client()
         await client.beta.vector_stores.delete(self.vector_store_id)
-        self.vector_store_id = None
 
     @expose_sync_method("has_vector_store")
     async def has_vector_store_async(self) -> bool:
-        return self.vector_store_id is not None
+        return await self.get_vector_store_id_async() is not None
+
+    @expose_sync_method("get_vector_store_id")
+    async def get_vector_store_id_async(self) -> str:
+        client = marvin.utilities.openai.get_openai_client()
+        thread = await client.beta.threads.retrieve(thread_id=self.id)
+        return (
+            thread.tool_resources.file_search.vector_store_ids[0]
+            if thread.tool_resources.file_search
+            else None
+        )
+
+    @expose_sync_method("get_vector_store_files")
+    async def get_vector_store_files_async(self) -> List[VectorStoreFile]:
+        client = marvin.utilities.openai.get_openai_client()
+        vector_store_id = await self.get_vector_store_id_async()
+        response = await client.beta.vector_stores.files.list(vector_store_id)
+        return response.data
+
+    @expose_sync_method("get_file_search_files")
+    async def get_file_search_files_async(self) -> List[str]:
+        # check if there is a vector store
+        client = marvin.utilities.openai.get_openai_client()
+        tool_resources = await client.beta.threads.retrieve(thread_id=self.id)
+        vector_store_id = (
+            tool_resources.tool_resources.file_search.vector_store_ids[0]
+            if tool_resources.tool_resources.file_search
+            else None
+        )
+        if not vector_store_id:
+            return []
+        files = await self.get_vector_store_files_async()
+        return [file.id for file in files]
 
     @expose_sync_method("list_files")
     async def list_files_async(self) -> List[str]:
-        if not self.vector_store_id:
-            return []
-        
         client = marvin.utilities.openai.get_openai_client()
-        files = await client.beta.vector_stores.files.list(self.vector_store_id)
-        return [file.filename for file in files.data]
+        thread = await client.beta.threads.retrieve(thread_id=self.id)
+        code_interpreter_files = (
+            thread.tool_resources.code_interpreter.file_ids
+            if thread.tool_resources.code_interpreter
+            else []
+        )
+        file_search_files = await self.get_file_search_files_async()
+        return code_interpreter_files + file_search_files
 
     @expose_sync_method("update_files")
-    async def update_files_async(self, add_files: List[str] = None, remove_files: List[str] = None) -> None:
+    async def update_files_async(
+        self, add_files: List[str] = None, remove_files: List[str] = None
+    ) -> None:
         if not self.vector_store_id:
-            raise ValueError("Vector store not created. Call create_vector_store first.")
-        
+            raise ValueError(
+                "Vector store not created. Call create_vector_store first."
+            )
+
         client = marvin.utilities.openai.get_openai_client()
-        
+
         if add_files:
             file_streams = [open(path, "rb") for path in add_files]
             await client.beta.vector_stores.file_batches.upload_and_poll(
-                vector_store_id=self.vector_store_id,
-                files=file_streams
+                vector_store_id=self.vector_store_id, files=file_streams
             )
-        
+
         if remove_files:
             files = await client.beta.vector_stores.files.list(self.vector_store_id)
             for file in files.data:
                 if file.filename in remove_files:
-                    await client.beta.vector_stores.files.delete(self.vector_store_id, file.id)
+                    await client.beta.vector_stores.files.delete(
+                        self.vector_store_id, file.id
+                    )

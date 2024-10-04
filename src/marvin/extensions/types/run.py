@@ -43,7 +43,7 @@ class AppRunStep(RunStep):
     step_details: Union[AppMessageCreationStepDetails, AppToolCallsStepDetails]
 
 
-class OpenaiRunSchema(OpenaiRun):
+class OpenaiRun(OpenaiRun):
     class Config(BaseModelConfig):
         extra = "allow"
 
@@ -54,7 +54,7 @@ class PersistedRun(BaseModel):
     tenant_id: str | UUID | None = None
     created: datetime | str | None = None
     modified: datetime | str | None = None
-    run: OpenaiRunSchema | None = None
+    run: OpenaiRun | None = None
     steps: List[AppRunStep] | None = []
     metadata: dict | RunMetadata | None = RunMetadata()
     data: dict | None = None
@@ -63,13 +63,13 @@ class PersistedRun(BaseModel):
     class Config(BaseModelConfig):
         extra = "allow"
 
-    def save_run_context_data(self, context: dict):
+    def save_run_context_data(self, context):
         """
         Update the run with the data from the context.
         Existing data will be overwritten.
         """
-        storage = context.get("storage", {})
-        run_metadata = storage.get("run_metadata", {})
+        storage = context.cache
+        run_metadata = storage.run_metadata
 
         # save run and metadata if run was created
         openai_run = run_metadata.get("run", None)
@@ -77,7 +77,7 @@ class PersistedRun(BaseModel):
         if openai_run:
             metadata = openai_run.get("metadata", {})
             openai_run["tools"] = openai_run.get("tools", None) or []
-            self.run = OpenaiRunSchema.model_validate(openai_run)
+            self.run = OpenaiRun.model_validate(openai_run)
             self.metadata = RunMetadata.model_validate(metadata)
 
         steps = run_metadata.get("steps", [])

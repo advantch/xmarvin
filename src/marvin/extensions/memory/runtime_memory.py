@@ -3,8 +3,10 @@ from typing import List
 from uuid import UUID
 
 from marvin.extensions.memory.base import BaseMemory
-from marvin.extensions.storage.base import BaseChatStore
-from marvin.extensions.storage.stores import ChatStore
+from marvin.extensions.storage.message_store import (
+    BaseMessageStore,
+    InMemoryMessageStore,
+)
 from marvin.extensions.types import ChatMessage
 from marvin.utilities.asyncio import ExposeSyncMethodsMixin, expose_sync_method
 
@@ -16,7 +18,7 @@ class RuntimeMemory(BaseMemory, ExposeSyncMethodsMixin):
     Attributes:
         index (str): The default index for storing messages.
         thread_id (str): The default thread ID for message organization.
-        storage (BaseChatStore | None): The storage backend for persisting messages.
+        storage (BaseMessageStore | None): The storage backend for persisting messages.
         context (dict | None): Additional context information.
         loaded (bool): Flag indicating if messages have been loaded from storage.
         memory (dict[str, List[ChatMessage]]): In-memory storage of messages.
@@ -36,12 +38,12 @@ class RuntimeMemory(BaseMemory, ExposeSyncMethodsMixin):
     Note:
         This class uses the ExposeSyncMethodsMixin to provide both synchronous and
         asynchronous versions of its methods.
-    
+
     """
 
     index: str = "default"
     thread_id: str = "default"
-    storage: BaseChatStore | None = ChatStore()
+    storage: BaseMessageStore | None = InMemoryMessageStore()
     context: dict | None = {}
     loaded: bool = False
     memory: dict[str, List[ChatMessage]] = {}
@@ -52,14 +54,13 @@ class RuntimeMemory(BaseMemory, ExposeSyncMethodsMixin):
     def __init__(self, storage=None, context=None, thread_id=None, index=None):
         super().__init__()
         self.memory = {"default": []}
-        self.storage = storage or ChatStore()
+        self.storage = storage or InMemoryMessageStore()
         self.thread_id = thread_id or "default"
-        self.index = thread_id or "default"
+        self.index = index or "default"
         self.load()
         self.hash_key = hash(
             f"{str(self.thread_id)}-{str(self.index)}-{str(time.time())}"
         )
-
         self.context = context or {}
 
     def _check_requires_search(self):
@@ -78,7 +79,9 @@ class RuntimeMemory(BaseMemory, ExposeSyncMethodsMixin):
         if self.loaded:
             return self.memory
 
-        messages = await self.storage.filter_async(thread_id=self.index)
+        messages = await self.storage.get_thread_messages_async(
+            thread_id=self.thread_id
+        )
         ids = [message.id for message in messages]
 
         self.previous_ids = ids
@@ -99,7 +102,7 @@ class RuntimeMemory(BaseMemory, ExposeSyncMethodsMixin):
             return
         self.memory[index].append(message)
         if self.storage:
-            await self.storage.update_async(message)
+            await self.storage.save_async(message, thread_id=self.thread_id)
         return self.memory
 
     @expose_sync_method("get")

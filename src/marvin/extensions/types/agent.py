@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from marvin.extensions.agent_memory.memory import Memory
 from marvin.extensions.types.base import BaseModelConfig
 from marvin.extensions.types.llms import AIModels
 from marvin.extensions.utilities.render_prompt import (
@@ -75,9 +76,22 @@ class AgentInstructions(BaseModel):
 
 
 class RuntimeConfig(BaseModel):
-    page_id: str | UUID | None = None
-    document_context: str | None = None
-    include_document: bool | None = True
+    page_id: str | UUID | None = Field(
+        default=None, description="Page ID to use for the agent if working with editors"
+    )
+    document_context: str | None = Field(
+        default=None,
+        description="Document context to use for the agent if working with editors",
+    )
+    include_document: bool | None = Field(
+        default=None, description="Include document in the context"
+    )
+    model: AIModels | None = Field(
+        default=None, description="Model to use for the agent"
+    )
+    extra: dict | None = Field(
+        default=None, description="Extra runtime config for agents"
+    )
 
     class Config(BaseModelConfig):
         pass
@@ -91,7 +105,6 @@ class CustomToolkit(BaseModel):
 class AgentConfig(BaseModel):
     """
     Defines attributes for agents and assistants(openai)
-
     """
 
     id: Optional[Union[str, uuid.UUID]] = None
@@ -105,6 +118,10 @@ class AgentConfig(BaseModel):
     temperature: Optional[float] | None = 0
     instructions: AgentInstructions | None = None
     owner_id: Optional[str] | None = None
+
+    memories: List[Memory] = Field(
+        default_factory=list, description="List of memories for the agent"
+    )
 
     # tools & toolkits
     builtin_toolkits: List[str] = Field(
@@ -137,7 +154,7 @@ class AgentConfig(BaseModel):
     max_runs: int | None = 10
 
     use_optimised_prompt: bool | None = False
-    
+
     # system
     is_internal: bool | None = False
 
@@ -177,6 +194,12 @@ class AgentConfig(BaseModel):
 
         self.toolkit_config = [config] if config else []
         return tools
+
+    def get_memories(self) -> List[Memory]:
+        """
+        Fetch memories for the agent
+        """
+        return self.memories
 
     def get_tools(self) -> List[AgentApiTool]:
         """

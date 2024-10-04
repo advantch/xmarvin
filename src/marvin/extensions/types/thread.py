@@ -16,4 +16,6 @@ class ChatThread(BaseModel):
     tags: List[str] | None = Field(default_factory=list)
     data: Optional[dict] = Field(default_factory=dict)
     vector_store: Optional[str] = None
-    files: List[str] = Field(default_factory=list)
+    files: List[str] = Field(
+        default_factory=list, description="List of data source ids."
+    )

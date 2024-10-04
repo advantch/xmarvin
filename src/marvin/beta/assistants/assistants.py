@@ -260,7 +260,7 @@ class Assistant(BaseModel, ExposeSyncMethodsMixin):
         client = marvin.utilities.openai.get_openai_client()
         await client.beta.assistants.update(
             assistant_id=self.id,
-            tool_resources={"file_search": {"vector_store_ids": [vector_store_id]}}
+            tool_resources={"file_search": {"vector_store_ids": [vector_store_id]}},
         )
         self.vector_store_id = vector_store_id
 
@@ -272,7 +272,7 @@ class Assistant(BaseModel, ExposeSyncMethodsMixin):
         client = marvin.utilities.openai.get_openai_client()
         await client.beta.assistants.update(
             assistant_id=self.id,
-            tool_resources={"file_search": {"vector_store_ids": []}}
+            tool_resources={"file_search": {"vector_store_ids": []}},
         )
         self.vector_store_id = None
 

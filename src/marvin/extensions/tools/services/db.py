@@ -5,11 +5,13 @@ try:
     import environ
     from django.conf import settings
     from django.db.utils import DEFAULT_DB_ALIAS, load_backend
-except ImportError as e:
-    print(f"ImportError: {e} - this package is only available in django")
+except ImportError:
+    environ = None
 
 
 def get_config_from_string(url):
+    if environ is None:
+        return {}
     env = environ.Env()
     config = env.db_url_config(url)
     return config

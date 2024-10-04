@@ -6,7 +6,6 @@ from marvin.extensions.context.tenant import (
     get_tenant_metadata,
     set_current_tenant_id,
     set_tenant_metadata,
-    set_thread_state,
     tenant_context,
 )
 
@@ -33,6 +32,3 @@ async def test_tenant_context():
     # Test set_tenant_metadata and get_tenant_metadata
     set_tenant_metadata({"key": "value"})
     assert get_tenant_metadata() == {"key": "value"}
-
-    # Test set_thread_state and clear_thread_state
-    set_thread_state("tenant4", {"data": "test"})

@@ -1,5 +1,6 @@
 import mimetypes
 import os
+from typing import BinaryIO
 
 import magic
 from magika import Magika
@@ -51,3 +52,10 @@ def get_mime_type(file_bytes, file_name=None):
                 return None
             return None
     return mime_type
+
+
+def get_file_size(file_content: BinaryIO):
+    file_content.seek(0, os.SEEK_END)
+    file_size = file_content.tell()
+    file_content.seek(0)
+    return file_size

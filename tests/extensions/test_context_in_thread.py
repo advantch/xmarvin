@@ -6,13 +6,15 @@ from httpx import Response
 
 from marvin.extensions.context.run_context import (
     RunContext,
+    get_current_run,
     get_current_run_id,
     get_run_context,
 )
+from marvin.extensions.executors.thread_run_executor import initialise_run
 from marvin.extensions.types import ChatMessage, Metadata
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.types.start_run import TriggerAgentRun
-from marvin.extensions.utilities.thread_runner import run_context
+from marvin.extensions.utilities.setup_storage import setup_memory_stores
 
 
 @pytest.mark.no_llm
@@ -46,7 +48,7 @@ def test_thread_runner(respx_mock):
         ),
         thread_id=thread_id,
     )
-    start_run_schema = TriggerAgentRun(
+    data = TriggerAgentRun(
         message=message,
         run_id=run_id,
         thread_id=thread_id,
@@ -60,21 +62,36 @@ def test_thread_runner(respx_mock):
     async def launch_async_task():
         await asyncio.sleep(1)
         run_context = RunContext(**get_run_context(get_current_run_id()))
-        assert str(run_context.run_id) == str(start_run_schema.run_id)
-        assert str(run_context.thread_id) == str(start_run_schema.thread_id)
+        assert str(run_context.run_id) == str(data.run_id)
+        assert str(run_context.thread_id) == str(data.thread_id)
 
-    with run_context(start_run_schema) as (run, thread_storage, context):
-        assert str(run.id) == str(start_run_schema.run_id)
+    context_stores = setup_memory_stores()
+    initialise_run(data, context_stores.run_store)
+
+    with RunContext(
+        channel_id=data.channel_id,
+        run_id=data.run_id,
+        thread_id=data.thread_id,
+        tenant_id=data.tenant_id,
+        agent_config=data.agent_config,
+        stores=context_stores,
+    ) as run_ctx:
+        assert str(run_ctx.run_id) == str(data.run_id)
 
         # try get tenant_id
         current_run_id = get_current_run_id()
-        assert str(current_run_id) == str(start_run_schema.run_id)
-        in_run_context = RunContext(**get_run_context(current_run_id))
+        assert str(current_run_id) == str(data.run_id)
+        in_run_context = get_current_run()
         assert str(in_run_context.tenant_id) == str(tenant_id)
         assert str(in_run_context.channel_id) == str(channel_id)
 
         asyncio.run(launch_async_task())
 
+        assert get_current_run() is not None
+
     # outside context
+    run = get_current_run()
+    assert run is None
+
     current_run_id = get_current_run_id()
     assert current_run_id is None

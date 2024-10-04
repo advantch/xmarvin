@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import re
+from collections import deque
 from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Union
 
 import sqlalchemy
+import sqlparse
 from langchain_core._api import deprecated
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -20,8 +23,9 @@ from sqlalchemy.exc import ProgrammingError, SQLAlchemyError
 from sqlalchemy.schema import CreateTable
 from sqlalchemy.sql.expression import Executable
 from sqlalchemy.types import NullType
-
-from marvin.extensions.utilities.logging import pretty_log
+from sqlparse import format as sql_format
+from sqlparse.sql import Token, TokenList
+from sqlparse.tokens import Keyword
 
 
 class ColumnInfo(BaseModel):
@@ -445,7 +449,6 @@ class SQLDatabase:
         execution_options: Optional[Dict[str, Any]] = None,
     ) -> QueryResult:
         """Execute a SQL command and return structured results."""
-        pretty_log(f"Executing command: {command}")
         result = self._execute(
             command, fetch, parameters=parameters, execution_options=execution_options
         )
@@ -464,7 +467,7 @@ class SQLDatabase:
                 }
                 for row in result
             ]
-        pretty_log(f"Result: {data}")
+
         return QueryResult(
             headers=headers, data=data, message="Query executed successfully."
         )
@@ -521,3 +524,141 @@ class SQLDatabase:
             "table_info": table_info.model_dump(),
             "table_names": ", ".join(table_names),
         }
+
+
+REPORTS_PARAM_TOKEN = "$$"
+
+
+def passes_blacklist(
+    sql: str, blacklist: Iterable[str] = None
+) -> tuple[bool, Iterable[str]]:
+    sql_strings = sqlparse.split(sql)
+    keyword_tokens = set()
+    for sql_string in sql_strings:
+        statements = sqlparse.parse(sql_string)
+        for statement in statements:
+            for token in walk_tokens(statement):
+                if not token.is_whitespace and not isinstance(token, TokenList):
+                    if token.ttype in Keyword:
+                        keyword_tokens.add(str(token.value).upper())
+
+    fails = [bl_word for bl_word in blacklist if bl_word.upper() in keyword_tokens]
+
+    return not bool(fails), fails
+
+
+def walk_tokens(token: TokenList) -> Iterable[Token]:
+    """
+    Generator to walk all tokens in a Statement
+    https://stackoverflow.com/questions/54982118/parse-case-when-statements-with-sqlparse
+    :param token: TokenList
+    """
+    queue = deque([token])
+    while queue:
+        token = queue.popleft()
+        if isinstance(token, TokenList):
+            queue.extend(token)
+        yield token
+
+
+def _format_field(field):
+    return field.get_attname_column()[1], field.get_internal_type()
+
+
+def param(name):
+    return f"{REPORTS_PARAM_TOKEN}{name}{REPORTS_PARAM_TOKEN}"
+
+
+def swap_params(sql, params):
+    p = params.items() if params else {}
+    for k, v in p:
+        regex = re.compile(r"\$\$%s(?:\:([^\$]+))?\$\$" % str(k).lower(), re.I)
+        sql = regex.sub(str(v), sql)
+    return sql
+
+
+def extract_params(text):
+    regex = re.compile(r"\$\$([a-z0-9_]+)(?:\:([^\$]+))?\$\$")
+    params = re.findall(regex, text.lower())
+    return {p[0]: p[1] if len(p) > 1 else "" for p in params}
+
+
+def shared_dict_update(target, source):
+    for k_d1 in target:
+        if k_d1 in source:
+            target[k_d1] = source[k_d1]
+    return target
+
+
+def safe_cast(val, to_type, default=None):
+    try:
+        return to_type(val)
+    except ValueError:
+        return default
+
+
+def get_int_from_request(request, name, default):
+    """Get an integer from the request"""
+    val = request.GET.get(name, default)
+    return safe_cast(val, int, default) if val else None
+
+
+def get_params_from_request(request):
+    """Return a dictionary of parameters for a query."""
+    val = request.GET.get("params", None)
+    try:
+        d = {}
+        tuples = val.split("|")
+        for t in tuples:
+            res = t.split(":")
+            d[res[0]] = res[1]
+        return d
+    except Exception:
+        return None
+
+
+def get_params_for_url(query):
+    """Return a string of parameters for a query."""
+    if query.params:
+        return "|".join([f"{p}:{v}" for p, v in query.params.items()])
+
+
+def url_get_rows(request):
+    """Number of rows to return from the database"""
+    return get_int_from_request(request, "rows", 1000)
+
+
+def url_get_query_id(request):
+    """Get the query id from the request"""
+    return get_int_from_request(request, "query_id", None)
+
+
+def url_get_log_id(request):
+    """Get the log id from the request"""
+    return get_int_from_request(request, "querylog_id", None)
+
+
+def url_get_show(request):
+    """Get the show parameter from the request"""
+    return bool(get_int_from_request(request, "show", 1))
+
+
+def url_get_fullscreen(request):
+    """Get the fullscreen parameter from the request"""
+    return bool(get_int_from_request(request, "fullscreen", 0))
+
+
+def url_get_params(request):
+    return get_params_from_request(request)
+
+
+def fmt_sql(sql):
+    return sql_format(sql, reindent=True, keyword_case="upper")
+
+
+def noop_decorator(f):
+    return f
+
+
+class InvalidReportsConnectionException(Exception):
+    pass

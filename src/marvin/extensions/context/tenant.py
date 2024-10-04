@@ -1,13 +1,27 @@
-from asgiref.local import Local
+"""
+This module provides a global context for storing and retrieving tenant-specific data.
+It uses the `asgiref.local.Local` class to store the context in a thread-local manner.
+
+In advantch apps we already use this for managing tenant state across threads.
+Make sure to set this app at the start of the app.
+"""
+
 from contextlib import asynccontextmanager
 from uuid import UUID
 
+from asgiref.local import Local
+
 from marvin.extensions.settings import extension_settings
 
-# this need to be an instance of asgiref.local.Local
-# so we can reuse the same state
-# in advantch apps we already use this for managing tenant state so this needs to be shared.
-_async_local: Local = extension_settings.app_context.container()
+state = None
+# check if is advantch and import from there
+try:
+    from apps.common.tenants import _async_local as state
+except ImportError:
+    state = extension_settings.global_context.container()
+
+_async_local: Local = state
+
 
 def get_current_tenant_id() -> str | None:
     return _async_local.tenant_id
@@ -66,4 +80,3 @@ async def empty_tenant_context():
 def set_tenant_from_current_thread():
     tenant_id = get_current_tenant_id()
     set_current_tenant_id(tenant_id)
-

@@ -128,7 +128,13 @@
 
     <script>
         function renderMessage(message) {
-            return marked.parse(message.content[0].text.value);
+            if (message?.content?.[0]?.type === 'text') {
+                return marked.parse(message.content[0].text.value);
+            }
+            if(message?.metadata?.toolCalls) {
+                return marked.parse(`\`\`\`python\n${JSON.stringify(message.metadata?.toolCalls[0]?.codeInterpreter?.input || '# runnning code interpreter')}\n\`\`\``);
+            }
+            return JSON.stringify(message);
         }
         function chat() {
             return {

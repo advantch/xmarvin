@@ -21,7 +21,6 @@ class DefaultJsonEncoder(json.JSONEncoder):
 
     def default(self, obj):
         cleaned_obj = obj
-        print(cleaned_obj, type(cleaned_obj))
 
         if isinstance(cleaned_obj, BaseModel):
             try:

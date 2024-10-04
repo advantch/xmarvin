@@ -29,11 +29,10 @@ from marvin.beta.assistants.handlers import PrintHandler
 from marvin.beta.local.assistant import LocalAssistant
 from marvin.beta.local.handlers import DefaultAssistantEventHandler
 from marvin.beta.local.thread import LocalThread
-from marvin.extensions.storage.cache import cache
+from marvin.extensions.cache.cache import mem_cache as cache
 from marvin.extensions.tools.tool import Tool, handle_tool_call_async
 from marvin.extensions.types.message import ChatMessage
 from marvin.extensions.types.tools import AppFunction, AppToolCall
-from marvin.extensions.utilities.logging import pretty_log
 from marvin.extensions.utilities.mappers import (
     convert_delta_to_message_delta,
     convert_model_response_to_message,
@@ -139,7 +138,7 @@ class LocalRun(BaseModel, ExposeSyncMethodsMixin):
         """
         tools = self.llm_tools if self.llm_tools and len(self.llm_tools) > 0 else None
         tool_dict = {"tools": tools} if tools else {}
-        run_stop_cache_key = f"run:stop:{self.id}"
+        run_stop_cache_key = f"run:stop:{str(self.id)}"
 
         self.handler = self.handler or PrintHandler()
         self.run = AppRun(
@@ -194,7 +193,6 @@ class LocalRun(BaseModel, ExposeSyncMethodsMixin):
                 self.usage.total_tokens += response.usage.total_tokens
                 self._current_step = None
                 tool_calls = getattr(response.choices[0].message, "tool_calls", None)
-                pretty_log(tool_calls)
                 if not tool_calls or len(tool_calls) == 0:
                     is_complete = True
 
@@ -217,7 +215,7 @@ class LocalRun(BaseModel, ExposeSyncMethodsMixin):
             await self.handler.on_event(event)
             # clean up the cache if it exists
 
-            if cache.get(run_stop_cache_key, None) is not None:
+            if cache.get(run_stop_cache_key) is not None:
                 cache.delete(run_stop_cache_key)
 
         except Exception as e:
@@ -234,7 +232,7 @@ class LocalRun(BaseModel, ExposeSyncMethodsMixin):
             self.run.status = RunStatus.COMPLETED.value
             event = ThreadRunCompleted(event="thread.run.completed", data=self.run)
             await self.handler.on_event(event)
-            if cache.get(run_stop_cache_key, None) is not None:
+            if cache.get(run_stop_cache_key) is not None:
                 cache.delete(run_stop_cache_key)
 
     async def _get_llm_response(self):

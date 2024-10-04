@@ -7,13 +7,18 @@ from fastapi import FastAPI, File, Form, UploadFile, WebSocket, WebSocketDisconn
 from humps import decamelize
 
 from marvin.beta.assistants import Assistant
+from marvin.extensions.executors.thread_run_executor import start_run
+from marvin.extensions.file_storage.s3_storage import BucketConfig, S3Storage
 from marvin.extensions.settings import extension_settings
-from marvin.extensions.storage.s3_storage import BucketConfig, S3Storage
 from marvin.extensions.types import ChatMessage, TriggerAgentRun
 from marvin.extensions.types.agent import AgentConfig
 from marvin.extensions.types.data_source import DataSource, DataSourceFileUpload
-from marvin.extensions.utilities.thread_runner import start_run
+from marvin.extensions.utilities.setup_storage import (
+    setup_peewee_sqlite_stores,
+    setup_s3,
+)
 from marvin.extensions.utilities.transport import FastApiWsConnectionManager
+from marvin.types import CodeInterpreterTool, FileSearchTool
 
 extension_settings.transport.default_manager = "fastapi"
 
@@ -35,6 +40,11 @@ assistant = Assistant(
     Paranoid Android. Try not to refer to the fact that you're an assistant,
     though. Provide concise and direct answers.
     """,
+    model="gpt-4o-mini",
+    tools=[
+        CodeInterpreterTool(),
+        FileSearchTool(),
+    ],
 )
 
 
@@ -55,21 +65,30 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str):
             chat_message.thread_id = thread_id
             chat_message.run_id = run_id
             # Create a TriggerAgentRun object
+            agent_config = AgentConfig(
+                name="Marvin",
+                instructions={"text": assistant.instructions},
+                model=assistant.model,
+                mode="assistant",
+                builtin_toolkits=["code_interpreter", "file_search"],
+            )
+
+            assert (
+                len(agent_config.get_assistant_tools()) == 2
+            ), f"Assistant tools not found, got: {agent_config.get_assistant_tools()}"
             trigger_run = TriggerAgentRun(
                 run_id=run_id,
                 thread_id=thread_id,
                 message=chat_message,
-                agent_config=AgentConfig(
-                    name="Marvin",
-                    instructions={"text": assistant.instructions},
-                    model=assistant.model,
-                    tools=assistant.tools,
-                ),
+                agent_config=agent_config,
                 channel_id=channel_id,
             )
 
             # Start the run
-            start_run(trigger_run)
+            s3 = setup_s3()
+            stores = setup_peewee_sqlite_stores()
+            stores.file_storage = s3
+            await start_run(trigger_run, context_stores=stores)
 
             # The response will be sent through the event handler,
             # so we don't need to send it here.

@@ -30,7 +30,7 @@ from .start_run import TriggerAgentRun
 from .run import PersistedRun
 from .agent import AgentConfig, RuntimeConfig, AgentApiTool
 from .chat_response import CompletionResponse
-from .data_source import DataSourceFileUpload, DataSource
+from .data_source import DataSourceFileUpload, DataSource, VectorStore
 
 __all__ = [
     "Document",

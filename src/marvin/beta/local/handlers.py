@@ -14,7 +14,7 @@ from openai.types.beta.threads import ImageFile, Message, MessageDelta
 from openai.types.beta.threads.runs import RunStep, RunStepDelta
 from typing_extensions import override
 
-from marvin.extensions.context.run_context import RunContext
+from marvin.extensions.context.run_context import RunContext, get_current_run
 from marvin.extensions.memory.runtime_memory import RuntimeMemory
 from marvin.extensions.types import ChatMessage
 from marvin.extensions.utilities.assistants_api import (
@@ -29,7 +29,7 @@ from marvin.extensions.utilities.mappers import (
 )
 from marvin.extensions.utilities.persist_files import save_assistant_image_to_storage
 from marvin.extensions.utilities.serialization import to_serializable
-from marvin.extensions.utilities.unique_id import generate_uuid_from_string
+from marvin.extensions.utilities.unique_id import generate_id
 
 
 class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
@@ -49,9 +49,14 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         self.print_steps = print_steps
         self.messages = []
         self.steps = []
-        self.context = RunContext(**kwargs.get("context"))
+
         self.tool_calls = []
-        self._context = kwargs.get("context")
+
+        # the original context dict.
+        ctx = kwargs.get("context")
+        self.context: RunContext = ctx
+        if ctx:
+            self._context = ctx.context_dict
         self.memory = kwargs.get("memory") or RuntimeMemory()
         self.cache = kwargs.get("cache") or {}
         super().__init__()
@@ -83,7 +88,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         """
 
         m = ChatMessage(
-            id=generate_uuid_from_string(snapshot.id),
+            id=generate_id("cs", snapshot.id),
             role=snapshot.role,
             content=map_content_to_block(delta.content, is_delta=True),
             run_id=self.context.run_id,
@@ -99,6 +104,10 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         await self.dispatcher.send_stream_event_async(data, patch=False)
 
     @property
+    def ctx(self):
+        return get_current_run()
+
+    @property
     def storage(self):
         """
         Context storage.
@@ -106,8 +115,9 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
 
         For openai assistants handlers are instantiated per stream,
         context and by extension storage is persisted.
+        # TODO: GET CURRENT RUN
         """
-        return self._context["storage"]
+        return self.ctx.cache if self.ctx and self.ctx.cache else {}
 
     async def check_run_stop(self):
         """
@@ -118,7 +128,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
 
         if (
             len(self.steps) > self.max_runs
-            or self.cache.get(run_stop_cache_key)
+            or self.ctx.cache_store.get(run_stop_cache_key)
             and self.openai_run_id
         ):
             run_id = self.openai_run_id
@@ -140,7 +150,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         m = message
         if isinstance(message, Message):
             m = ChatMessage(
-                id=generate_uuid_from_string(message.id),
+                id=generate_id("cs", message.id),
                 role=message.role,
                 content=map_content_to_block(message.content, is_delta=False),
                 run_id=message.run_id,
@@ -151,8 +161,9 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
                     "type": "message",
                 },
             )
-        self.storage["messages"].append(m)
-        await self.memory.put_async(m)
+        if self.storage:
+            self.storage.messages.append(m)
+        await self.memory.put_async(m, index=self.context.thread_id)
         await self.check_run_stop()
 
     @override
@@ -191,7 +202,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         """
 
         if not run_step.completed_at:
-            run_step.completed_at = datetime.now().timestamp()
+            run_step.completed_at = int(datetime.now().timestamp())
         self.steps.append(run_step)
         details = run_step.step_details
 
@@ -204,12 +215,12 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
                 run_step, self.context, tool_calls=outputs
             )
             # clear tool outputs
-            pretty_log("clear tool outputs", len(self.tool_outputs))
             self.tool_outputs = []
+
             data = {"message": assistant_message}
 
-            # pretty_log("run step done", data)
             await self.dispatcher.send_stream_event_async(data, patch=False)
+
             await self.memory.put_async(assistant_message, index=self.context.thread_id)
 
     async def on_tool_output(self, tool_output):
@@ -225,7 +236,8 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
     async def on_tool_call_done(self, tool_call, raw_tool_result=None) -> None:
         """Callback that is fired when a tool call is done"""
         self.tool_calls.append(tool_call.model_dump())
-        self._context["storage"]["tool_calls"] = self.tool_calls
+        # ctx = get_current_run()
+        self.storage.tool_calls.append(tool_call.model_dump())
 
     @override
     async def on_exception(self, exc):
@@ -237,10 +249,11 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
 
         This function logs the error, prints the traceback, and sends an error event.
         """
+        # ctx = get_current_run()
         logger.error(exc)
         traceback.print_exc()
         logger.info("sent error")
-        self._context["storage"]["errors"].append(str(exc))
+        self.storage.errors.append(str(exc))
         await self.dispatcher.send_error_async(str(exc))
 
     @override
@@ -256,11 +269,9 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         """
         if isinstance(event, ThreadRunRequiresAction) and self.previous_event is None:
             self.previous_event = event
-            logger.info("tool call event started")
 
         # step completed - maybe a good place to track actions
         if isinstance(event, ThreadRunStepCompleted):
-            logger.info("step completed")
             self.processed_steps.append(event)
 
         # run completed events
@@ -274,7 +285,7 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
 
             metadata = {
                 "credits": run_credits.model_dump(),
-                "events": self.dispatcher.run_events(),
+                "events": self.dispatcher.stack,
                 "messages": self.messages,
             }
             event.data.metadata = metadata
@@ -283,9 +294,8 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
                 "steps": to_serializable(self.steps),
             }
 
-            self._context["storage"]["run_metadata"] = data
+            self.storage.run_metadata = data
 
-            # pretty_log("run completed", data)
             await self.dispatcher.send_close_async()
 
         # run failed events, cancelled
@@ -307,30 +317,19 @@ class DefaultAssistantEventHandler(AsyncAssistantEventHandler):
         """Callback that is fired when an image file block is finished"""
         try:
             file_info = await save_assistant_image_to_storage(
-                context=self.context,
                 image_file=image_file,
-                file_storage=self.file_storage,
+                file_storage=self.ctx.stores.file_storage,
             )
-        
-            # Update the tool call output
-            for tool_call in self.tool_calls:
-                if tool_call.get("type") == "code_interpreter":
-                    outputs = tool_call.get("code_interpreter", {}).get("outputs", [])
-                    for output in outputs:
-                        if output.get("type") == "image":
-                            output.update(file_info)
+            pretty_log("file info", file_info)
+            # # display to user
+            await self.ctx.stores.message_store.update_message_tool_calls_async(
+                thread_id=self.context.thread_id,
+                file_id=image_file.file_id,
+                data_source=file_info,
+            )
 
             # Update the context storage
-            self._context["storage"]["tool_calls"] = self.tool_calls
-
-            chat_message = await save_assistant_image_to_storage(
-                    context=self.context,
-                    image_file=image_file,
-            )
-
-            await self.dispatcher.send_stream_event_async(
-                    {"message": chat_message}, patch=False
-            )
+            self._context["cache"]["tool_calls"] = self.tool_calls
 
         except Exception as e:
             logger.error(f"AssistantHandler:Failed to save image file {e}")
