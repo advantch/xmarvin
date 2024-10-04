@@ -9,7 +9,6 @@ Used to
 import asyncio
 import traceback
 
-import logfire
 import rich
 
 from marvin.beta.assistants import Assistant
@@ -44,9 +43,6 @@ from marvin.extensions.utilities.message_parsing import (
 )
 from marvin.extensions.utilities.setup_storage import setup_memory_stores
 from marvin.extensions.utilities.streaming import send_app_event
-
-logfire.configure(token="BHd6CgNxWTS5KWyHlTDpddQRkQ46Kf2rjmmnwt6qVc1M")
-# logfire.install_auto_tracing(modules=["marvin"], min_duration=0.01, check_imported_modules='ignore')
 
 
 def send_close_event(data, event="close", error=None):
@@ -164,7 +160,6 @@ async def initialise_run_async(data: TriggerAgentRun, run_store: BaseRunStore):
     return persisted_run
 
 
-@logfire.instrument("Assistant Run", extract_args=True)
 async def handle_assistant_run(
     data: TriggerAgentRun,
     context_stores: RunContextStores | None = None,
@@ -258,7 +253,6 @@ async def handle_assistant_run(
         return remote_run
 
 
-@logfire.instrument("Local Run {data.run_id}", extract_args=True)
 async def handle_local_run(
     data: TriggerAgentRun,
     context_stores: RunContextStores | None = None,
@@ -323,7 +317,6 @@ async def handle_local_run(
         return local_run
 
 
-@logfire.instrument("Start Run {data.run_id}", extract_args=True)
 async def start_run(
     data: TriggerAgentRun, context_stores: RunContextStores | None = None
 ):
