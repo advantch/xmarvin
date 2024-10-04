@@ -17,12 +17,9 @@ from .ai.text import (
     Model,
     Image,
 )
-import logfire
+
 from .ai.images import paint, paint_async, image
 from .ai.audio import speak_async, speak, speech, transcribe, transcribe_async
-
-# logfire.configure()
-# logfire.install_auto_tracing(modules=['marvin'], min_duration=0.01, check_imported_modules='ignore')
 
 
 if settings.auto_import_beta_modules:
